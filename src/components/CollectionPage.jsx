@@ -299,7 +299,7 @@ export default function CollectionPage({
                   style={{ background: '#21201D' }}
                 >
                   <ShoppingBag size={18} />
-                  <span>+ Pilih Koleksi & Masukkan Keranjang ({activeItem.priceFormatted})</span>
+                  <span>Pilih & Masukkan Keranjang</span>
                 </button>
               ) : activeItem.isCustomizable ? (
                 <button

@@ -401,7 +401,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.config-step:focus-within, .config-step:hover {
+.config-step:focus-within,
+.config-step:hover {
   border-color: #D1C7BA;
 }
 
@@ -1129,10 +1130,12 @@
   .canvas-view-toggle {
     padding: 2px;
   }
+
   .canvas-view-toggle button {
     font-size: 0.68rem;
     padding: 4px 8px;
   }
+
   .canvas-change-frame-btn {
     font-size: 0.68rem !important;
     padding: 4px 10px !important;
@@ -1144,6 +1147,7 @@
     font-size: 0.62rem;
     padding: 3px 6px;
   }
+
   .canvas-change-frame-btn {
     font-size: 0.64rem !important;
     padding: 3px 8px !important;
@@ -1305,6 +1309,7 @@
     padding: 8px 6px;
     gap: 5px;
   }
+
   .accent-color-btn span {
     font-size: 0.75rem !important;
   }
@@ -1480,5 +1485,3 @@
   color: var(--text-secondary);
   line-height: 1.3;
 }
-
-

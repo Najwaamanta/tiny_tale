@@ -273,7 +273,7 @@ export default function BundlingSelectionModal({
                   Rp {Number(bundlingProduct.price).toLocaleString('id-ID')}
                 </span>
               </div>
-              <h3 style={{ fontSize: '1.18rem', margin: '3px 0 0', fontWeight: 800, color: '#181A1F' }}>
+              <h3 style={{ fontSize: '0.98rem', margin: '3px 0 0', fontWeight: 800, color: '#181A1F', lineHeight: 1.25 }}>
                 {bundlingProduct.name}
               </h3>
             </div>
@@ -1030,12 +1030,9 @@ export default function BundlingSelectionModal({
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EDE9FE', color: '#4F46E5', padding: '4px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '8px' }}>
                   <span>Langkah 1 dari 2</span>
                 </div>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 6px', color: '#111827' }}>
-                  Pilih Jenis Gelang yang Diinginkan
+                <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 10px', color: '#111827' }}>
+                  Pilih Jenis Gelang
                 </h4>
-                <p style={{ fontSize: '0.85rem', color: '#6B7280', margin: 0, lineHeight: 1.45 }}>
-                  Pilih model gelang favoritmu terlebih dahulu. Setelah memilih gelang, kamu akan langsung <strong>dialihkan ke Studio Kustomisasi</strong> untuk merancang Bagcharm (pilih frame, foto & charm) seharga paket bundling <strong>Rp 27.000</strong>!
-                </p>
               </div>
 
               {/* Bracelet Grid */}
@@ -1325,7 +1322,7 @@ export default function BundlingSelectionModal({
                   boxShadow: selectedFrame1 && selectedFrame2 ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none'
                 }}
               >
-                <span>Lanjut Kustom 2 Bagcharm di Studio</span>
+                <span>Lanjut Kustom 2 Bagcharm</span>
                 <ArrowRight size={18} />
               </button>
             )}
@@ -1350,7 +1347,7 @@ export default function BundlingSelectionModal({
                   boxShadow: selectedGelangB3 ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none'
                 }}
               >
-                <span>Lanjut Kustom Bagcharm di Studio</span>
+                <span>Lanjut Kustom Bagcharm</span>
                 <ArrowRight size={18} />
               </button>
             )}
