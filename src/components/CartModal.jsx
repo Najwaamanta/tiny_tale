@@ -94,8 +94,8 @@ export default function CartModal({
       >
         {/* Header */}
         <div
+          className="cart-modal-header"
           style={{
-            padding: '18px 24px',
             borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
             justifyContent: 'space-between',
@@ -150,7 +150,7 @@ export default function CartModal({
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px 24px', maxHeight: '60vh', overflowY: 'auto' }}>
+        <div className="cart-modal-body">
           {cartItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-secondary)' }}>
               <div
@@ -254,6 +254,7 @@ export default function CartModal({
                         style={{
                           width: '20px',
                           height: '20px',
+                          minWidth: '20px',
                           borderRadius: '5px',
                           border: isSelected ? '2px solid var(--accent-cyan)' : '2px solid var(--border-medium)',
                           background: isSelected ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
@@ -262,6 +263,7 @@ export default function CartModal({
                           justifyContent: 'center',
                           cursor: 'pointer',
                           flexShrink: 0,
+                          marginTop: '3px',
                           transition: 'all 0.15s ease'
                         }}
                         title={isSelected ? 'Batalkan pilihan item ini' : 'Pilih item ini untuk dibeli'}
@@ -270,7 +272,19 @@ export default function CartModal({
                       </div>
 
                       {/* Thumbnail: Product Photo or Photostrip */}
-                      <div className="cart-item-thumb" style={{ opacity: isSelected ? 1 : 0.65 }}>
+                      <div
+                        className="cart-item-thumb"
+                        style={{
+                          opacity: isSelected ? 1 : 0.65,
+                          width: '56px',
+                          height: '56px',
+                          minWidth: '56px',
+                          minHeight: '56px',
+                          borderRadius: '8px',
+                          flexShrink: 0,
+                          marginTop: '2px'
+                        }}
+                      >
                         {item.image ? (
                           <img src={item.image} alt={item.title} />
                         ) : item.frameImage ? (
@@ -288,19 +302,19 @@ export default function CartModal({
                         )}
                       </div>
 
-                    {/* Item Information */}
-                    <div className="cart-item-info">
-                      <div className="cart-item-title" style={{ fontSize: '0.96rem' }}>
-                        {item.title}
-                        {item.productType === 'bundling' && (
-                          <span
-                            className="badge badge-purple"
-                            style={{ fontSize: '0.68rem', padding: '1px 6px', marginLeft: '6px' }}
-                          >
-                            Paket Bundling
-                          </span>
-                        )}
-                      </div>
+                      {/* Item Information */}
+                      <div className="cart-item-info" style={{ flex: 1, minWidth: 0 }}>
+                        <div className="cart-item-title" style={{ fontSize: '0.94rem', fontWeight: 700, wordBreak: 'break-word', lineHeight: 1.35, marginBottom: '4px' }}>
+                          {item.title}
+                          {item.productType === 'bundling' && (
+                            <span
+                              className="badge badge-purple"
+                              style={{ fontSize: '0.68rem', padding: '1px 6px', marginLeft: '6px' }}
+                            >
+                              Paket Bundling
+                            </span>
+                          )}
+                        </div>
 
                       {/* Bundling Package Choices Details */}
                       {item.bundleChoices && (
@@ -419,70 +433,90 @@ export default function CartModal({
                         </div>
                       )}
 
-                      {/* Pricing */}
-                      <div className="cart-item-price" style={{ marginTop: '6px' }}>
-                        <span style={{ fontWeight: 800, color: 'var(--accent-cyan)', fontSize: '0.98rem' }}>
-                          Rp {itemTotal.toLocaleString('id-ID')}
-                        </span>
-                        {itemQty > 1 && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '6px' }}>
-                            (@ Rp {itemUnitPrice.toLocaleString('id-ID')})
-                          </span>
-                        )}
+                        {/* Bottom Row: Price on left, Quantity & Delete on right */}
+                        <div
+                          style={{
+                            marginTop: '10px',
+                            paddingTop: '8px',
+                            borderTop: '1px dashed var(--border-subtle)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '8px',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          {/* Pricing */}
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+                            <span style={{ fontWeight: 800, color: 'var(--accent-cyan)', fontSize: '0.98rem', whiteSpace: 'nowrap' }}>
+                              Rp {itemTotal.toLocaleString('id-ID')}
+                            </span>
+                            {itemQty > 1 && (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                (@ Rp {itemUnitPrice.toLocaleString('id-ID')})
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Controls Group */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {/* Quantity Controls */}
+                            <div className="qty-counter" style={{ padding: '2px 4px' }}>
+                              <button
+                                type="button"
+                                className="qty-btn"
+                                style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(item, -1);
+                                }}
+                                title={itemQty === 1 ? 'Hapus item' : 'Kurangi jumlah'}
+                                aria-label="Kurangi jumlah"
+                              >
+                                <Minus size={13} />
+                              </button>
+                              <span className="qty-value" style={{ minWidth: '20px', textAlign: 'center', fontSize: '0.86rem', fontWeight: 700 }}>
+                                {itemQty}
+                              </span>
+                              <button
+                                type="button"
+                                className="qty-btn"
+                                style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(item, 1);
+                                }}
+                                title="Tambah jumlah"
+                                aria-label="Tambah jumlah"
+                              >
+                                <Plus size={13} />
+                              </button>
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-icon"
+                              style={{
+                                width: '30px',
+                                height: '30px',
+                                minWidth: '30px',
+                                borderColor: 'transparent',
+                                color: 'var(--accent-rose)',
+                                padding: 0
+                              }}
+                              onClick={() => setItemToDelete(item)}
+                              title="Hapus item ini dari keranjang"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Quantity Controls */}
-                    <div className="qty-counter">
-                      <button
-                        type="button"
-                        className="qty-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuantityChange(item, -1);
-                        }}
-                        title={itemQty === 1 ? 'Hapus item' : 'Kurangi jumlah'}
-                        aria-label="Kurangi jumlah"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="qty-value">
-                        {itemQty}
-                      </span>
-                      <button
-                        type="button"
-                        className="qty-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuantityChange(item, 1);
-                        }}
-                        title="Tambah jumlah"
-                        aria-label="Tambah jumlah"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-
-                    {/* Delete Button */}
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-icon"
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderColor: 'transparent',
-                        color: 'var(--accent-rose)',
-                        marginLeft: '4px'
-                      }}
-                      onClick={() => setItemToDelete(item)}
-                      title="Hapus item ini dari keranjang"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
           </div>
         )}
       </div>
@@ -490,8 +524,8 @@ export default function CartModal({
       {/* Footer Checkout */}
       {cartItems.length > 0 && (
         <div
+          className="cart-modal-footer"
           style={{
-            padding: '18px 24px',
             borderTop: '1px solid var(--border-subtle)',
             background: 'var(--bg-primary)'
           }}

@@ -1914,17 +1914,19 @@
 
 .cart-item-card {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 12px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .cart-item-thumb {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   background: #FFFFFF;
   border-radius: var(--radius-sm);
   display: flex;
@@ -1942,7 +1944,8 @@
 }
 
 .cart-item-info {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
 }
 
 .cart-item-title {
@@ -2015,6 +2018,38 @@
   text-align: center;
   color: #0F172A;
   user-select: none;
+}
+
+/* Cart Modal Responsive Layout */
+.cart-modal-header {
+  padding: 18px 24px;
+}
+
+.cart-modal-body {
+  padding: 20px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.cart-modal-footer {
+  padding: 18px 24px;
+}
+
+@media (max-width: 640px) {
+  .cart-modal-header {
+    padding: 14px 16px !important;
+  }
+  .cart-modal-body {
+    padding: 14px 12px !important;
+    max-height: 65vh !important;
+  }
+  .cart-modal-footer {
+    padding: 14px 16px !important;
+  }
+  .cart-item-card {
+    padding: 10px !important;
+    gap: 10px !important;
+  }
 }
 
 /* Tracking */
