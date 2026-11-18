@@ -3,6 +3,7 @@ import { X, Check, Sparkles, ShoppingBag, ArrowRight, ArrowLeft, Camera, Upload,
 import confetti from 'canvas-confetti';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector.jsx';
 import { useBodyScrollLock } from '../utils/scrollLock';
+import { getBraceletColorOptions } from '../utils/productColors';
 
 export default function BundlingSelectionModal({
   isOpen,
@@ -72,7 +73,15 @@ export default function BundlingSelectionModal({
 
   // Bundle 1 Selections (2 Gelang)
   const [selectedGelang1, setSelectedGelang1] = useState(defaultBracelets[0] || null);
+  const [selectedGelang1Color, setSelectedGelang1Color] = useState(() => {
+    const opts = getBraceletColorOptions(defaultBracelets[0]);
+    return opts ? opts[0].label : null;
+  });
   const [selectedGelang2, setSelectedGelang2] = useState(defaultBracelets[1] || defaultBracelets[0] || null);
+  const [selectedGelang2Color, setSelectedGelang2Color] = useState(() => {
+    const opts = getBraceletColorOptions(defaultBracelets[1] || defaultBracelets[0]);
+    return opts ? opts[0].label : null;
+  });
 
   // Bundle 2 Selections (2 Bagcharm - All 30 Frames)
   const [selectedFrame1, setSelectedFrame1] = useState(allFrames[0] || null);
@@ -82,6 +91,10 @@ export default function BundlingSelectionModal({
 
   // Bundle 3 Selection (1 Gelang & 1 Bagcharm)
   const [selectedGelangB3, setSelectedGelangB3] = useState(defaultBracelets[0] || null);
+  const [selectedGelangB3Color, setSelectedGelangB3Color] = useState(() => {
+    const opts = getBraceletColorOptions(defaultBracelets[0]);
+    return opts ? opts[0].label : null;
+  });
 
   // Reset when product opens
   useEffect(() => {
@@ -89,8 +102,16 @@ export default function BundlingSelectionModal({
     setFrameSearch('');
     if (defaultBracelets.length > 0) {
       setSelectedGelang1(defaultBracelets[0]);
+      const opts1 = getBraceletColorOptions(defaultBracelets[0]);
+      setSelectedGelang1Color(opts1 ? opts1[0].label : null);
+
       setSelectedGelang2(defaultBracelets[1] || defaultBracelets[0]);
+      const opts2 = getBraceletColorOptions(defaultBracelets[1] || defaultBracelets[0]);
+      setSelectedGelang2Color(opts2 ? opts2[0].label : null);
+
       setSelectedGelangB3(defaultBracelets[0]);
+      const optsB3 = getBraceletColorOptions(defaultBracelets[0]);
+      setSelectedGelangB3Color(optsB3 ? optsB3[0].label : null);
     }
     if (allFrames.length > 0) {
       setSelectedFrame1(allFrames[0]);
@@ -122,6 +143,14 @@ export default function BundlingSelectionModal({
   // Submit Bundle 1 (2 Gelang)
   const handleConfirmBundle1 = () => {
     if (!selectedGelang1 || !selectedGelang2) return;
+    const g1ColorOpt = getBraceletColorOptions(selectedGelang1);
+    const g1Color = g1ColorOpt ? (selectedGelang1Color || g1ColorOpt[0].label) : null;
+    const g1Name = g1Color ? `${selectedGelang1.name} (${g1Color})` : selectedGelang1.name;
+
+    const g2ColorOpt = getBraceletColorOptions(selectedGelang2);
+    const g2Color = g2ColorOpt ? (selectedGelang2Color || g2ColorOpt[0].label) : null;
+    const g2Name = g2Color ? `${selectedGelang2.name} (${g2Color})` : selectedGelang2.name;
+
     if (onConfirm) {
       onConfirm({
         id: bundlingProduct.id,
@@ -134,18 +163,20 @@ export default function BundlingSelectionModal({
         bundleChoices: {
           item1: {
             label: 'Gelang 1',
-            name: selectedGelang1.name,
+            name: g1Name,
             image: selectedGelang1.image,
-            id: selectedGelang1.id
+            id: selectedGelang1.id,
+            color: g1Color
           },
           item2: {
             label: 'Gelang 2',
-            name: selectedGelang2.name,
+            name: g2Name,
             image: selectedGelang2.image,
-            id: selectedGelang2.id
+            id: selectedGelang2.id,
+            color: g2Color
           }
         },
-        bundleDescription: `Gelang 1: ${selectedGelang1.name} | Gelang 2: ${selectedGelang2.name}`
+        bundleDescription: `Gelang 1: ${g1Name} | Gelang 2: ${g2Name}`
       });
     }
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
@@ -169,11 +200,20 @@ export default function BundlingSelectionModal({
   // Bundle 3 Action: Navigate to Custom Studio with selected gelang
   const handleProceedToStudioBundle3 = () => {
     if (!selectedGelangB3) return;
+    const gB3ColorOpt = getBraceletColorOptions(selectedGelangB3);
+    const gB3Color = gB3ColorOpt ? (selectedGelangB3Color || gB3ColorOpt[0].label) : null;
+    const finalGelang = gB3Color ? {
+      ...selectedGelangB3,
+      name: `${selectedGelangB3.name} (${gB3Color})`,
+      selectedColor: gB3Color
+    } : selectedGelangB3;
+
     if (onGoToCustomStudio) {
       onGoToCustomStudio({
         bundlingProduct,
         bundleType: 3,
-        selectedGelang: selectedGelangB3
+        selectedGelang: finalGelang,
+        selectedGelangColor: gB3Color
       });
     }
     onClose();
@@ -360,10 +400,16 @@ export default function BundlingSelectionModal({
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '14px' }}>
                     {defaultBracelets.map((item) => {
                       const isSelected = selectedGelang1?.id === item.id;
+                      const colorOptions = getBraceletColorOptions(item);
                       return (
                         <div
                           key={item.id}
-                          onClick={() => setSelectedGelang1(item)}
+                          onClick={() => {
+                            setSelectedGelang1(item);
+                            if (colorOptions && !selectedGelang1Color) {
+                              setSelectedGelang1Color(colorOptions[0].label);
+                            }
+                          }}
                           style={{
                             background: '#FFFFFF',
                             borderRadius: '16px',
@@ -389,6 +435,7 @@ export default function BundlingSelectionModal({
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
+                                justifySelf: 'center',
                                 justifyContent: 'center',
                                 fontSize: '0.75rem',
                                 fontWeight: 800,
@@ -420,6 +467,51 @@ export default function BundlingSelectionModal({
                           <div style={{ fontSize: '0.78rem', color: '#6B7280', lineHeight: 1.35 }}>
                             {item.description ? item.description.substring(0, 70) + '...' : 'Gelang manik handmade aesthetic'}
                           </div>
+
+                          {colorOptions && (
+                            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #F3F4F6' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 600 }}>Warna:</span>
+                                <span style={{ fontSize: '0.72rem', color: '#4F46E5', fontWeight: 700 }}>
+                                  {isSelected ? (selectedGelang1Color || colorOptions[0].label) : colorOptions[0].label}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {colorOptions.map((opt) => {
+                                  const isColorSel = isSelected && (selectedGelang1Color || colorOptions[0].label) === opt.label;
+                                  return (
+                                    <button
+                                      key={opt.id}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedGelang1(item);
+                                        setSelectedGelang1Color(opt.label);
+                                      }}
+                                      style={{
+                                        flex: 1,
+                                        padding: '4px 6px',
+                                        borderRadius: '999px',
+                                        border: isColorSel ? '2px solid #4F46E5' : '1px solid #D1D5DB',
+                                        background: isColorSel ? '#EEF2FF' : '#FFFFFF',
+                                        color: isColorSel ? '#4F46E5' : '#4B5563',
+                                        fontSize: '0.72rem',
+                                        fontWeight: isColorSel ? 700 : 500,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)' }} />
+                                      <span>{opt.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -451,10 +543,16 @@ export default function BundlingSelectionModal({
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '14px' }}>
                     {defaultBracelets.map((item) => {
                       const isSelected = selectedGelang2?.id === item.id;
+                      const colorOptions = getBraceletColorOptions(item);
                       return (
                         <div
                           key={item.id}
-                          onClick={() => setSelectedGelang2(item)}
+                          onClick={() => {
+                            setSelectedGelang2(item);
+                            if (colorOptions && !selectedGelang2Color) {
+                              setSelectedGelang2Color(colorOptions[0].label);
+                            }
+                          }}
                           style={{
                             background: '#FFFFFF',
                             borderRadius: '16px',
@@ -511,6 +609,51 @@ export default function BundlingSelectionModal({
                           <div style={{ fontSize: '0.78rem', color: '#6B7280', lineHeight: 1.35 }}>
                             {item.description ? item.description.substring(0, 70) + '...' : 'Gelang manik handmade aesthetic'}
                           </div>
+
+                          {colorOptions && (
+                            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #F3F4F6' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 600 }}>Warna:</span>
+                                <span style={{ fontSize: '0.72rem', color: '#4F46E5', fontWeight: 700 }}>
+                                  {isSelected ? (selectedGelang2Color || colorOptions[0].label) : colorOptions[0].label}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {colorOptions.map((opt) => {
+                                  const isColorSel = isSelected && (selectedGelang2Color || colorOptions[0].label) === opt.label;
+                                  return (
+                                    <button
+                                      key={opt.id}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedGelang2(item);
+                                        setSelectedGelang2Color(opt.label);
+                                      }}
+                                      style={{
+                                        flex: 1,
+                                        padding: '4px 6px',
+                                        borderRadius: '999px',
+                                        border: isColorSel ? '2px solid #4F46E5' : '1px solid #D1D5DB',
+                                        background: isColorSel ? '#EEF2FF' : '#FFFFFF',
+                                        color: isColorSel ? '#4F46E5' : '#4B5563',
+                                        fontSize: '0.72rem',
+                                        fontWeight: isColorSel ? 700 : 500,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)' }} />
+                                      <span>{opt.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -899,10 +1042,16 @@ export default function BundlingSelectionModal({
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '14px' }}>
                 {defaultBracelets.map((item) => {
                   const isSelected = selectedGelangB3?.id === item.id;
+                  const colorOptions = getBraceletColorOptions(item);
                   return (
                     <div
                       key={item.id}
-                      onClick={() => setSelectedGelangB3(item)}
+                      onClick={() => {
+                        setSelectedGelangB3(item);
+                        if (colorOptions && !selectedGelangB3Color) {
+                          setSelectedGelangB3Color(colorOptions[0].label);
+                        }
+                      }}
                       style={{
                         background: '#FFFFFF',
                         borderRadius: '16px',
@@ -959,6 +1108,51 @@ export default function BundlingSelectionModal({
                       <div style={{ fontSize: '0.78rem', color: '#6B7280', lineHeight: 1.35 }}>
                         {item.description ? item.description.substring(0, 70) + '...' : 'Gelang manik handmade aesthetic'}
                       </div>
+
+                      {colorOptions && (
+                        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #F3F4F6' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 600 }}>Warna:</span>
+                            <span style={{ fontSize: '0.72rem', color: '#4F46E5', fontWeight: 700 }}>
+                              {isSelected ? (selectedGelangB3Color || colorOptions[0].label) : colorOptions[0].label}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {colorOptions.map((opt) => {
+                              const isColorSel = isSelected && (selectedGelangB3Color || colorOptions[0].label) === opt.label;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedGelangB3(item);
+                                    setSelectedGelangB3Color(opt.label);
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: '4px 6px',
+                                    borderRadius: '999px',
+                                    border: isColorSel ? '2px solid #4F46E5' : '1px solid #D1D5DB',
+                                    background: isColorSel ? '#EEF2FF' : '#FFFFFF',
+                                    color: isColorSel ? '#4F46E5' : '#4B5563',
+                                    fontSize: '0.72rem',
+                                    fontWeight: isColorSel ? 700 : 500,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)' }} />
+                                  <span>{opt.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1021,9 +1215,15 @@ export default function BundlingSelectionModal({
                   <>
                     <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <strong style={{ color: '#4F46E5' }}>Gelang 1:</strong> {selectedGelang1?.name || '(belum dipilih)'}
+                      {selectedGelang1 && getBraceletColorOptions(selectedGelang1) && (
+                        <span style={{ color: '#4F46E5', fontWeight: 600 }}> ({selectedGelang1Color || getBraceletColorOptions(selectedGelang1)[0].label})</span>
+                      )}
                     </div>
                     <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <strong style={{ color: '#4F46E5' }}>Gelang 2:</strong> {selectedGelang2?.name || '(belum dipilih)'}
+                      {selectedGelang2 && getBraceletColorOptions(selectedGelang2) && (
+                        <span style={{ color: '#4F46E5', fontWeight: 600 }}> ({selectedGelang2Color || getBraceletColorOptions(selectedGelang2)[0].label})</span>
+                      )}
                     </div>
                   </>
                 )}
@@ -1035,7 +1235,12 @@ export default function BundlingSelectionModal({
                 )}
                 {bundleType === 3 && (
                   <>
-                    <div><strong>Gelang:</strong> {selectedGelangB3?.name || '(belum dipilih)'}</div>
+                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ color: '#4F46E5' }}>Gelang:</strong> {selectedGelangB3?.name || '(belum dipilih)'}
+                      {selectedGelangB3 && getBraceletColorOptions(selectedGelangB3) && (
+                        <span style={{ color: '#4F46E5', fontWeight: 600 }}> ({selectedGelangB3Color || getBraceletColorOptions(selectedGelangB3)[0].label})</span>
+                      )}
+                    </div>
                     <div><strong>Bagcharm:</strong> <em>Dialihkan ke Studio</em></div>
                   </>
                 )}

@@ -372,6 +372,11 @@ export default function CartModal({
                       )}
 
                       <div className="cart-item-details" style={{ fontSize: '0.8rem', marginTop: '2px', lineHeight: 1.45 }}>
+                        {(item.variant || item.color || item.customization?.color) && (
+                          <div>
+                            Varian Warna: <strong style={{ color: '#4F46E5' }}>{item.variant || item.color || item.customization?.color}</strong>
+                          </div>
+                        )}
                         {item.frameName && (
                           <div>
                             Template: <strong style={{ color: 'var(--accent-cyan)' }}>{item.frameName}</strong>

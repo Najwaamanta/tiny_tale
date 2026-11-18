@@ -291,6 +291,11 @@ class Store {
       if (choiceA2 !== choiceB2) return false;
     }
 
+    // 12. Bracelet / Product Color Variant
+    const variantA = (a.variant || a.color || a.selectedColor || a.customization?.color || '').trim();
+    const variantB = (b.variant || b.color || b.selectedColor || b.customization?.color || '').trim();
+    if (variantA !== variantB) return false;
+
     return true;
   }
 

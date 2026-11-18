@@ -3,6 +3,7 @@ import { ShoppingBag, ChevronRight, Sparkles, Check, Heart } from 'lucide-react'
 import confetti from 'canvas-confetti';
 import { INITIAL_COLLECTIONS as ALL_COLLECTION_ITEMS } from '../data/initialData';
 import BundlingSelectionModal from './BundlingSelectionModal';
+import { getBraceletColorOptions } from '../utils/productColors';
 
 export { ALL_COLLECTION_ITEMS };
 
@@ -20,6 +21,7 @@ export default function CollectionPage({
   const [activeThumbIndex, setActiveThumbIndex] = useState(0);
   const [addedToast, setAddedToast] = useState(false);
   const [bundlingModalItem, setBundlingModalItem] = useState(null);
+  const [selectedColors, setSelectedColors] = useState({});
 
   useEffect(() => {
     if (initialCategory && initialCategory !== 'all') {
@@ -76,13 +78,19 @@ export default function CollectionPage({
       return;
     }
     if (onAddToCart) {
+      const activeColorOpt = getBraceletColorOptions(activeItem);
+      const chosenColor = activeColorOpt ? (selectedColors[activeItem.id] || activeColorOpt[0].label) : null;
+
       onAddToCart({
         productType: activeItem.type,
-        title: activeItem.name,
+        title: chosenColor ? `${activeItem.name} (${chosenColor})` : activeItem.name,
         unitPrice: activeItem.price,
         quantity: 1,
         subtotal: activeItem.price,
-        image: activeItem.image
+        image: activeItem.image,
+        variant: chosenColor || undefined,
+        color: chosenColor || undefined,
+        customization: chosenColor ? { color: chosenColor } : null
       });
       confetti({
         particleCount: 45,
@@ -206,6 +214,53 @@ export default function CollectionPage({
                 </li>
               </ul>
             </div>
+
+            {/* Bracelet Color Variant Selector in Showcase */}
+            {(() => {
+              const showcaseColorOpt = getBraceletColorOptions(activeItem);
+              if (!showcaseColorOpt) return null;
+              const currentChosenColor = selectedColors[activeItem.id] || showcaseColorOpt[0].label;
+              return (
+                <div style={{ margin: '14px 0 10px', background: '#FAF9F6', padding: '12px 14px', borderRadius: '14px', border: '1px solid #EBE8E1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#374151' }}>Pilihan Warna:</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4F46E5' }}>{currentChosenColor}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {showcaseColorOpt.map((opt) => {
+                      const isSel = currentChosenColor === opt.label;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setSelectedColors((prev) => ({ ...prev, [activeItem.id]: opt.label }))}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '999px',
+                            border: isSel ? '2px solid #4F46E5' : '1px solid #D1D5DB',
+                            background: isSel ? '#EEF2FF' : '#FFFFFF',
+                            color: isSel ? '#4F46E5' : '#4B5563',
+                            fontSize: '0.84rem',
+                            fontWeight: isSel ? 800 : 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            cursor: 'pointer',
+                            boxShadow: isSel ? '0 2px 8px rgba(79, 70, 229, 0.15)' : 'none',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)' }} />
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Main Action Button */}
             <div className="tt-showcase-action">
@@ -377,6 +432,63 @@ export default function CollectionPage({
                     </p>
 
                     <div className="col-actions">
+                      {/* Color Variant Option Selector */}
+                      {(() => {
+                        const colorOptions = getBraceletColorOptions(item);
+                        if (!colorOptions) return null;
+                        const currentColor = selectedColors[item.id] || colorOptions[0].label;
+                        return (
+                          <div style={{ marginBottom: '10px', width: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600 }}>Pilihan Warna:</span>
+                              <span style={{ fontSize: '0.74rem', color: '#4F46E5', fontWeight: 700 }}>{currentColor}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {colorOptions.map((opt) => {
+                                const isSel = currentColor === opt.label;
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedColors((prev) => ({ ...prev, [item.id]: opt.label }));
+                                    }}
+                                    style={{
+                                      flex: 1,
+                                      padding: '5px 8px',
+                                      borderRadius: '999px',
+                                      border: isSel ? '2px solid #4F46E5' : '1px solid #E5E7EB',
+                                      background: isSel ? '#EEF2FF' : '#FFFFFF',
+                                      color: isSel ? '#4F46E5' : '#374151',
+                                      fontSize: '0.75rem',
+                                      fontWeight: isSel ? 700 : 500,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: '5px',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        background: opt.hex,
+                                        border: '1px solid rgba(0,0,0,0.15)'
+                                      }}
+                                    />
+                                    <span>{opt.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {isBundle2(item) ? (
                         <button
                           type="button"
@@ -411,13 +523,18 @@ export default function CollectionPage({
                             style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem', background: '#21201D', color: '#ffffff' }}
                             onClick={() => {
                               if (onAddToCart) {
+                                const colorOpt = getBraceletColorOptions(item);
+                                const chosenColor = colorOpt ? (selectedColors[item.id] || colorOpt[0].label) : null;
                                 onAddToCart({
                                   productType: item.type,
-                                  title: item.name,
+                                  title: chosenColor ? `${item.name} (${chosenColor})` : item.name,
                                   unitPrice: item.price,
                                   quantity: 1,
                                   subtotal: item.price,
-                                  image: item.image
+                                  image: item.image,
+                                  variant: chosenColor || undefined,
+                                  color: chosenColor || undefined,
+                                  customization: chosenColor ? { color: chosenColor } : null
                                 });
                                 confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
                                 setAddedToast(true);
@@ -434,13 +551,18 @@ export default function CollectionPage({
                           className="col-order-pill-btn"
                           onClick={() => {
                             if (onAddToCart) {
+                              const colorOpt = getBraceletColorOptions(item);
+                              const chosenColor = colorOpt ? (selectedColors[item.id] || colorOpt[0].label) : null;
                               onAddToCart({
                                 productType: item.type,
-                                title: item.name,
+                                title: chosenColor ? `${item.name} (${chosenColor})` : item.name,
                                 unitPrice: item.price,
                                 quantity: 1,
                                 subtotal: item.price,
-                                image: item.image
+                                image: item.image,
+                                variant: chosenColor || undefined,
+                                color: chosenColor || undefined,
+                                customization: chosenColor ? { color: chosenColor } : null
                               });
                               confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
                               setAddedToast(true);
@@ -498,6 +620,63 @@ export default function CollectionPage({
                     </p>
 
                     <div className="col-actions">
+                      {/* Color Variant Option Selector */}
+                      {(() => {
+                        const colorOptions = getBraceletColorOptions(rec);
+                        if (!colorOptions) return null;
+                        const currentColor = selectedColors[rec.id] || colorOptions[0].label;
+                        return (
+                          <div style={{ marginBottom: '10px', width: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600 }}>Pilihan Warna:</span>
+                              <span style={{ fontSize: '0.74rem', color: '#4F46E5', fontWeight: 700 }}>{currentColor}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {colorOptions.map((opt) => {
+                                const isSel = currentColor === opt.label;
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedColors((prev) => ({ ...prev, [rec.id]: opt.label }));
+                                    }}
+                                    style={{
+                                      flex: 1,
+                                      padding: '5px 8px',
+                                      borderRadius: '999px',
+                                      border: isSel ? '2px solid #4F46E5' : '1px solid #E5E7EB',
+                                      background: isSel ? '#EEF2FF' : '#FFFFFF',
+                                      color: isSel ? '#4F46E5' : '#374151',
+                                      fontSize: '0.75rem',
+                                      fontWeight: isSel ? 700 : 500,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: '5px',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        background: opt.hex,
+                                        border: '1px solid rgba(0,0,0,0.15)'
+                                      }}
+                                    />
+                                    <span>{opt.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {isBundle2(rec) ? (
                         <button
                           type="button"
@@ -532,13 +711,18 @@ export default function CollectionPage({
                             style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem', background: '#21201D', color: '#ffffff' }}
                             onClick={() => {
                               if (onAddToCart) {
+                                const colorOpt = getBraceletColorOptions(rec);
+                                const chosenColor = colorOpt ? (selectedColors[rec.id] || colorOpt[0].label) : null;
                                 onAddToCart({
                                   productType: rec.type,
-                                  title: rec.name,
+                                  title: chosenColor ? `${rec.name} (${chosenColor})` : rec.name,
                                   unitPrice: rec.price,
                                   quantity: 1,
                                   subtotal: rec.price,
-                                  image: rec.image
+                                  image: rec.image,
+                                  variant: chosenColor || undefined,
+                                  color: chosenColor || undefined,
+                                  customization: chosenColor ? { color: chosenColor } : null
                                 });
                                 confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
                                 setAddedToast(true);
@@ -555,13 +739,18 @@ export default function CollectionPage({
                           className="col-order-pill-btn"
                           onClick={() => {
                             if (onAddToCart) {
+                              const colorOpt = getBraceletColorOptions(rec);
+                              const chosenColor = colorOpt ? (selectedColors[rec.id] || colorOpt[0].label) : null;
                               onAddToCart({
                                 productType: rec.type,
-                                title: rec.name,
+                                title: chosenColor ? `${rec.name} (${chosenColor})` : rec.name,
                                 unitPrice: rec.price,
                                 quantity: 1,
                                 subtotal: rec.price,
-                                image: rec.image
+                                image: rec.image,
+                                variant: chosenColor || undefined,
+                                color: chosenColor || undefined,
+                                customization: chosenColor ? { color: chosenColor } : null
                               });
                               confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
                               setAddedToast(true);
