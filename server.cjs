@@ -506,12 +506,16 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-app.listen(PORT, async () => {
-  console.log(`[Tiny Tale Backend] API server running on http://localhost:${PORT}`);
-  try {
-    const [rows] = await pool.query('SELECT 1 + 1 AS solution');
-    console.log(`[Tiny Tale Backend] Berhasil terhubung ke database MySQL "${process.env.DB_NAME || 'tiny_tale'}" di ${process.env.DB_HOST || '127.0.0.1'}:${process.env.DB_PORT || 3306}`);
-  } catch (err) {
-    console.error(`[Tiny Tale Backend] Gagal terhubung ke database:`, err.message);
-  }
-});
+if (require.main === module) {
+  app.listen(PORT, async () => {
+    console.log(`[Tiny Tale Backend] API server running on http://localhost:${PORT}`);
+    try {
+      const [rows] = await pool.query('SELECT 1 + 1 AS solution');
+      console.log(`[Tiny Tale Backend] Berhasil terhubung ke database MySQL "${process.env.DB_NAME || 'tiny_tale'}" di ${process.env.DB_HOST || '127.0.0.1'}:${process.env.DB_PORT || 3306}`);
+    } catch (err) {
+      console.error(`[Tiny Tale Backend] Gagal terhubung ke database:`, err.message);
+    }
+  });
+}
+
+module.exports = app;
