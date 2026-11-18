@@ -226,41 +226,6 @@ export default function CheckoutModal({
                 </p>
               </div>
 
-              {/* Order ID Badge Box */}
-              <div
-                style={{
-                  background: 'var(--bg-primary)',
-                  border: '1px dashed var(--border-medium)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '16px 20px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '20px'
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-                    KODE / NOMOR IDENTITAS PESANAN:
-                  </div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)' }}>
-                    {createdOrder.id}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    WhatsApp: <strong>{createdOrder.customer.whatsapp}</strong>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={handleCopyOrderId}
-                >
-                  <Copy size={14} />
-                  <span>{copiedOrderId ? 'Tersalin!' : 'Salin Kode'}</span>
-                </button>
-              </div>
-
               {/* Primary Action Button: Selesai & Kembali ke Beranda */}
               <button
                 type="button"
