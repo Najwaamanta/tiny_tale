@@ -46,6 +46,7 @@ export default function App() {
 
   // Active Bundling Customization Session (For Bundle 3: 1 Gelang & 1 Bagcharm)
   const [bundlingSession, setBundlingSession] = useState(null);
+  const [studioDraft, setStudioDraft] = useState(null);
 
   // Collection page view state
   const [collectionCategory, setCollectionCategory] = useState('all');
@@ -108,12 +109,26 @@ export default function App() {
       if (bundlingSession.bundle2ActiveBagcharm === 2) {
         setBundlingSession((prev) => ({
           ...prev,
-          selectedFrame2: template
+          selectedFrame2: template,
+          savedBagcharm2: prev?.savedBagcharm2 ? {
+            ...prev.savedBagcharm2,
+            frameId: template.frameId || template.id,
+            frameName: template.name,
+            frameImage: template.imageSrc,
+            layoutId: template.layoutId || 'layout-a'
+          } : null
         }));
       } else {
         setBundlingSession((prev) => ({
           ...prev,
-          selectedFrame1: template
+          selectedFrame1: template,
+          savedBagcharm1: prev?.savedBagcharm1 ? {
+            ...prev.savedBagcharm1,
+            frameId: template.frameId || template.id,
+            frameName: template.name,
+            frameImage: template.imageSrc,
+            layoutId: template.layoutId || 'layout-a'
+          } : null
         }));
       }
     }
@@ -131,7 +146,25 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBackToFramesFromStudio = () => {
+  const handleBackToFramesFromStudio = (draft) => {
+    if (draft) {
+      setStudioDraft(draft);
+      if (bundlingSession?.bundleType === 2) {
+        if (draft.bundle2Step === 1 && draft.b1Data) {
+          setBundlingSession((prev) => ({
+            ...prev,
+            bundle2ActiveBagcharm: 1,
+            savedBagcharm1: draft.b1Data
+          }));
+        } else if (draft.bundle2Step === 2 && draft.b2Data) {
+          setBundlingSession((prev) => ({
+            ...prev,
+            bundle2ActiveBagcharm: 2,
+            savedBagcharm2: draft.b2Data
+          }));
+        }
+      }
+    }
     setActiveView('frames');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -457,6 +490,7 @@ export default function App() {
               bundlingSession={bundlingSession}
               onClearBundlingSession={() => setBundlingSession(null)}
               onGoToFrameForBagcharm2={handleGoToFrameForBagcharm2}
+              studioDraft={studioDraft}
             />
           </div>
         )}

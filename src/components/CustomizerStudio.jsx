@@ -17,18 +17,23 @@ export default function CustomizerStudio({
   currentTemplate = null,
   bundlingSession = null,
   onClearBundlingSession = null,
-  onGoToFrameForBagcharm2 = null
+  onGoToFrameForBagcharm2 = null,
+  studioDraft = null
 }) {
   const currentProduct = products.find((p) => p.type === 'bag_charm') || products[0];
 
   // Bundling Session Multi-step State (For Couple / Bestie 2: 2 Bagcharms)
-  const [bundle2Step, setBundle2Step] = useState(() => bundlingSession?.bundle2ActiveBagcharm || 1);
-  const [bagcharm1Data, setBagcharm1Data] = useState(() => bundlingSession?.savedBagcharm1 || null);
-  const [bagcharm2Data, setBagcharm2Data] = useState(() => bundlingSession?.savedBagcharm2 || null);
+  const initialBundle2Step = bundlingSession?.bundle2ActiveBagcharm || studioDraft?.bundle2Step || 1;
+  const initialBagcharm1 = bundlingSession?.savedBagcharm1 || studioDraft?.b1Data || null;
+  const initialBagcharm2 = bundlingSession?.savedBagcharm2 || studioDraft?.b2Data || null;
+
+  const [bundle2Step, setBundle2Step] = useState(initialBundle2Step);
+  const [bagcharm1Data, setBagcharm1Data] = useState(initialBagcharm1);
+  const [bagcharm2Data, setBagcharm2Data] = useState(initialBagcharm2);
 
   // Frame Modal Selector State
   const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
-  const [isFrameConfirmed, setIsFrameConfirmed] = useState(false);
+  const [isFrameConfirmed, setIsFrameConfirmed] = useState(true);
   const [frameSearch, setFrameSearch] = useState('');
   const [framePoseFilter, setFramePoseFilter] = useState('all');
 
@@ -44,6 +49,73 @@ export default function CustomizerStudio({
       setBundle2Step(bundlingSession.bundle2ActiveBagcharm);
     }
   }, [bundlingSession]);
+
+  // Navigate to Frame Selection page (Image 2) preserving all customizations
+  const handleGoToFrameSelectionPage = () => {
+    const activeCustomization = {
+      framePhotos: [...framePhotos],
+      selectedColor,
+      accentColor,
+      customLetters,
+      paracordModel,
+      paracordLength,
+      selectedCharmIds: [...selectedCharmIds]
+    };
+
+    let b1 = bagcharm1Data;
+    let b2 = bagcharm2Data;
+
+    if (bundlingSession && bundlingSession.bundleType === 2) {
+      if (bundle2Step === 1) {
+        b1 = {
+          frameId: selectedFrameId,
+          layoutId: selectedLayoutId,
+          frameName: activeFrame?.name || (currentTemplate?.name || 'Bagcharm 1'),
+          frameImage: activeFrame?.image || currentTemplate?.imageSrc || '/frames/1.png',
+          framePhotos: [...framePhotos],
+          selectedColor,
+          accentColor,
+          customLetters,
+          paracordModel,
+          paracordLength
+        };
+        setBagcharm1Data(b1);
+        if (bundlingSession) {
+          bundlingSession.savedBagcharm1 = b1;
+          bundlingSession.bundle2ActiveBagcharm = 1;
+        }
+      } else if (bundle2Step === 2) {
+        b2 = {
+          frameId: selectedFrameId,
+          layoutId: selectedLayoutId,
+          frameName: activeFrame?.name || (currentTemplate?.name || 'Bagcharm 2'),
+          frameImage: activeFrame?.image || currentTemplate?.imageSrc || '/frames/2.png',
+          framePhotos: [...framePhotos],
+          selectedColor,
+          accentColor,
+          customLetters,
+          paracordModel,
+          paracordLength
+        };
+        setBagcharm2Data(b2);
+        if (bundlingSession) {
+          bundlingSession.savedBagcharm2 = b2;
+          bundlingSession.bundle2ActiveBagcharm = 2;
+        }
+      }
+    }
+
+    const draft = {
+      ...activeCustomization,
+      bundle2Step,
+      b1Data: b1,
+      b2Data: b2
+    };
+
+    if (onBackToFrames) {
+      onBackToFrames(draft);
+    }
+  };
 
   // Handler to select frame inside Customizer Studio without unmounting
   const handleSelectFrameInStudio = (template) => {
@@ -86,24 +158,35 @@ export default function CustomizerStudio({
     }
   };
 
+  // Helper to get active step's initial data
+  const activeInitialData = bundlingSession?.bundleType === 2
+    ? (initialBundle2Step === 2 ? initialBagcharm2 : initialBagcharm1)
+    : studioDraft;
+
   // Layout & Frame selection states (Matching Image 2)
-  const [selectedLayoutId, setSelectedLayoutId] = useState(currentTemplate?.layoutId || 'layout-a');
-  const [selectedFrameId, setSelectedFrameId] = useState(
-    currentTemplate ? (currentTemplate.type === 'custom_frame' ? currentTemplate.frameId : null) : 'frame-borcelle'
+  const [selectedLayoutId, setSelectedLayoutId] = useState(
+    currentTemplate?.layoutId || activeInitialData?.layoutId || 'layout-a'
   );
-  const [framePhotos, setFramePhotos] = useState([null, null, null, null, null, null]);
+  const [selectedFrameId, setSelectedFrameId] = useState(
+    currentTemplate
+      ? (currentTemplate.type === 'custom_frame' ? currentTemplate.frameId : null)
+      : (activeInitialData?.frameId || 'frame-borcelle')
+  );
+  const [framePhotos, setFramePhotos] = useState(
+    activeInitialData?.framePhotos || [null, null, null, null, null, null]
+  );
   const [zoomMode, setZoomMode] = useState(false);
 
   // Bag Charm Hardware & Charm customizations
   const [selectedHwId, setSelectedHwId] = useState('');
-  const [selectedColor, setSelectedColor] = useState('#18181B');
-  const [paracordModel, setParacordModel] = useState('twisted-loop-tassel');
-  const [paracordLength, setParacordLength] = useState('long');
-  const [accentColor, setAccentColor] = useState('hitam');
+  const [selectedColor, setSelectedColor] = useState(activeInitialData?.selectedColor || '#18181B');
+  const [paracordModel, setParacordModel] = useState(activeInitialData?.paracordModel || 'twisted-loop-tassel');
+  const [paracordLength, setParacordLength] = useState(activeInitialData?.paracordLength || 'long');
+  const [accentColor, setAccentColor] = useState(activeInitialData?.accentColor || 'hitam');
   const starColor = accentColor;
   const bellColor = accentColor;
-  const [customLetters, setCustomLetters] = useState('');
-  const [selectedCharmIds, setSelectedCharmIds] = useState([]);
+  const [customLetters, setCustomLetters] = useState(activeInitialData?.customLetters || '');
+  const [selectedCharmIds, setSelectedCharmIds] = useState(activeInitialData?.selectedCharmIds || []);
   const [charmCategoryFilter, setCharmCategoryFilter] = useState('all');
   const [addedToast, setAddedToast] = useState(false);
 
@@ -349,10 +432,11 @@ export default function CustomizerStudio({
       bundlingSession.savedBagcharm1 = currentB1;
       bundlingSession.bundle2ActiveBagcharm = 2;
     }
-    handleSwitchBundle2Step(2);
-    // Open frame modal in-studio so user can pick Bagcharm 2 frame seamlessly without leaving
-    setIsFrameModalOpen(true);
-    setIsFrameConfirmed(false);
+    if (onGoToFrameForBagcharm2) {
+      onGoToFrameForBagcharm2(currentB1);
+    } else {
+      handleSwitchBundle2Step(2);
+    }
   };
 
   // Layout change handler
@@ -589,7 +673,7 @@ export default function CustomizerStudio({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => setIsFrameModalOpen(true)}
+              onClick={handleGoToFrameSelectionPage}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -614,7 +698,7 @@ export default function CustomizerStudio({
             <button
               type="button"
               className="btn btn-outline btn-sm"
-              onClick={() => setIsFrameModalOpen(true)}
+              onClick={handleGoToFrameSelectionPage}
               style={{
                 fontSize: '0.82rem',
                 borderRadius: 'var(--radius-full)',
@@ -872,7 +956,7 @@ export default function CustomizerStudio({
                 onSlotClick={(slotIdx) => handleTriggerUpload(slotIdx)}
                 zoomMode={zoomMode}
                 onToggleZoom={(val) => setZoomMode(val)}
-                onChangeFrame={() => setIsFrameModalOpen(true)}
+                onChangeFrame={handleGoToFrameSelectionPage}
                 isFrameConfirmed={isFrameConfirmed}
               />
 

@@ -139,14 +139,12 @@ export default function VisualCanvas({
             zIndex: 10,
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: '8px',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
+            pointerEvents: 'none'
           }}
         >
-          <div className="canvas-view-toggle" style={{ flexShrink: 0 }}>
+          <div className="canvas-view-toggle" style={{ flexShrink: 0, pointerEvents: 'auto' }}>
             <button
               type="button"
               className={!zoomMode ? 'active' : ''}
@@ -168,13 +166,14 @@ export default function VisualCanvas({
               type="button"
               onClick={onChangeFrame}
               style={{
+                pointerEvents: 'auto',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
                 background: isFrameConfirmed ? '#10B981' : '#2563EB',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '999px',
-                padding: '5px 12px',
+                padding: '6px 14px',
                 fontSize: '0.74rem',
                 fontWeight: 700,
                 display: 'inline-flex',
