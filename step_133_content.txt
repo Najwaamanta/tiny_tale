@@ -1,0 +1,49 @@
+Created At: 2026-11-15T11:18:35+07:00
+Completed At: 2026-11-15T11:18:56+07:00
+Created At: 2026-11-15T11:18:35+07:00
+Completed At: 2026-11-15T11:18:56+07:00
+Command exited with code 0.
+
+Command output:
+
+src\components\FrameLayoutSelector.jsx:9:      id: 'frame-1',
+src\components\FrameLayoutSelector.jsx:11:      frameId: 'frame-1',
+src\components\FrameLayoutSelector.jsx:22:      id: 'frame-borcelle',
+src\components\FrameLayoutSelector.jsx:24:      frameId: 'frame-borcelle',
+src\components\FrameLayoutSelector.jsx:35:      id: 'frame-3',
+src\components\FrameLayoutSelector.jsx:37:      frameId: 'frame-3',
+src\components\FrameLayoutSelector.jsx:48:      id: 'frame-4',
+src\components\FrameLayoutSelector.jsx:50:      frameId: 'frame-4',
+src\components\FrameLayoutSelector.jsx:61:      id: 'frame-the-moment',
+src\components\FrameLayoutSelector.jsx:63:      frameId: 'frame-the-moment',
+src\components\FrameLayoutSelector.jsx:74:      id: 'frame-6',
+src\components\FrameLayoutSelector.jsx:76:      frameId: 'frame-6',
+src\components\FrameLayoutSelector.jsx:87:      id: 'frame-7',
+src\components\FrameLayoutSelector.jsx:89:      frameId: 'frame-7',
+src\components\FrameLayoutSelector.jsx:100:      id: 'frame-8',
+src\components\FrameLayoutSelector.jsx:102:      frameId: 'frame-8',
+src\components\FrameLayoutSelector.jsx:113:      id: 'frame-9',
+src\components\FrameLayoutSelector.jsx:115:      frameId: 'frame-9',
+src\components\FrameLayoutSelector.jsx:126:      id: 'frame-10',
+src\components\FrameLayoutSelector.jsx:128:      frameId: 'frame-10',
+src\components\FrameLayoutSelector.jsx:139:      id: 'frame-11',
+src\components\FrameLayoutSelector.jsx:141:      frameId: 'frame-11',
+src\components\FrameLayoutSelector.jsx:152:      id: 'frame-12',
+src\components\FrameLayoutSelector.jsx:154:      frameId: 'frame-12',
+src\components\FrameLayoutSelector.jsx:165:      id: 'frame-13',
+src\components\FrameLayoutSelector.jsx:167:      frameId: 'frame-13',
+src\components\FrameLayoutSelector.jsx:178:      id: 'frame-14',
+src\components\FrameLayoutSelector.jsx:180:      frameId: 'frame-14',
+src\components\FrameLayoutSelector.jsx:191:      id: 'frame-15',
+src\components\FrameLayoutSelector.jsx:193:      frameId: 'frame-15',
+src\components\FrameLayoutSelector.jsx:204:      id: 'frame-16',
+src\components\FrameLayoutSelector.jsx:206:      frameId: 'frame-16',
+src\components\FrameLayoutSelector.jsx:217:      id: 'frame-17',
+src\components\FrameLayoutSelector.jsx:219:      frameId: 'frame-17',
+src\components\FrameLayoutSelector.jsx:230:      id: 'frame-18',
+src\components\FrameLayoutSelector.jsx:232:      frameId: 'frame-18',
+src\components\FrameLayoutSelector.jsx:243:      id: 'frame-19',
+src\components\FrameLayoutSelector.jsx:245:      frameId: 'frame-19',
+
+
+

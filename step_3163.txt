@@ -1,0 +1,56 @@
+Created At: 2026-11-17T09:48:52+07:00
+Completed At: 2026-11-17T09:48:52+07:00
+Created At: 2026-11-17T09:48:52+07:00
+Completed At: 2026-11-17T09:48:52+07:00
+Showing lines 415-465 of 599
+415:           <div className="sparkle-decoration" style={{ bottom: '28px', right: '64px', fontSize: '1.8rem' }}>✦</div>
+416: 
+417:           <div className="choose-layout-header">
+418:             <h2 className="choose-layout-title">choose your layout</h2>
+419:             <p className="choose-layout-note">NOTE: YOU HAVE 3 SECONDS FOR EACH SHOT</p>
+420:             <p style={{ color: '#4B5563', fontSize: '0.88rem', marginTop: '6px' }}>
+421:               Klik salah satu frame di bawah untuk mulai mengunggah foto dan merancang Bag Charm di studio kustomisasi.
+422:             </p>
+423:           </div>
+424: 
+425:           {/* Frame & Layout Cards Gallery */}
+426:           <div className="photostrip-gallery" aria-label="Pilihan frame foto untuk bag charm">
+427:             {allTemplates.map((template) => {
+428:               const isSelected = selectedTemplateId === template.id;
+429: 
+430:               return (
+431:                 <div
+432:                   key={template.id}
+433:                   className={`photostrip-picker-card ${isSelected ? 'active' : ''}`}
+434:                   onClick={() => onSelectTemplate(template)}
+435:                   role="button"
+436:                   tabIndex={0}
+437:                   onKeyDown={(e) => e.key === 'Enter' && onSelectTemplate(template)}
+438:                   style={{
+439:                     cursor: 'pointer',
+440:                     display: 'flex',
+441:                     flexDirection: 'column',
+442:                     justifyContent: 'space-between',
+443:                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+444:                   }}
+445:                 >
+446:                   {/* Paper Strip Visual */}
+447:                   <div
+448:                     className="photostrip-paper"
+449:                     style={{
+450:                       position: 'relative',
+451:                       background: template.isPublicFrame ? '#FAF8F5' : '#FFFFFF',
+452:                       borderRadius: '8px',
+453:                       padding: '10px 8px 14px 8px',
+454:                       boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+455:                       display: 'flex',
+456:                       flexDirection: 'column',
+457:                       alignItems: 'center',
+458:                       minHeight: '290px'
+459:                     }}
+460:                   >
+461:                     {isSelected && (
+462:                       <span className="photostrip-active-badge">✓ Terpilih</span>
+463:                     )}
+464: 
+465:                     {template.imageSrc ? (

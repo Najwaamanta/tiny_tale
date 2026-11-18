@@ -1,0 +1,101 @@
+Created At: 2026-11-15T16:30:04+07:00
+Completed At: 2026-11-15T16:30:51+07:00
+Created At: 2026-11-15T16:30:04+07:00
+Completed At: 2026-11-15T16:30:51+07:00
+Command exited with code 0.
+
+Command output:
+
+  src\components\FrameLayoutSelector.jsx:77:      frameId: 'frame-6',
+  src\components\FrameLayoutSelector.jsx:78:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:79:      name: '06: Brown Polka Dot Fabric',
+  src\components\FrameLayoutSelector.jsx:80:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:81:      badge: 'Linen Dots',
+  src\components\FrameLayoutSelector.jsx:83:      imageSrc: '/frames/6.png',
+  src\components\FrameLayoutSelector.jsx:84:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:85:      description: 'Tekstur kain kanvas cokelat bertabur motif polkadot 
+putih dengan pinggiran tiket dan teks MEMORIES.'
+  src\components\FrameLayoutSelector.jsx:86:    },
+  src\components\FrameLayoutSelector.jsx:87:    {
+  src\components\FrameLayoutSelector.jsx:90:      frameId: 'frame-7',
+  src\components\FrameLayoutSelector.jsx:91:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:92:      name: '07: Pink Dainty Polka Dot',
+  src\components\FrameLayoutSelector.jsx:93:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:94:      badge: 'Pastel Dots',
+  src\components\FrameLayoutSelector.jsx:96:      imageSrc: '/frames/7.png',
+  src\components\FrameLayoutSelector.jsx:97:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:98:      description: 'Kain kanvas blush pink lembut dengan motif polkadot 
+manis dan logo Tiny Tale.'
+  src\components\FrameLayoutSelector.jsx:99:    },
+  src\components\FrameLayoutSelector.jsx:100:    {
+  src\components\FrameLayoutSelector.jsx:116:      frameId: 'frame-9',
+  src\components\FrameLayoutSelector.jsx:117:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:118:      name: '09: Monochrome White Polka Dot',
+  src\components\FrameLayoutSelector.jsx:119:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+> src\components\FrameLayoutSelector.jsx:120:      badge: 'Mono Polka',
+  src\components\FrameLayoutSelector.jsx:121:      badgeClass: 'badge-cyan',
+  src\components\FrameLayoutSelector.jsx:122:      imageSrc: '/frames/9.png',
+  src\components\FrameLayoutSelector.jsx:123:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:124:      description: 'Frame putih bersih berhias polkadot hitam kontras 
+dengan tipografi Tiny Tale minimalis.'
+  src\components\FrameLayoutSelector.jsx:125:    },
+  src\components\FrameLayoutSelector.jsx:126:    {
+  src\components\FrameLayoutSelector.jsx:129:      frameId: 'frame-10',
+  src\components\FrameLayoutSelector.jsx:130:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:131:      name: '10: Black Polka Dot Classic',
+  src\components\FrameLayoutSelector.jsx:132:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:133:      badge: 'Retro Dots',
+  src\components\FrameLayoutSelector.jsx:135:      imageSrc: '/frames/10.png',
+  src\components\FrameLayoutSelector.jsx:136:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:137:      description: 'Kain katun hitam pekat dengan polkadot putih klasik 
+yang timeless dan estetik.'
+  src\components\FrameLayoutSelector.jsx:138:    },
+  src\components\FrameLayoutSelector.jsx:139:    {
+  src\components\FrameLayoutSelector.jsx:77:      frameId: 'frame-6',
+  src\components\FrameLayoutSelector.jsx:78:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:79:      name: '06: Brown Polka Dot Fabric',
+  src\components\FrameLayoutSelector.jsx:80:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:81:      badge: 'Linen Dots',
+  src\components\FrameLayoutSelector.jsx:83:      imageSrc: '/frames/6.png',
+  src\components\FrameLayoutSelector.jsx:84:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:85:      description: 'Tekstur kain kanvas cokelat bertabur motif polkadot 
+putih dengan pinggiran tiket dan teks MEMORIES.'
+  src\components\FrameLayoutSelector.jsx:86:    },
+  src\components\FrameLayoutSelector.jsx:87:    {
+  src\components\FrameLayoutSelector.jsx:90:      frameId: 'frame-7',
+  src\components\FrameLayoutSelector.jsx:91:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:92:      name: '07: Pink Dainty Polka Dot',
+  src\components\FrameLayoutSelector.jsx:93:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:94:      badge: 'Pastel Dots',
+  src\components\FrameLayoutSelector.jsx:96:      imageSrc: '/frames/7.png',
+  src\components\FrameLayoutSelector.jsx:97:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:98:      description: 'Kain kanvas blush pink lembut dengan motif polkadot 
+manis dan logo Tiny Tale.'
+  src\components\FrameLayoutSelector.jsx:99:    },
+  src\components\FrameLayoutSelector.jsx:100:    {
+  src\components\FrameLayoutSelector.jsx:116:      frameId: 'frame-9',
+  src\components\FrameLayoutSelector.jsx:117:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:118:      name: '09: Monochrome White Polka Dot',
+  src\components\FrameLayoutSelector.jsx:119:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+> src\components\FrameLayoutSelector.jsx:120:      badge: 'Mono Polka',
+  src\components\FrameLayoutSelector.jsx:121:      badgeClass: 'badge-cyan',
+  src\components\FrameLayoutSelector.jsx:122:      imageSrc: '/frames/9.png',
+  src\components\FrameLayoutSelector.jsx:123:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:124:      description: 'Frame putih bersih berhias polkadot hitam kontras 
+dengan tipografi Tiny Tale minimalis.'
+  src\components\FrameLayoutSelector.jsx:125:    },
+  src\components\FrameLayoutSelector.jsx:126:    {
+  src\components\FrameLayoutSelector.jsx:129:      frameId: 'frame-10',
+  src\components\FrameLayoutSelector.jsx:130:      layoutId: 'layout-a',
+> src\components\FrameLayoutSelector.jsx:131:      name: '10: Black Polka Dot Classic',
+  src\components\FrameLayoutSelector.jsx:132:      subtitle: 'Size 6 x 2 Strip (3 Pose)',
+  src\components\FrameLayoutSelector.jsx:133:      badge: 'Retro Dots',
+  src\components\FrameLayoutSelector.jsx:135:      imageSrc: '/frames/10.png',
+  src\components\FrameLayoutSelector.jsx:136:      isPublicFrame: true,
+> src\components\FrameLayoutSelector.jsx:137:      description: 'Kain katun hitam pekat dengan polkadot putih klasik 
+yang timeless dan estetik.'
+  src\components\FrameLayoutSelector.jsx:138:    },
+  src\components\FrameLayoutSelector.jsx:139:    {
+
+
+

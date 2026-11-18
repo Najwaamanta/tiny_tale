@@ -1,0 +1,155 @@
+Created At: 2026-11-17T09:45:17+07:00
+Completed At: 2026-11-17T09:45:17+07:00
+Created At: 2026-11-17T09:45:17+07:00
+Completed At: 2026-11-17T09:45:17+07:00
+Showing lines 450-599 of 599
+450:                       position: 'relative',
+451:                       background: template.isPublicFrame ? '#FAF8F5' : '#FFFFFF',
+452:                       borderRadius: '8px',
+453:                       padding: '10px 8px 14px 8px',
+454:                       boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+455:                       display: 'flex',
+456:                       flexDirection: 'column',
+457:                       alignItems: 'center',
+458:                       minHeight: '290px'
+459:                     }}
+460:                   >
+461:                     {isSelected && (
+462:                       <span className="photostrip-active-badge">✓ Terpilih</span>
+463:                     )}
+464: 
+465:                     {template.imageSrc ? (
+466:                       /* Render public frame asset directly */
+467:                       <div
+468:                         style={{
+469:                           width: '100%',
+470:                           height: '240px',
+471:                           display: 'flex',
+472:                           alignItems: 'center',
+473:                           justifyContent: 'center',
+474:                           position: 'relative',
+475:                           overflow: 'hidden',
+476:                           borderRadius: '4px',
+477:                           background: '#E5E7EB'
+478:                         }}
+479:                       >
+480:                         <img
+481:                           src={template.imageSrc}
+482:                           alt={template.name}
+483:                           style={{
+484:                             width: '100%',
+485:                             height: '100%',
+486:                             objectFit: 'cover',
+487:                             display: 'block'
+488:                           }}
+489:                         />
+490:                         <div
+491:                           style={{
+492:                             position: 'absolute',
+493:                             bottom: '8px',
+494:                             background: 'rgba(0,0,0,0.65)',
+495:                             color: '#FFFFFF',
+496:                             fontSize: '0.68rem',
+497:                             padding: '3px 8px',
+498:                             borderRadius: '999px',
+499:                             backdropFilter: 'blur(4px)'
+500:                           }}
+501:                         >
+502:                           Frame Template
+503:                         </div>
+504:                       </div>
+505:                     ) : (
+506:                       /* Render Photostrip Preview Slots */
+507:                       <div className="photostrip-slots-wrap" style={{ width: '100%' }}>
+508:                         {template.isGrid ? (
+509:                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px', position: 'relative' }}>
+510:                             {template.previewPhotos.map((imgUrl, pIdx) => (
+511:                               <div key={pIdx} className="photostrip-thumb-slot" style={{ height: '42px' }}>
+512:                                 <img src={imgUrl} alt={`Pose ${pIdx + 1}`} />
+513:                               </div>
+514:                             ))}
+515:                             {template.hasRibbon && (
+516:                               <div
+517:                                 className="photostrip-ribbon-badge"
+518:                                 style={{
+519:                                   position: 'absolute',
+520:                                   top: '50%',
+521:                                   left: '-4px',
+522:                                   right: '-4px',
+523:                                   transform: 'translateY(-50%)',
+524:                                   zIndex: 3
+525:                                 }}
+526:                               >
+527:                                 {template.ribbonText}
+528:                               </div>
+529:                             )}
+530:                           </div>
+531:                         ) : (
+532:                           <>
+533:                             {template.id === 'layout-b' ? (
+534:                               <>
+535:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+536:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+537:                                 </div>
+538:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+539:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+540:                                 </div>
+541:                                 <div className="photostrip-ribbon-badge">{template.ribbonText}</div>
+542:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+543:                                   <img src={template.previewPhotos[2]} alt="Pose 3" />
+544:                                 </div>
+545:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+546:                                   <img src={template.previewPhotos[3]} alt="Pose 4" />
+547:                                 </div>
+548:                               </>
+549:                             ) : template.id === 'layout-c' ? (
+550:                               <>
+551:                                 <div className="photostrip-thumb-slot" style={{ height: '88px' }}>
+552:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+553:                                 </div>
+554:                                 <div className="photostrip-ribbon-badge">{template.ribbonText}</div>
+555:                                 <div className="photostrip-thumb-slot" style={{ height: '88px' }}>
+556:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+557:                                 </div>
+558:                               </>
+559:                             ) : (
+560:                               <>
+561:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+562:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+563:                                 </div>
+564:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+565:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+566:                                 </div>
+567:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+568:                                   <img src={template.previewPhotos[2]} alt="Pose 3" />
+569:                                 </div>
+570:                               </>
+571:                             )}
+572:                           </>
+573:                         )}
+574:                         <div className="photostrip-footer-text">
+575:                           photobooth <br />
+576:                           <span style={{ fontSize: '0.45rem', color: '#64748B' }}>23.09.2026</span>
+577:                         </div>
+578:                       </div>
+579:                     )}
+580:                   </div>
+581: 
+582:                   {/* Metadata below card */}
+583:                   <div className="photostrip-meta" style={{ marginTop: '12px', textAlign: 'center' }}>
+584:                     <div className="photostrip-label" style={{ fontSize: '1rem', fontWeight: 800 }}>
+585:                       {template.name}
+586:                     </div>
+587:                     <div className="photostrip-subtext" style={{ fontSize: '0.78rem', color: '#6B7280', margin: '4px 0 0' }}>
+588:                       {template.subtitle}
+589:                     </div>
+590:                   </div>
+591:                 </div>
+592:               );
+593:             })}
+594:           </div>
+595:         </div>
+596:       </div>
+597:     </section>
+598:   );
+599: }

@@ -1,0 +1,25 @@
+Created At: 2026-11-17T09:49:17+07:00
+Completed At: 2026-11-17T09:49:17+07:00
+Created At: 2026-11-17T09:49:17+07:00
+Completed At: 2026-11-17T09:49:17+07:00
+Showing lines 1-20 of 599
+1: import React from 'react';
+2: import { Sparkles, ArrowRight, Camera, Check } from 'lucide-react';
+3: import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS } from '../data/initialData';
+4: 
+5: export default function FrameLayoutSelector({ onSelectTemplate, selectedTemplateId }) {
+6:   // Combine custom frames from /frames/ and photobooth layouts
+7:   const allTemplates = [
+8:     {
+9:       id: 'frame-1',
+10:       type: 'custom_frame',
+11:       frameId: 'frame-1',
+12:       layoutId: 'layout-a',
+13:       name: '01: Tiny Tale Stamp Classic',
+14:       subtitle: 'Size 6 x 2 Strip (2 Pose)',
+15:       badge: 'Classic 2-Pose',
+16:       badgeClass: 'badge-cyan',
+17:       imageSrc: '/frames/1.png',
+18:       isPublicFrame: true,
+19:       description: 'Strip photobooth navy dengan tepi bergerigi perangko klasik dan ilustrasi sardine vintage.'
+20:     },

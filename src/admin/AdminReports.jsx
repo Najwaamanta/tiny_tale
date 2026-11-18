@@ -1,16 +1,16 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Award, DollarSign, PackageCheck, RotateCcw } from 'lucide-react';
+import { BarChart3, TrendingUp, Award, DollarSign, PackageCheck, RotateCcw, Download } from 'lucide-react';
+import { exportCompleteBusinessReport } from '../utils/excelExport';
 
 export default function AdminReports({ orders = [], charms = [], onResetDemoData }) {
   // Total Revenue
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const avgOrderValue = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
-  const completedOrders = orders.filter((o) => o.craftingStatus === 'completed' || o.craftingStatus === 'shipped').length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
+  const avgOrderValue = orders.length > 0 ? Math.round(totalRevenue / Math.max(orders.length, 1)) : 0;
+  const completedOrders = orders.filter((o) => (o.craftingStatus || o.orderStatus) === 'completed' || (o.craftingStatus || o.orderStatus) === 'shipped').length;
 
   // Breakdown by product category
   let bagCharmCount = 0;
   let gelangCount = 0;
-  let phoneStrapCount = 0;
 
   // Track charm frequencies
   const charmCountMap = {};
@@ -19,7 +19,6 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
     (o.items || []).forEach((it) => {
       if (it.productType === 'bag_charm') bagCharmCount += it.quantity || 1;
       if (it.productType === 'gelang') gelangCount += it.quantity || 1;
-      if (it.productType === 'gantungan_hp') phoneStrapCount += it.quantity || 1;
 
       (it.charms || []).forEach((ch) => {
         const cName = ch.name || 'Custom Charm';
@@ -28,7 +27,7 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
     });
   });
 
-  const totalCustomItems = bagCharmCount + gelangCount + phoneStrapCount;
+  const totalCustomItems = bagCharmCount + gelangCount;
 
   // Sort top charms
   const topCharms = Object.entries(charmCountMap)
@@ -37,6 +36,47 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
 
   return (
     <div>
+      {/* Top Banner with Excel Download */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+          background: 'var(--bg-secondary)',
+          padding: '16px 20px',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-subtle)',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}
+      >
+        <div>
+          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Ringkasan & Analitik Bisnis Toko</h3>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            Laporan omset penjualan kustom, breakdown kategori, dan ranking minat komponen
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => exportCompleteBusinessReport(orders)}
+          style={{
+            background: '#059669',
+            color: '#FFFFFF',
+            borderColor: '#047857',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontWeight: 700
+          }}
+        >
+          <Download size={15} />
+          <span>Download Laporan Excel Lengkap (.xlsx)</span>
+        </button>
+      </div>
+
       {/* Overview Stat Cards */}
       <div className="admin-metrics-grid">
         <div className="metric-card">
@@ -74,9 +114,9 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
       </div>
 
       {/* Two columns: Category Breakdown & Top Charms */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+      <div className="admin-reports-grid">
         {/* Category Share */}
-        <div className="admin-table-card" style={{ padding: '24px' }}>
+        <div className="admin-table-card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '1.1rem', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <BarChart3 size={18} color="var(--accent-cyan)" />
             <span>Distribusi Penjualan per Lini Produk</span>
@@ -100,16 +140,6 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
               </div>
               <div style={{ width: '100%', height: '8px', background: 'var(--bg-primary)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ width: `${totalCustomItems > 0 ? (gelangCount / totalCustomItems) * 100 : 0}%`, height: '100%', background: 'var(--accent-purple)' }} />
-              </div>
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '6px' }}>
-                <span>Gantungan HP (Phone Strap)</span>
-                <strong>{phoneStrapCount} pcs ({totalCustomItems > 0 ? Math.round((phoneStrapCount / totalCustomItems) * 100) : 0}%)</strong>
-              </div>
-              <div style={{ width: '100%', height: '8px', background: 'var(--bg-primary)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${totalCustomItems > 0 ? (phoneStrapCount / totalCustomItems) * 100 : 0}%`, height: '100%', background: 'var(--accent-lime)' }} />
               </div>
             </div>
           </div>
@@ -168,24 +198,25 @@ export default function AdminReports({ orders = [], charms = [], onResetDemoData
         }}
       >
         <div>
-          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Reset Data Simulasi Toko</div>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Sinkronisasi Realtime Database MySQL</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Kembalikan seluruh daftar pesanan, katalog charm, dan status ke pengaturan demo awal.
+            Tarik dan perbarui data transaksi pesanan serta inventaris langsung dari database MySQL (tiny_tale).
           </div>
         </div>
 
         <button
           type="button"
           className="btn btn-outline btn-sm"
-          onClick={() => {
-            if (confirm('Apakah Anda yakin ingin me-reset seluruh data ke awal?')) {
-              onResetDemoData();
-              alert('Data berhasil di-reset ke status demo awal!');
+          onClick={async () => {
+            if (onResetDemoData) {
+              await onResetDemoData();
+              alert('Database MySQL berhasil disinkronkan secara realtime!');
             }
           }}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
         >
           <RotateCcw size={14} />
-          <span>Reset ke Default Demo</span>
+          <span>Sinkronkan Sekarang</span>
         </button>
       </div>
     </div>

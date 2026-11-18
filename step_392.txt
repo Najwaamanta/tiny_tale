@@ -1,0 +1,208 @@
+Created At: 2026-11-15T12:57:22+07:00
+Completed At: 2026-11-15T12:57:22+07:00
+Created At: 2026-11-15T12:57:22+07:00
+Completed At: 2026-11-15T12:57:22+07:00
+Showing lines 250-452 of 452
+250:       badgeClass: 'badge-purple',
+251:       imageSrc: '/frames/19.png',
+252:       isPublicFrame: true,
+253:       description: 'Sentuhan kemewahan tekstur foil burgundy dengan kilau metalik elegan dan logo timbul emas.'
+254:     }
+255:   ];
+256: 
+257:   return (
+258:     <section className="section-frame-selector" id="pilih-frame" style={{ paddingTop: '40px', paddingBottom: '70px' }}>
+259:       <div className="container">
+260:         {/* ========================================================
+261:             CHOOSE YOUR LAYOUT - PHOTOBOOTH HEADER (MATCHING IMAGE 1)
+262:             ======================================================== */}
+263:         <div className="choose-layout-container" id="choose-layout">
+264:           {/* Sparkle star decorations */}
+265:           <div className="sparkle-decoration" style={{ top: '24px', left: '36px', fontSize: '1.8rem' }}>✦</div>
+266:           <div className="sparkle-decoration" style={{ top: '38px', right: '48px', fontSize: '2.2rem' }}>✧</div>
+267:           <div className="sparkle-decoration" style={{ bottom: '24px', left: '48px', fontSize: '1.4rem' }}>✧</div>
+268:           <div className="sparkle-decoration" style={{ bottom: '28px', right: '64px', fontSize: '1.8rem' }}>✦</div>
+269: 
+270:           <div className="choose-layout-header">
+271:             <h2 className="choose-layout-title">choose your layout</h2>
+272:             <p className="choose-layout-note">NOTE: YOU HAVE 3 SECONDS FOR EACH SHOT</p>
+273:             <p style={{ color: '#4B5563', fontSize: '0.88rem', marginTop: '6px' }}>
+274:               Klik salah satu frame di bawah untuk mulai mengunggah foto dan merancang Bag Charm di studio kustomisasi.
+275:             </p>
+276:           </div>
+277: 
+278:           {/* Frame & Layout Cards Gallery */}
+279:           <div className="photostrip-gallery" aria-label="Pilihan frame foto untuk bag charm">
+280:             {allTemplates.map((template) => {
+281:               const isSelected = selectedTemplateId === template.id;
+282: 
+283:               return (
+284:                 <div
+285:                   key={template.id}
+286:                   className={`photostrip-picker-card ${isSelected ? 'active' : ''}`}
+287:                   onClick={() => onSelectTemplate(template)}
+288:                   role="button"
+289:                   tabIndex={0}
+290:                   onKeyDown={(e) => e.key === 'Enter' && onSelectTemplate(template)}
+291:                   style={{
+292:                     cursor: 'pointer',
+293:                     display: 'flex',
+294:                     flexDirection: 'column',
+295:                     justifyContent: 'space-between',
+296:                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+297:                   }}
+298:                 >
+299:                   {/* Paper Strip Visual */}
+300:                   <div
+301:                     className="photostrip-paper"
+302:                     style={{
+303:                       position: 'relative',
+304:                       background: template.isPublicFrame ? '#FAF8F5' : '#FFFFFF',
+305:                       borderRadius: '8px',
+306:                       padding: '10px 8px 14px 8px',
+307:                       boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+308:                       display: 'flex',
+309:                       flexDirection: 'column',
+310:                       alignItems: 'center',
+311:                       minHeight: '290px'
+312:                     }}
+313:                   >
+314:                     {isSelected && (
+315:                       <span className="photostrip-active-badge">✓ Terpilih</span>
+316:                     )}
+317: 
+318:                     {template.imageSrc ? (
+319:                       /* Render public frame asset directly */
+320:                       <div
+321:                         style={{
+322:                           width: '100%',
+323:                           height: '240px',
+324:                           display: 'flex',
+325:                           alignItems: 'center',
+326:                           justifyContent: 'center',
+327:                           position: 'relative',
+328:                           overflow: 'hidden',
+329:                           borderRadius: '4px',
+330:                           background: '#E5E7EB'
+331:                         }}
+332:                       >
+333:                         <img
+334:                           src={template.imageSrc}
+335:                           alt={template.name}
+336:                           style={{
+337:                             width: '100%',
+338:                             height: '100%',
+339:                             objectFit: 'cover',
+340:                             display: 'block'
+341:                           }}
+342:                         />
+343:                         <div
+344:                           style={{
+345:                             position: 'absolute',
+346:                             bottom: '8px',
+347:                             background: 'rgba(0,0,0,0.65)',
+348:                             color: '#FFFFFF',
+349:                             fontSize: '0.68rem',
+350:                             padding: '3px 8px',
+351:                             borderRadius: '999px',
+352:                             backdropFilter: 'blur(4px)'
+353:                           }}
+354:                         >
+355:                           Frame Template
+356:                         </div>
+357:                       </div>
+358:                     ) : (
+359:                       /* Render Photostrip Preview Slots */
+360:                       <div className="photostrip-slots-wrap" style={{ width: '100%' }}>
+361:                         {template.isGrid ? (
+362:                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px', position: 'relative' }}>
+363:                             {template.previewPhotos.map((imgUrl, pIdx) => (
+364:                               <div key={pIdx} className="photostrip-thumb-slot" style={{ height: '42px' }}>
+365:                                 <img src={imgUrl} alt={`Pose ${pIdx + 1}`} />
+366:                               </div>
+367:                             ))}
+368:                             {template.hasRibbon && (
+369:                               <div
+370:                                 className="photostrip-ribbon-badge"
+371:                                 style={{
+372:                                   position: 'absolute',
+373:                                   top: '50%',
+374:                                   left: '-4px',
+375:                                   right: '-4px',
+376:                                   transform: 'translateY(-50%)',
+377:                                   zIndex: 3
+378:                                 }}
+379:                               >
+380:                                 {template.ribbonText}
+381:                               </div>
+382:                             )}
+383:                           </div>
+384:                         ) : (
+385:                           <>
+386:                             {template.id === 'layout-b' ? (
+387:                               <>
+388:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+389:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+390:                                 </div>
+391:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+392:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+393:                                 </div>
+394:                                 <div className="photostrip-ribbon-badge">{template.ribbonText}</div>
+395:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+396:                                   <img src={template.previewPhotos[2]} alt="Pose 3" />
+397:                                 </div>
+398:                                 <div className="photostrip-thumb-slot" style={{ height: '44px' }}>
+399:                                   <img src={template.previewPhotos[3]} alt="Pose 4" />
+400:                                 </div>
+401:                               </>
+402:                             ) : template.id === 'layout-c' ? (
+403:                               <>
+404:                                 <div className="photostrip-thumb-slot" style={{ height: '88px' }}>
+405:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+406:                                 </div>
+407:                                 <div className="photostrip-ribbon-badge">{template.ribbonText}</div>
+408:                                 <div className="photostrip-thumb-slot" style={{ height: '88px' }}>
+409:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+410:                                 </div>
+411:                               </>
+412:                             ) : (
+413:                               <>
+414:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+415:                                   <img src={template.previewPhotos[0]} alt="Pose 1" />
+416:                                 </div>
+417:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+418:                                   <img src={template.previewPhotos[1]} alt="Pose 2" />
+419:                                 </div>
+420:                                 <div className="photostrip-thumb-slot" style={{ height: '58px' }}>
+421:                                   <img src={template.previewPhotos[2]} alt="Pose 3" />
+422:                                 </div>
+423:                               </>
+424:                             )}
+425:                           </>
+426:                         )}
+427:                         <div className="photostrip-footer-text">
+428:                           photobooth <br />
+429:                           <span style={{ fontSize: '0.45rem', color: '#64748B' }}>23.09.2026</span>
+430:                         </div>
+431:                       </div>
+432:                     )}
+433:                   </div>
+434: 
+435:                   {/* Metadata below card */}
+436:                   <div className="photostrip-meta" style={{ marginTop: '12px', textAlign: 'center' }}>
+437:                     <div className="photostrip-label" style={{ fontSize: '1rem', fontWeight: 800 }}>
+438:                       {template.name}
+439:                     </div>
+440:                     <div className="photostrip-subtext" style={{ fontSize: '0.78rem', color: '#6B7280', margin: '4px 0 0' }}>
+441:                       {template.subtitle}
+442:                     </div>
+443:                   </div>
+444:                 </div>
+445:               );
+446:             })}
+447:           </div>
+448:         </div>
+449:       </div>
+450:     </section>
+451:   );
+452: }

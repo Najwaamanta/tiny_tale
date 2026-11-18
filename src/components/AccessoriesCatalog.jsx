@@ -46,18 +46,17 @@ export default function AccessoriesCatalog({ onAddToCart }) {
             <div className="badge badge-purple" style={{ marginBottom: '10px' }}>
               <Sparkles size={12} /> Ready-to-Wear Catalog
             </div>
-            <h2 style={{ fontSize: '2.2rem', marginBottom: '8px' }}>Katalog Gelang & Phone Strap</h2>
+            <h2 style={{ fontSize: '2.2rem', marginBottom: '8px' }}>Katalog Gelang (Bracelets)</h2>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '640px' }}>
-              Koleksi aksesoris autentik siap pakai. Rantai stainless steel anti-karat, anyaman paracord serut, dan gantungan HP tahan putus.
+              Koleksi gelang handmade autentik siap pakai. Kombinasi mutiara pastel, manik crystal, dan aksen bintang yang manis.
             </p>
           </div>
 
           {/* Filter Tabs */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignSelf: 'flex-start' }}>
             {[
-              { id: 'all', label: 'Semua Koleksi' },
-              { id: 'gelang', label: 'Gelang (Bracelets)' },
-              { id: 'gantungan_hp', label: 'Phone Strap (Gantungan HP)' }
+              { id: 'all', label: 'Semua Gelang' },
+              { id: 'gelang', label: 'Pastel & Beads' }
             ].map((cat) => (
               <button
                 key={cat.id}

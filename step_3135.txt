@@ -1,0 +1,106 @@
+Created At: 2026-11-17T09:45:10+07:00
+Completed At: 2026-11-17T09:45:10+07:00
+Created At: 2026-11-17T09:45:10+07:00
+Completed At: 2026-11-17T09:45:10+07:00
+Showing lines 350-450 of 599
+350:     {
+351:       id: 'frame-27',
+352:       type: 'custom_frame',
+353:       frameId: 'frame-27',
+354:       layoutId: 'layout-a',
+355:       name: '27: Cloud Nine Sky Blue',
+356:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+357:       badge: 'Fluffy Sky',
+358:       badgeClass: 'badge-cyan',
+359:       imageSrc: '/frames/27.png',
+360:       isPublicFrame: true,
+361:       description: 'Langit biru cerah bertabur awan putih menggemaskan untuk memori penuh keceriaan.'
+362:     },
+363:     {
+364:       id: 'frame-28',
+365:       type: 'custom_frame',
+366:       frameId: 'frame-28',
+367:       layoutId: 'layout-a',
+368:       name: '28: Coquette Ballet Pearl',
+369:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+370:       badge: 'Coquette Pearl',
+371:       badgeClass: 'badge-rose',
+372:       imageSrc: '/frames/28.png',
+373:       isPublicFrame: true,
+374:       description: 'Aksen pita coquette dan untaian mutiara anggun bernuansa dusty pink lembut.'
+375:     },
+376:     {
+377:       id: 'frame-29',
+378:       type: 'custom_frame',
+379:       frameId: 'frame-29',
+380:       layoutId: 'layout-a',
+381:       name: '29: Midnight Constellation',
+382:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+383:       badge: 'Galaxy Star',
+384:       badgeClass: 'badge-purple',
+385:       imageSrc: '/frames/29.png',
+386:       isPublicFrame: true,
+387:       description: 'Hamparan langit malam berbintang kosmik dengan garis konstelasi zodiak estetik.'
+388:     },
+389:     {
+390:       id: 'frame-30',
+391:       type: 'custom_frame',
+392:       frameId: 'frame-30',
+393:       layoutId: 'layout-a',
+394:       name: '30: Retro Polaroid Film Gold',
+395:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+396:       badge: 'Polaroid Gold',
+397:       badgeClass: 'badge-cyan',
+398:       imageSrc: '/frames/30.png',
+399:       isPublicFrame: true,
+400:       description: 'Tampilan strip polaroid klasik dengan foil emas mewah dan tipografi kenangan.'
+401:     }
+402:   ];
+403: 
+404:   return (
+405:     <section className="section-frame-selector" id="pilih-frame" style={{ paddingTop: '40px', paddingBottom: '70px' }}>
+406:       <div className="container">
+407:         {/* ========================================================
+408:             CHOOSE YOUR LAYOUT - PHOTOBOOTH HEADER (MATCHING IMAGE 1)
+409:             ======================================================== */}
+410:         <div className="choose-layout-container" id="choose-layout">
+411:           {/* Sparkle star decorations */}
+412:           <div className="sparkle-decoration" style={{ top: '24px', left: '36px', fontSize: '1.8rem' }}>✦</div>
+413:           <div className="sparkle-decoration" style={{ top: '38px', right: '48px', fontSize: '2.2rem' }}>✧</div>
+414:           <div className="sparkle-decoration" style={{ bottom: '24px', left: '48px', fontSize: '1.4rem' }}>✧</div>
+415:           <div className="sparkle-decoration" style={{ bottom: '28px', right: '64px', fontSize: '1.8rem' }}>✦</div>
+416: 
+417:           <div className="choose-layout-header">
+418:             <h2 className="choose-layout-title">choose your layout</h2>
+419:             <p className="choose-layout-note">NOTE: YOU HAVE 3 SECONDS FOR EACH SHOT</p>
+420:             <p style={{ color: '#4B5563', fontSize: '0.88rem', marginTop: '6px' }}>
+421:               Klik salah satu frame di bawah untuk mulai mengunggah foto dan merancang Bag Charm di studio kustomisasi.
+422:             </p>
+423:           </div>
+424: 
+425:           {/* Frame & Layout Cards Gallery */}
+426:           <div className="photostrip-gallery" aria-label="Pilihan frame foto untuk bag charm">
+427:             {allTemplates.map((template) => {
+428:               const isSelected = selectedTemplateId === template.id;
+429: 
+430:               return (
+431:                 <div
+432:                   key={template.id}
+433:                   className={`photostrip-picker-card ${isSelected ? 'active' : ''}`}
+434:                   onClick={() => onSelectTemplate(template)}
+435:                   role="button"
+436:                   tabIndex={0}
+437:                   onKeyDown={(e) => e.key === 'Enter' && onSelectTemplate(template)}
+438:                   style={{
+439:                     cursor: 'pointer',
+440:                     display: 'flex',
+441:                     flexDirection: 'column',
+442:                     justifyContent: 'space-between',
+443:                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+444:                   }}
+445:                 >
+446:                   {/* Paper Strip Visual */}
+447:                   <div
+448:                     className="photostrip-paper"
+449:                     style={{
+450:                       position: 'relative',

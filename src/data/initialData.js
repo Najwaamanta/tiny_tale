@@ -8,7 +8,7 @@ export const INITIAL_PRODUCTS = [
     name: 'Custom Bag Charm',
     subtitle: 'Gantungan Tas Kustom Unisex',
     tagline: 'Tactical, Y2K, or Cyberpunk — Rancang gantungan tas sesuai identitasmu.',
-    basePrice: 59000,
+    basePrice: 15000,
     estimatedCraftTime: '1-2 Hari Kerja',
     description: 'Bag charm kokoh dengan material premium carabiner aerospace/alloy, tali paracord 550 militer atau rantai chunky, serta opsi hanging charm & inisial nama.',
     bases: [
@@ -30,7 +30,7 @@ export const INITIAL_PRODUCTS = [
     name: 'Custom Bracelet (Gelang)',
     subtitle: 'Gelang Rantai & Paracord Kustom',
     tagline: 'Kombinasi rantai metal, knot cord, pelat nama, dan charm eksklusif.',
-    basePrice: 49000,
+    basePrice: 10000,
     estimatedCraftTime: '1 Hari Kerja',
     description: 'Gelang unisex dengan lock clasp magnetik atau serut paracord adjustable. Nyaman dipakai harian, anti-karat, dan tahan air.',
     bases: [
@@ -44,61 +44,132 @@ export const INITIAL_PRODUCTS = [
       { id: 'hw-chrome-silver', name: 'Liquid Chrome Silver', color: '#DCE2E6', border: '#CBD5E0' },
       { id: 'hw-titanium-gunmetal', name: 'Titanium Gunmetal', color: '#4A5568', border: '#718096' }
     ]
-  },
-  {
-    id: 'prod-gantungan-hp',
-    type: 'gantungan_hp',
-    name: 'Custom Phone Strap',
-    subtitle: 'Gantungan HP & Wristlet Lanyard',
-    tagline: 'Pencegah jatuh estetik untuk smartphone, sling bag, atau kunci motor.',
-    basePrice: 45000,
-    estimatedCraftTime: '1 Hari Kerja',
-    description: 'Phone charm & lanyard kompatibel dengan semua jenis casing handphone via tether tab universal anti-putus.',
-    bases: [
-      { id: 'base-ps-wristlet', name: 'Tactical Wrist Lanyard', price: 0, previewType: 'paracord_loop', defaultCordColor: '#0F172A', maxCharms: 6, maxLetters: 8 },
-      { id: 'base-ps-beaded', name: 'Chunky Y2K Beads & Acrylic', price: 10000, previewType: 'beads_loop', defaultCordColor: '#94A3B8', maxCharms: 8, maxLetters: 8 },
-      { id: 'base-ps-crossbody', name: 'Long Crossbody Rope Strap (120cm)', price: 30000, previewType: 'crossbody', defaultCordColor: '#334155', maxCharms: 5, maxLetters: 6 },
-      { id: 'base-ps-mini-charm', name: 'Mini Dangler Loop', price: -5000, previewType: 'mini_loop', defaultCordColor: '#64748B', maxCharms: 4, maxLetters: 5 }
-    ],
-    hardwareFinishes: [
-      { id: 'hw-chrome-silver', name: 'Liquid Chrome Silver', color: '#DCE2E6', border: '#CBD5E0' },
-      { id: 'hw-matte-black', name: 'Matte Stealth Black', color: '#181A1F', border: '#2D3748' },
-      { id: 'hw-antique-gold', name: 'Cyber Gold Brass', color: '#D4AF37', border: '#ECC94B' }
-    ]
   }
 ];
 
 export const INITIAL_CORD_COLORS = [
-  { id: 'col-black', name: 'Obsidian Black', hex: '#111317', textHex: '#ffffff' },
-  { id: 'col-silver', name: 'Titanium Silver', hex: '#94A3B8', textHex: '#000000' },
-  { id: 'col-neon-lime', name: 'Cyber Neon Lime', hex: '#84CC16', textHex: '#000000' },
-  { id: 'col-electric-blue', name: 'Electric Cyan', hex: '#06B6D4', textHex: '#000000' },
-  { id: 'col-khaki', name: 'Desert Khaki', hex: '#A89F91', textHex: '#000000' },
-  { id: 'col-crimson', name: 'Deep Crimson Red', hex: '#BE123C', textHex: '#ffffff' },
-  { id: 'col-purple', name: 'Cyber Violet', hex: '#7C3AED', textHex: '#ffffff' },
-  { id: 'col-bone', name: 'Bone White', hex: '#F1F5F9', textHex: '#000000' }
+  { id: 'col-hitam-polos', name: 'Hitam Polos', type: 'polos', hex: '#18181B', textHex: '#ffffff', hasSpeckle: false, speckle: null, badge: 'Polos' },
+  { id: 'col-putih-polos', name: 'Putih Polos', type: 'polos', hex: '#FFFFFF', border: '#CBD5E1', textHex: '#000000', hasSpeckle: false, speckle: null, badge: 'Polos' },
+  { id: 'col-marun-polos', name: 'Marun Polos', type: 'polos', hex: '#7F1D1D', textHex: '#ffffff', hasSpeckle: false, speckle: null, badge: 'Polos' },
+  { id: 'col-pink-muda', name: 'Pink Muda', type: 'bintik', hex: '#F9A8D4', textHex: '#831843', hasSpeckle: true, speckle: '#FFFFFF', badge: 'Bintik' },
+  { id: 'col-kuning-muda', name: 'Kuning Muda', type: 'bintik', hex: '#FDE047', textHex: '#713F12', hasSpeckle: true, speckle: '#FFFFFF', badge: 'Bintik' },
+  { id: 'col-biru-muda', name: 'Biru Muda', type: 'bintik', hex: '#93C5FD', textHex: '#1E3A8A', hasSpeckle: true, speckle: '#FFFFFF', badge: 'Bintik' },
+  { id: 'col-coklat-muda', name: 'Coklat Muda', type: 'bintik', hex: '#B08968', textHex: '#3E2723', hasSpeckle: true, speckle: '#FFFBEB', badge: 'Bintik' }
+];
+
+export const PARACORD_MODELS = [
+  {
+    id: 'twisted-loop-tassel',
+    name: 'Twisted Loop & Dual Tassel',
+    desc: 'Model lilitan loop dengan 2 ujung simpul rumbai menjuntai (Sesuai Foto)',
+    badge: 'Sesuai Foto',
+    icon: '➰'
+  },
+  {
+    id: 'tactical-snake-knot',
+    name: 'Tactical Cobra / Snake Knot',
+    desc: 'Anyaman tebal silang khas paracord militer menjuntai lurus',
+    badge: 'Streetwear',
+    icon: '🪢'
+  },
+  {
+    id: 'spiral-pastel-cord',
+    name: 'Pastel Aesthetic Rope',
+    desc: 'Tali tambang pilin lembut dengan simpul pita aesthetic',
+    badge: 'Cute Y2K',
+    icon: '🎀'
+  },
+  {
+    id: 'double-loop-wave',
+    name: 'Dual Hanging Loop',
+    desc: 'Dua untaian loop berjenjang dinamis & estetik',
+    badge: 'Minimalist',
+    icon: '⛓️'
+  }
+];
+
+export const PARACORD_LENGTHS = [
+  {
+    id: 'medium',
+    name: 'Medium — Setinggi Slot 2',
+    desc: 'Menjuntai hingga Slot Foto 2 (~55% panjang photostrip)',
+    badge: 'Sesuai Foto',
+    loopEndY: 325,
+    tassel1EndY: 265,
+    tassel2EndY: 285
+  },
+  {
+    id: 'long',
+    name: 'Long Dangle — Setinggi Slot 3',
+    desc: 'Menjuntai panjang hingga Slot Foto 3 (~75% frame)',
+    badge: 'Ekstra Menjuntai',
+    loopEndY: 410,
+    tassel1EndY: 345,
+    tassel2EndY: 370
+  },
+  {
+    id: 'short',
+    name: 'Compact Short — Setinggi Slot 1',
+    desc: 'Ringkas setinggi Slot Foto 1 (~35% frame)',
+    badge: 'Ringkas',
+    loopEndY: 235,
+    tassel1EndY: 195,
+    tassel2EndY: 210
+  }
+];
+
+export const ACCENT_COLORS = [
+  { id: 'hitam', name: 'Hitam', hex: '#181A1F', border: '#000000' },
+  { id: 'putih', name: 'Putih', hex: '#FFFFFF', border: '#CBD5E1' },
+  { id: 'cokelat', name: 'Cokelat', hex: '#5D4037', border: '#3E2723' }
+];
+
+export const PARACORD_ACCENTS = [
+  {
+    id: 'bell-white',
+    name: 'Lonceng Mini Putih',
+    desc: 'Lonceng enamel putih bulat (Seperti di Foto)',
+    color: '#FFFFFF',
+    border: '#CBD5E1',
+    type: 'bell',
+    badge: 'Sesuai Foto'
+  },
+  {
+    id: 'bell-silver',
+    name: 'Lonceng Mini Silver Logam',
+    desc: 'Lonceng krom logam mengkilap',
+    color: '#DCE2E6',
+    border: '#94A3B8',
+    type: 'bell'
+  },
+  {
+    id: 'bell-gold',
+    name: 'Lonceng Cyber Gold',
+    desc: 'Lonceng finishing emas metalik',
+    color: '#F3E5AB',
+    border: '#D4AF37',
+    type: 'bell'
+  },
+  {
+    id: 'star-acrylic-black',
+    name: 'Bintang Wavy Akrilik Hitam',
+    desc: 'Liontin bintang wavy hollow hitam (Seperti di Foto)',
+    color: '#181A1F',
+    border: '#000000',
+    type: 'star',
+    badge: 'Sesuai Foto'
+  },
+  {
+    id: 'none',
+    name: 'Tanpa Aksen Tambahan',
+    desc: 'Hanya tali paracord murni',
+    type: 'none'
+  }
 ];
 
 export const INITIAL_CHARMS = [
-  // Charms - Metal & Cyber (Unisex)
-  { id: 'ch-cyber-star', name: 'Cyber Y2K Star', category: 'metal', price: 9000, stock: 48, icon: '★', desc: 'Liontin bintang 4-sudut chrome stainless' },
-  { id: 'ch-metal-cross', name: 'Gothic Metal Cross', category: 'metal', price: 12000, stock: 35, icon: '✝', desc: 'Salib detail gothic streetwear finish gunmetal' },
-  { id: 'ch-chrome-dice', name: 'Lucky Chrome Dice', category: 'metal', price: 15000, stock: 22, icon: '🎲', desc: 'Dadu 3D metal solid mengkilap' },
-  { id: 'ch-astro-tag', name: 'Astronaut Voyager', category: 'cyber', price: 16000, stock: 18, icon: '👨‍🚀', desc: 'Miniatur astronot luar angkasa titanium' },
-  { id: 'ch-liquid-drop', name: 'Liquid Metal Drop', category: 'metal', price: 11000, stock: 40, icon: '💧', desc: 'Bentuk lelehan chrome abstrak futuristik' },
-  { id: 'ch-flame-tag', name: 'Streetwear Flame', category: 'streetwear', price: 12000, stock: 30, icon: '🔥', desc: 'Plat kobaran api silhouette aesthetic' },
-  { id: 'ch-broken-heart', name: 'Y2K Barbed Heart', category: 'y2k', price: 13000, stock: 25, icon: '🖤', desc: 'Hati kawat duri punk modern' },
-  { id: 'ch-smiley-pixel', name: 'Acid Smiley Badge', category: 'y2k', price: 10000, stock: 52, icon: '☻', desc: 'Icon senyum retro acid streetwear' },
-  { id: 'ch-obsidian-crystal', name: 'Raw Obsidian Rock', category: 'stone', price: 18000, stock: 15, icon: '💎', desc: 'Batu alam obsidian hitam pelindung energi' },
-  { id: 'ch-barcode-tag', name: 'Atelier Serial Barcode', category: 'cyber', price: 14000, stock: 28, icon: '|||', desc: 'Plat stainless ukir barcode serial number' },
-  { id: 'ch-mini-camera', name: 'Vintage Rangefinder', category: 'streetwear', price: 17000, stock: 12, icon: '📷', desc: 'Kamera analog mini detail 3D' },
-  { id: 'ch-compass-rose', name: 'Wayfinder Compass', category: 'metal', price: 14000, stock: 20, icon: '🧭', desc: 'Kompas petualang relief tajam' },
-
-  // Beads & Accent Spacers
-  { id: 'bd-matte-onyx', name: 'Matte Onyx Bead (Set of 3)', category: 'beads', price: 8000, stock: 80, icon: '⚫', desc: 'Manik batu onyx matte diameter 8mm' },
-  { id: 'bd-chrome-spheres', name: 'Chrome Ball Spacers (Set of 3)', category: 'beads', price: 9000, stock: 65, icon: '⚪', desc: 'Spacer bola metal anti-luntur' },
-  { id: 'bd-pearl-accent', name: 'Baroque Fresh Pearl', category: 'beads', price: 12000, stock: 40, icon: '🦪', desc: 'Mutiara air tawar bentuk organik natural' },
-  { id: 'bd-neon-cylinder', name: 'Neon Cyber Spacers', category: 'beads', price: 7000, stock: 50, icon: '🟢', desc: 'Silinder akrilik fluorescent glow-in-uv' }
+  { id: 'ch-gitar', name: 'Gitar', category: 'metal', price: 5000, stock: 50, icon: '🎸', image: '/images/charm_guitar.png', desc: 'Charm liontin gitar mini aesthetic' },
+  { id: 'ch-boneka-puppy', name: 'Boneka Puppy', category: 'cute', price: 5000, stock: 50, icon: '🐶', image: '/images/charm_balloon_puppy.jpg', desc: 'Charm liontin balloon puppy chrome silver aesthetic' }
 ];
 
 export const INITIAL_PRESETS = [
@@ -137,23 +208,6 @@ export const INITIAL_PRESETS = [
     }
   },
   {
-    id: 'preset-3',
-    productType: 'gantungan_hp',
-    name: 'Y2K Acid Dangler Phone Strap',
-    subtitle: 'Phone Strap Paracord + Acrylic Beads',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80',
-    price: 79000,
-    tags: ['New Drop', 'Aesthetic', 'Glow'],
-    config: {
-      productType: 'gantungan_hp',
-      baseId: 'base-ps-wristlet',
-      hardwareId: 'hw-chrome-silver',
-      cordColor: '#84CC16',
-      customLetters: 'AURA',
-      selectedCharms: ['ch-smiley-pixel', 'ch-cyber-star', 'bd-chrome-spheres']
-    }
-  },
-  {
     id: 'preset-4',
     productType: 'bag_charm',
     name: 'Raw Obsidian & Voyager Charm',
@@ -172,135 +226,7 @@ export const INITIAL_PRESETS = [
   }
 ];
 
-export const INITIAL_ORDERS = [
-  {
-    id: 'ATC-2026-8912',
-    createdAt: '2026-09-22T14:20:00Z',
-    customer: {
-      name: 'Rian Pratama',
-      whatsapp: '081234567890',
-      address: 'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan',
-      city: 'Jakarta Selatan',
-      courier: 'SiCepat Reguler (Rp 10.000)',
-      courierCost: 10000,
-      notes: 'Tolong inisial hurufnya agak rapat ya kak'
-    },
-    items: [
-      {
-        id: 'item-8912-1',
-        productType: 'bag_charm',
-        title: 'Custom Bag Charm — Tactical Paracord',
-        baseName: 'Tactical Paracord Weave',
-        hardwareName: 'Matte Stealth Black',
-        cordColor: '#111317',
-        customLetters: 'RIAN',
-        charms: [
-          { name: 'Lucky Chrome Dice', price: 15000 },
-          { name: 'Cyber Y2K Star', price: 9000 }
-        ],
-        unitPrice: 83000,
-        quantity: 1,
-        subtotal: 83000
-      }
-    ],
-    totalAmount: 93000,
-    paymentMethod: 'QRIS Instant',
-    paymentStatus: 'paid', // 'unpaid', 'paid', 'verified'
-    craftingStatus: 'in_crafting', // 'pending', 'paid_verified', 'in_crafting', 'quality_check', 'shipped', 'completed'
-    shippingTrackingNumber: 'SC-89218736192-ID',
-    craftingNotes: 'Sudah di meja perakitan 2 oleh artisan Budi.'
-  },
-  {
-    id: 'ATC-2026-9045',
-    createdAt: '2026-09-23T09:15:00Z',
-    customer: {
-      name: 'Alika Nabila',
-      whatsapp: '085712349988',
-      address: 'Cluster Menteng Indah Blok C3, BSD City, Tangerang Selatan',
-      city: 'Tangerang Selatan',
-      courier: 'J&T Express (Rp 12.000)',
-      courierCost: 12000,
-      notes: 'Bungkus kado ya kak untuk hadiah ultah cowok saya'
-    },
-    items: [
-      {
-        id: 'item-9045-1',
-        productType: 'gelang',
-        title: 'Custom Gelang — Cuban Link Chain 8mm',
-        baseName: 'Cuban Link Chain 8mm',
-        hardwareName: 'Liquid Chrome Silver',
-        cordColor: '#94A3B8',
-        customLetters: 'ALKA',
-        charms: [
-          { name: 'Liquid Metal Drop', price: 11000 },
-          { name: 'Streetwear Flame', price: 12000 }
-        ],
-        unitPrice: 87000,
-        quantity: 1,
-        subtotal: 87000
-      },
-      {
-        id: 'item-9045-2',
-        productType: 'gantungan_hp',
-        title: 'Custom Phone Strap — Y2K Beads',
-        baseName: 'Chunky Y2K Beads & Acrylic',
-        hardwareName: 'Liquid Chrome Silver',
-        cordColor: '#84CC16',
-        customLetters: 'NOVA',
-        charms: [
-          { name: 'Acid Smiley Badge', price: 10000 },
-          { name: 'Cyber Y2K Star', price: 9000 }
-        ],
-        unitPrice: 74000,
-        quantity: 1,
-        subtotal: 74000
-      }
-    ],
-    totalAmount: 173000,
-    paymentMethod: 'Transfer BCA',
-    paymentStatus: 'paid',
-    craftingStatus: 'quality_check',
-    shippingTrackingNumber: '',
-    craftingNotes: 'Perakitan selesai, masuk tahap QC ketahanan kait dan kelurusan huruf.'
-  },
-  {
-    id: 'ATC-2026-7833',
-    createdAt: '2026-09-21T11:00:00Z',
-    customer: {
-      name: 'Dimas Satria',
-      whatsapp: '081398765432',
-      address: 'Apartemen Sudirman Tower A Lt 15, Jl. Jend. Sudirman, Bandung',
-      city: 'Bandung',
-      courier: 'JNE YES (Rp 18.000)',
-      courierCost: 18000,
-      notes: 'Mohon segera dikirim'
-    },
-    items: [
-      {
-        id: 'item-7833-1',
-        productType: 'bag_charm',
-        title: 'Custom Bag Charm — Heavy Cuban Chain',
-        baseName: 'Heavy Cuban Chain',
-        hardwareName: 'Titanium Gunmetal',
-        cordColor: '#A0AEC0',
-        customLetters: 'DIMZ',
-        charms: [
-          { name: 'Astronaut Voyager', price: 16000 },
-          { name: 'Raw Obsidian Rock', price: 18000 }
-        ],
-        unitPrice: 108000,
-        quantity: 1,
-        subtotal: 108000
-      }
-    ],
-    totalAmount: 126000,
-    paymentMethod: 'QRIS Instant',
-    paymentStatus: 'paid',
-    craftingStatus: 'shipped',
-    shippingTrackingNumber: 'JNE-BDG-20269910',
-    craftingNotes: 'Paket sudah diserahkan ke kurir JNE pukul 16:30.'
-  }
-];
+export const INITIAL_ORDERS = [];
 
 export const SAMPLE_FRAME_PHOTOS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
@@ -310,36 +236,260 @@ export const SAMPLE_FRAME_PHOTOS = [
 
 export const BAG_CHARM_FRAMES = [
   {
+    id: 'frame-1',
+    name: '01: Tiny Tale Stamp Classic',
+    subtitle: 'Classic Perforated Stamp & Sardines',
+    badge: '2 Slot Stamp',
+    image: '/frames/1.png',
+    overlayImage: '/frames/1_overlay.png',
+    slotShape: 'rect',
+    slots: [
+      { id: 1, label: 'Foto 1 (Atas)', top: '17.2%', left: '14.0%', width: '71.9%', height: '22.5%', borderRadius: '0px' },
+      { id: 2, label: 'Foto 2 (Bawah)', top: '72.4%', left: '14.0%', width: '71.9%', height: '22.6%', borderRadius: '0px' }
+    ],
+    accentColor: '#133155',
+    tagline: 'Strip photobooth navy dengan tepi bergerigi perangko klasik dan ilustrasi sardine vintage.'
+  },
+  {
     id: 'frame-borcelle',
     name: 'Borcelle Vintage Mosaic',
     subtitle: 'Classic Green Tile & Silver Emblem',
-    badge: '3 Slot Oval',
-    image: '/frames/frame_borcelle.png',
-    slotShape: 'oval',
+    badge: '3 Slot Mosaic',
+    image: '/frames/2.png',
+    overlayImage: '/frames/2_overlay.png',
+    slotShape: 'rect',
     slots: [
-      { id: 1, label: 'Foto 1 (Atas)', top: '5.9%', left: '7.3%', width: '85.4%', height: '21.5%', borderRadius: '50%' },
-      { id: 2, label: 'Foto 2 (Tengah)', top: '30.7%', left: '7.3%', width: '85.4%', height: '21.5%', borderRadius: '50%' },
-      { id: 3, label: 'Foto 3 (Bawah)', top: '55.2%', left: '7.3%', width: '85.4%', height: '21.5%', borderRadius: '50%' }
+      { id: 1, label: 'Foto 1 (Atas)', top: '4.6%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+      { id: 2, label: 'Foto 2 (Tengah)', top: '31.0%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+      { id: 3, label: 'Foto 3 (Bawah)', top: '57.4%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' }
     ],
     accentColor: '#1B4D3E',
-    tagline: 'Nuansa vintage mosaic dengan plat silver Borcelle dan 3 jendela foto elips elegan.'
+    tagline: 'Nuansa vintage mosaic dengan plat silver Borcelle dan 3 jendela foto elegan.'
   },
   {
     id: 'frame-the-moment',
-    name: 'The Moment Classic',
-    subtitle: 'Editorial Warm-Cream Photostrip',
+    name: 'Archive Memory Editorial',
+    subtitle: 'Modern Ticket & Barcode Strip',
     badge: '3 Slot Persegi',
-    image: '/frames/frame_the_moment.png',
+    image: '/frames/5.png',
+    overlayImage: '/frames/5_overlay.png',
     slotShape: 'rect',
     slots: [
-      { id: 1, label: 'Foto 1 (Atas)', top: '3.42%', left: '29.9%', width: '59.8%', height: '30.08%', borderRadius: '0px' },
-      { id: 2, label: 'Foto 2 (Tengah)', top: '34.86%', left: '29.9%', width: '59.8%', height: '30.08%', borderRadius: '0px' },
-      { id: 3, label: 'Foto 3 (Bawah)', top: '66.41%', left: '29.9%', width: '59.8%', height: '30.08%', borderRadius: '0px' }
+      { id: 1, label: 'Foto 1 (Atas)', top: '8.9%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+      { id: 2, label: 'Foto 2 (Tengah)', top: '34.8%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+      { id: 3, label: 'Foto 3 (Bawah)', top: '60.8%', left: '10.8%', width: '79.4%', height: '24.5%', borderRadius: '0px' }
     ],
-    accentColor: '#CBBBA0',
-    tagline: 'Gaya strip photobooth minimalis dengan tipografi The Moment dan 3 slot foto portrait.'
+    accentColor: '#1E1E1E',
+    tagline: 'Gaya strip photobooth minimalis dengan tipografi Archive Memory dan 3 slot foto portrait.'
+  },
+  {
+    id: 'frame-3',
+    name: '03: Night Arched Comic Star',
+    subtitle: 'Night Arched & Pop Comic Star',
+    badge: '3 Slot Arched',
+    image: '/frames/3.png',
+    overlayImage: '/frames/3_overlay.png',
+    slotShape: 'rect',
+    slots: [
+      { id: 1, label: 'Foto 1 (Atas)', top: '6.3%', left: '9.7%', width: '82.2%', height: '25.8%', borderRadius: '0px' },
+      { id: 2, label: 'Foto 2 (Tengah)', top: '35.0%', left: '9.7%', width: '82.2%', height: '25.8%', borderRadius: '0px' },
+      { id: 3, label: 'Foto 3 (Bawah)', top: '63.8%', left: '9.7%', width: '82.2%', height: '25.7%', borderRadius: '0px' }
+    ],
+    accentColor: '#121212',
+    tagline: 'Frame lengkung hitam modern dengan aksen bintang kuning komik pop art nan playful.'
+  },
+  {
+    id: 'frame-4',
+    name: '04: Cottagecore Lily',
+    subtitle: 'Pastel Stripes & Elegant Lily Bloom',
+    badge: '3 Slot Floral',
+    image: '/frames/4.png',
+    overlayImage: '/frames/4_overlay.png',
+    slotShape: 'rect',
+    slots: [
+      { id: 1, label: 'Foto 1 (Atas)', top: '14.1%', left: '9.0%', width: '82.0%', height: '22.2%', borderRadius: '0px' },
+      { id: 2, label: 'Foto 2 (Tengah)', top: '40.5%', left: '9.0%', width: '82.0%', height: '22.7%', borderRadius: '0px' },
+      { id: 3, label: 'Foto 3 (Bawah)', top: '67.5%', left: '9.0%', width: '82.0%', height: '23.8%', borderRadius: '0px' }
+    ],
+    accentColor: '#B96A9C',
+    tagline: 'Desain bermotif garis pastel hijau-pink dengan hiasan bunga lili mekar nan anggun di sudut frame.'
   }
 ];
+
+export const FRAME_SLOTS_MAP = {
+  'frame-1': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '17.2%', left: '14.0%', width: '71.9%', height: '22.5%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Bawah)', top: '72.4%', left: '14.0%', width: '71.9%', height: '22.6%', borderRadius: '0px' }
+  ],
+  'frame-2': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.6%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '31.0%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '57.4%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' }
+  ],
+  'frame-borcelle': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.6%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '31.0%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '57.4%', left: '11.8%', width: '77.1%', height: '24.1%', borderRadius: '0px' }
+  ],
+  'frame-3': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '6.3%', left: '9.7%', width: '82.2%', height: '25.8%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '35.0%', left: '9.7%', width: '82.2%', height: '25.8%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '63.8%', left: '9.7%', width: '82.2%', height: '25.7%', borderRadius: '0px' }
+  ],
+  'frame-4': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '14.1%', left: '9.0%', width: '82.0%', height: '22.2%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '40.5%', left: '9.0%', width: '82.0%', height: '22.7%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '67.5%', left: '9.0%', width: '82.0%', height: '23.8%', borderRadius: '0px' }
+  ],
+  'frame-5': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '8.9%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '34.8%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.8%', left: '10.8%', width: '79.4%', height: '24.5%', borderRadius: '0px' }
+  ],
+  'frame-the-moment': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '8.9%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '34.8%', left: '10.8%', width: '79.4%', height: '24.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.8%', left: '10.8%', width: '79.4%', height: '24.5%', borderRadius: '0px' }
+  ],
+  'frame-6': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '10.6%', width: '78.8%', height: '25.3%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '31.8%', left: '10.6%', width: '78.8%', height: '25.3%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '59.3%', left: '10.6%', width: '78.8%', height: '25.3%', borderRadius: '0px' }
+  ],
+  'frame-7': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '12.6%', left: '10.0%', width: '81.6%', height: '25.4%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '40.4%', left: '10.0%', width: '81.6%', height: '25.4%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '68.1%', left: '10.0%', width: '81.6%', height: '25.4%', borderRadius: '0px' }
+  ],
+  'frame-8': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '3.5%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '30.7%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '58.0%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' }
+  ],
+  'frame-9': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '3.1%', left: '7.1%', width: '85.2%', height: '25.5%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '30.8%', left: '7.1%', width: '85.2%', height: '25.4%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '58.4%', left: '7.1%', width: '85.2%', height: '25.5%', borderRadius: '0px' }
+  ],
+  'frame-10': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '10.7%', left: '11.3%', width: '78.6%', height: '25.8%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '38.8%', left: '11.3%', width: '78.6%', height: '25.8%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '67.0%', left: '11.3%', width: '78.6%', height: '25.8%', borderRadius: '0px' }
+  ],
+  'frame-11': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '8.2%', width: '83.4%', height: '26.1%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.7%', left: '8.2%', width: '83.4%', height: '26.1%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '61.1%', left: '8.2%', width: '83.4%', height: '26.1%', borderRadius: '0px' }
+  ],
+  'frame-12': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '10.3%', left: '11.6%', width: '76.8%', height: '24.0%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '36.4%', left: '11.6%', width: '76.8%', height: '24.0%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '65.9%', left: '12.4%', width: '76.8%', height: '21.4%', borderRadius: '0px' }
+  ],
+  'frame-13': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '7.7%', width: '84.6%', height: '26.5%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.1%', left: '7.7%', width: '84.6%', height: '26.5%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '61.8%', left: '7.7%', width: '84.6%', height: '26.5%', borderRadius: '0px' }
+  ],
+  'frame-14': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '8.8%', width: '82.3%', height: '25.7%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.3%', left: '8.8%', width: '82.3%', height: '25.7%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.2%', left: '8.8%', width: '82.3%', height: '25.7%', borderRadius: '0px' }
+  ],
+  'frame-15': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '8.4%', width: '83.3%', height: '26.1%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.6%', left: '8.4%', width: '83.3%', height: '26.0%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.9%', left: '8.4%', width: '83.3%', height: '26.0%', borderRadius: '0px' }
+  ],
+  'frame-16': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '8.1%', width: '83.6%', height: '26.2%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.7%', left: '8.1%', width: '83.6%', height: '26.2%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '61.1%', left: '8.1%', width: '83.6%', height: '26.2%', borderRadius: '0px' }
+  ],
+  'frame-17': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '5.7%', left: '9.3%', width: '82.2%', height: '25.7%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.7%', left: '9.3%', width: '82.2%', height: '25.7%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '61.6%', left: '9.3%', width: '82.2%', height: '25.7%', borderRadius: '0px' }
+  ],
+  'frame-18': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.2%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.1%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.0%', left: '8.8%', width: '82.5%', height: '25.8%', borderRadius: '0px' }
+  ],
+  'frame-19': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '13.2%', width: '73.5%', height: '23.1%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '30.1%', left: '13.2%', width: '73.5%', height: '23.1%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '55.9%', left: '13.2%', width: '73.5%', height: '23.1%', borderRadius: '0px' }
+  ],
+  'frame-20': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '6.5%', left: '12.1%', width: '80.7%', height: '25.2%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.4%', left: '12.1%', width: '80.7%', height: '25.2%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.3%', left: '12.1%', width: '80.7%', height: '25.2%', borderRadius: '0px' }
+  ],
+  'frame-21': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '9.0%', width: '82.0%', height: '25.6%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '30.7%', left: '9.0%', width: '82.0%', height: '25.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '57.0%', left: '9.0%', width: '82.0%', height: '25.6%', borderRadius: '0px' }
+  ],
+  'frame-22': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '3.3%', left: '8.4%', width: '85.3%', height: '27.0%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.3%', left: '8.4%', width: '85.3%', height: '27.0%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '63.3%', left: '8.4%', width: '85.3%', height: '27.0%', borderRadius: '0px' }
+  ],
+  'frame-23': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.8%', left: '11.2%', width: '79.6%', height: '24.6%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.6%', left: '11.2%', width: '79.6%', height: '24.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.2%', left: '11.2%', width: '79.6%', height: '24.6%', borderRadius: '0px' }
+  ],
+  'frame-24': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.8%', left: '9.9%', width: '80.9%', height: '24.9%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.1%', left: '9.9%', width: '80.9%', height: '24.9%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '59.6%', left: '9.9%', width: '80.9%', height: '24.8%', borderRadius: '0px' }
+  ],
+  'frame-25': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '3.6%', left: '8.0%', width: '84.3%', height: '26.2%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '31.8%', left: '7.8%', width: '84.3%', height: '26.2%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.2%', left: '7.8%', width: '84.3%', height: '26.2%', borderRadius: '0px' }
+  ],
+  'frame-26': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '7.5%', left: '10.6%', width: '78.8%', height: '24.7%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.2%', left: '10.6%', width: '78.8%', height: '24.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '58.9%', left: '10.6%', width: '78.8%', height: '24.6%', borderRadius: '0px' }
+  ],
+  'frame-27': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '6.1%', left: '8.4%', width: '82.4%', height: '25.5%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '33.7%', left: '8.4%', width: '82.4%', height: '25.5%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '61.3%', left: '8.4%', width: '82.4%', height: '25.6%', borderRadius: '0px' }
+  ],
+  'frame-28': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.7%', left: '8.7%', width: '82.6%', height: '25.6%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.3%', left: '8.7%', width: '82.6%', height: '25.6%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '59.9%', left: '8.7%', width: '82.6%', height: '25.6%', borderRadius: '0px' }
+  ],
+  'frame-29': [
+    { id: 1, label: 'Foto 1 (Atas)', top: '2.7%', left: '8.9%', width: '82.8%', height: '25.7%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '30.4%', left: '8.9%', width: '82.8%', height: '25.7%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '58.1%', left: '8.9%', width: '82.8%', height: '25.7%', borderRadius: '0px' }
+  ],
+  'frame-30': [
+    { id: 1, label: 'Foto 1', top: '10.4%', left: '18.8%', width: '65.5%', height: '19.7%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2', top: '31.1%', left: '18.8%', width: '65.5%', height: '19.7%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3', top: '51.8%', left: '18.8%', width: '65.5%', height: '19.7%', borderRadius: '0px' },
+    { id: 4, label: 'Foto 4', top: '72.6%', left: '18.8%', width: '65.5%', height: '19.8%', borderRadius: '0px' }
+  ]
+};
+
+export function getFrameSlots(frameId) {
+  if (!frameId) return null;
+  if (FRAME_SLOTS_MAP[frameId]) return FRAME_SLOTS_MAP[frameId];
+  const num = String(frameId).replace('frame-', '');
+  if (FRAME_SLOTS_MAP[`frame-${num}`]) return FRAME_SLOTS_MAP[`frame-${num}`];
+  return [
+    { id: 1, label: 'Foto 1 (Atas)', top: '4.3%', left: '8.5%', width: '83.0%', height: '25.8%', borderRadius: '0px' },
+    { id: 2, label: 'Foto 2 (Tengah)', top: '32.5%', left: '8.5%', width: '83.0%', height: '25.8%', borderRadius: '0px' },
+    { id: 3, label: 'Foto 3 (Bawah)', top: '60.5%', left: '8.5%', width: '83.0%', height: '25.8%', borderRadius: '0px' }
+  ];
+}
 
 export const PHOTOSTRIP_LAYOUTS = [
   {
@@ -442,11 +592,11 @@ export const ACCESSORIES_CATALOG_ITEMS = [
     category: 'gelang',
     name: 'Pearl Star Charm Bracelet',
     subtitle: 'Pastel Pink Pearl + Star Accent',
-    price: 64000,
+    price: 10000,
     rating: 4.9,
     soldCount: 142,
     badge: 'Best Seller',
-    image: '/catalog%20gelang/bracelets.jpg',
+    image: '/images/bracelet_pearl_star.jpg',
     description: 'Gelang dengan kombinasi mutiara pastel pink, manik bening, dan charm bintang kecil yang memberi kesan feminine dan dreamy.',
     specs: ['Pearl Pink & Crystal Beads', 'Star Charm Detail', 'Soft Girly Aesthetic']
   },
@@ -456,11 +606,11 @@ export const ACCESSORIES_CATALOG_ITEMS = [
     category: 'gelang',
     name: 'White Pearl & Silver Star Bracelet',
     subtitle: 'Pearl Minimalis dengan Accent Star',
-    price: 49000,
+    price: 10000,
     rating: 4.8,
     soldCount: 98,
     badge: 'Trending',
-    image: '/catalog%20gelang/gelang%20manik.jpg',
+    image: '/images/bracelet_white_pearl.jpg',
     description: 'Desain pearl putih dengan kombinasi silver star charm, bead crystal, dan detail clean yang cocok untuk look minimal tetapi tetap statement.',
     specs: ['Freshwater Pearl', 'Silver Star Detail', 'Minimal & Elegant']
   },
@@ -470,11 +620,11 @@ export const ACCESSORIES_CATALOG_ITEMS = [
     category: 'gelang',
     name: 'Crystal Bloom Bracelet',
     subtitle: 'Transparan + Pearl + Shell Motif',
-    price: 74000,
+    price: 10000,
     rating: 5.0,
     soldCount: 76,
     badge: 'Premium',
-    image: '/catalog%20gelang/gl%202.jpg',
+    image: '/images/bracelet_crystal_bloom.jpg',
     description: 'Gelang dengan nuansa clean dan romantis, menampilkan manik crystal bening, pearl creamy, serta motif shell agar terlihat lebih feminin.',
     specs: ['Crystal Glass Beads', 'Pearl Ivory Finish', 'Shell-Inspired Detail']
   },
@@ -484,72 +634,274 @@ export const ACCESSORIES_CATALOG_ITEMS = [
     category: 'gelang',
     name: 'Sage Green Pearl Bracelet',
     subtitle: 'Pearl + Green Glass + Star Charm',
-    price: 67000,
+    price: 10000,
     rating: 4.9,
     soldCount: 110,
     badge: 'Fresh Breeze',
-    image: '/catalog%20gelang/simple%20beads%20bracelet%F0%9F%8E%80.jpg',
+    image: '/images/bracelet_sage_green.jpg',
     description: 'Kombinasi pearl creamy, green glass bead, dan star accessory memberi tampilan soft pastel yang fresh, light, dan aesthetic.',
     specs: ['Pastel Green Accent', 'Pearl Ivory', 'Soft Star Detail']
-  },
-
-  // PHONE STRAP (GANTUNGAN HP)
-  {
-    id: 'cat-ps-wristlet',
-    type: 'gantungan_hp',
-    category: 'gantungan_hp',
-    name: 'Velvet Pearl Phone Strap',
-    subtitle: 'Soft Glam + Pearl Charm',
-    price: 45000,
-    rating: 4.9,
-    soldCount: 215,
-    badge: 'Heavy Duty',
-    image: '/catalog%20phonestrep/%40velvet_deww_tt.jpg',
-    description: 'Phone strap dengan sentuhan pearl yang lembut dan aesthetic, cocok untuk tampilan glam yang tetap ringan dan nyaman dipakai.',
-    specs: ['Soft Pearl Detail', 'Glam Finish', 'Comfort Fit']
-  },
-  {
-    id: 'cat-ps-beaded',
-    type: 'gantungan_hp',
-    category: 'gantungan_hp',
-    name: 'Colorful Pearly Gummy Phone Charm',
-    subtitle: 'Pastel Pop + Jelly Beads',
-    price: 55000,
-    rating: 4.8,
-    soldCount: 180,
-    badge: 'Y2K Acid',
-    image: '/catalog%20phonestrep/Colorful%20Pearly%20Gummy%20Bear%20Phone%20Charm.jpg',
-    description: 'Gantungan HP dengan kombinasi warna pastel dan bead gummy yang playful, bikin tampilan ponsel terasa lebih cute dan eye-catching.',
-    specs: ['Pastel Jelly Beads', 'Cute Y2K Style', 'Lightweight Build']
-  },
-  {
-    id: 'cat-ps-crossbody',
-    type: 'gantungan_hp',
-    category: 'gantungan_hp',
-    name: 'Silver Black Phone Strap',
-    subtitle: 'Minimalist Metal + Dark Edge',
-    price: 75000,
-    rating: 5.0,
-    soldCount: 164,
-    badge: 'Best Travel',
-    image: '/catalog%20phonestrep/Silver%20Black%20Phone%20Strap.jpg',
-    description: 'Phone strap dengan gaya metalikal hitam silver yang sleek dan modern, cocok untuk tampilan minimal yang tetap berani dan edgy.',
-    specs: ['Silver Black Finish', 'Minimalist Tone', 'Strong Metal Detail']
-  },
-  {
-    id: 'cat-ps-pearl',
-    type: 'gantungan_hp',
-    category: 'gantungan_hp',
-    name: 'Classic Pearl Phone Strap',
-    subtitle: 'Pearl Beads + Clean Ribbon Style',
-    price: 59000,
-    rating: 4.9,
-    soldCount: 88,
-    badge: 'New Arrival',
-    image: '/catalog%20phonestrep/phone%20strep.jpg',
-    description: 'Gantungan HP dengan kombinasi manik pearl dan detail clean, memberi tampilan elegant serta cocok untuk daily use dengan karakter soft feminine.',
-    specs: ['Pearl Beads', 'Daily Casual Style', 'Elegant Soft Finish']
   }
 ];
+
+export const INITIAL_COLLECTIONS = [
+  // --- BUNDLING SPECIAL COUPLE / BESTIE ---
+  {
+    id: 'col-bundle-couple-1',
+    category: 'bundling',
+    type: 'bundling',
+    name: 'Couple / Bestie 1 (2 Gelang)',
+    price: 18000,
+    priceFormatted: 'Rp 18.000',
+    image: '/images/cat_bracelets.png',
+    thumbs: [
+      '/images/cat_bracelets.png',
+      '/images/bracelet_pearl_star.jpg',
+      '/images/bracelet_white_pearl.jpg',
+      '/images/bracelet_sage_green.jpg'
+    ],
+    description: 'Paket bundling hemat spesial Bestie & Pasangan berisi 2 pcs Gelang pilihanmu. Pilih 2 model gelang favoritmu (bisa kembaran atau beda model) untuk dipakai bersama sahabat atau pasangan tercinta.',
+    highlights: {
+      strap: '2x Tali Serut Adjustable / Elastis Korea High-Durability',
+      shapes: '2 Pcs Gelang Pilihan Bebas (Bisa Mix & Match)',
+      charms: 'Desain Manik Huruf Custom, Mutiara Gading & Kristal Faset'
+    },
+    templateId: 'layout-a',
+    isCustomizable: false
+  },
+  {
+    id: 'col-bundle-couple-2',
+    category: 'bundling',
+    type: 'bundling',
+    name: 'Couple / Bestie 2 (2 Bagcharm)',
+    price: 28000,
+    priceFormatted: 'Rp 28.000',
+    image: '/images/cat_keychains.png',
+    thumbs: [
+      '/images/cat_keychains.png',
+      '/images/bagcharm_sweet_pink.jpg',
+      '/images/bagcharm_baby_blue.jpg',
+      '/images/bagcharm_tactical_black.jpg'
+    ],
+    description: 'Paket bundling hemat spesial Bestie & Pasangan berisi 2 pcs Custom Bagcharm. Bebas pilih template frame dan foto kenangan terindah untuk Bagcharm 1 dan Bagcharm 2.',
+    highlights: {
+      strap: '2x Paracord 550 / Metal Clasp Premium',
+      shapes: '2x Custom Acrylic Frame (Bebas Pilih Frame)',
+      charms: '2x Charm Bintang Wavy Akrilik & Lonceng Mini Enamel'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  {
+    id: 'col-bundle-couple-3',
+    category: 'bundling',
+    type: 'bundling',
+    name: 'Couple / Bestie 3 (1 Gelang & 1 Bagcharm)',
+    price: 27000,
+    priceFormatted: 'Rp 27.000',
+    image: '/images/custom_bagcharm_blue.jpg',
+    thumbs: [
+      '/images/custom_bagcharm_blue.jpg',
+      '/images/bracelet_crystal_bloom.jpg',
+      '/images/bagcharm_sweet_pink.jpg'
+    ],
+    description: 'Paket bundling combo terfavorit! Perpaduan 1 pcs Gelang mutiara pilihanmu dan 1 pcs Custom Bagcharm foto frame dalam satu paket hemat matching.',
+    highlights: {
+      strap: '1x Gelang Elastis Korea + 1x Paracord Bagcharm',
+      shapes: '1x Gelang Pilihan Bebas + 1x Custom Frame Bagcharm',
+      charms: 'Charm Bintang Wavy, Lonceng Mini & Iridescent Star'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  // --- CUSTOM BAGCHARMS & KEYCHAINS ---
+  {
+    id: 'col-bagcharm-baby-blue',
+    category: 'keychains',
+    type: 'bag_charm',
+    name: 'Baby Blue Star Photostrip Bagcharm',
+    price: 15000,
+    priceFormatted: 'Rp 15.000',
+    image: '/images/bagcharm_baby_blue.jpg',
+    thumbs: [
+      '/images/bagcharm_baby_blue.jpg'
+    ],
+    description: 'Gantungan tas bernuansa baby blue dengan tali paracord bintik putih model twisted loop, lonceng mini putih, charm bintang akrilik wavy iridescent, dan frame photostrip akrilik bertema vintage stamp biru.',
+    highlights: {
+      strap: 'Paracord 550 Baby Blue bintik putih (Twisted Loop)',
+      shapes: 'Frame Akrilik Photostrip 3 Pose (Vintage Stamp Edition)',
+      charms: 'Lonceng mini putih & charm bintang akrilik wavy iridescent'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  {
+    id: 'col-bagcharm-sweet-pink',
+    category: 'keychains',
+    type: 'bag_charm',
+    name: 'Sweet Pastel Pink Photostrip Bagcharm',
+    price: 15000,
+    priceFormatted: 'Rp 15.000',
+    image: '/images/bagcharm_sweet_pink.jpg',
+    thumbs: [
+      '/images/bagcharm_sweet_pink.jpg'
+    ],
+    description: 'Gantungan tas manis bernuansa soft pastel pink dengan tali paracord dual-tone pink & kuning ceria, lonceng enamel soft pink, charm bintang wavy pink pastel, dan frame photostrip floral bertema sweet aesthetic.',
+    highlights: {
+      strap: 'Paracord 550 Sweet Pink dual-tone (Twisted Loop & Dual Tassel)',
+      shapes: 'Frame Akrilik 3 Pose Floral Sweet Pink',
+      charms: 'Bintang wavy akrilik pastel pink & lonceng mini enamel soft pink'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  {
+    id: 'col-bagcharm-tactical-black',
+    category: 'keychains',
+    type: 'bag_charm',
+    name: 'Stealth Tactical Black Photostrip Bagcharm',
+    price: 15000,
+    priceFormatted: 'Rp 15.000',
+    image: '/images/bagcharm_tactical_black.jpg',
+    thumbs: [
+      '/images/bagcharm_tactical_black.jpg'
+    ],
+    description: 'Gaya tactical streetwear dengan carabiner clasp matte stealth black, tali paracord hitam bintik putih, charm bintang akrilik hitam glossy, gantungan bola bulat mutiara, dan frame photostrip 3 slot modern.',
+    highlights: {
+      strap: 'Paracord 550 Stealth Black & Matte Black Tactical Carabiner',
+      shapes: 'Frame Akrilik 3 Pose Minimalist Black Border',
+      charms: 'Bintang wavy akrilik hitam, bola mutiara putih & silver star'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  {
+    id: 'col-bagcharm-polaroid-red-black',
+    category: 'keychains',
+    type: 'bag_charm',
+    name: 'Classic Black & Red Polaroid Bagcharm',
+    price: 15000,
+    priceFormatted: 'Rp 15.000',
+    image: '/images/bagcharm_polaroid_red_black.jpg',
+    thumbs: [
+      '/images/bagcharm_polaroid_red_black.jpg'
+    ],
+    description: 'Bagcharm bergaya retro pop Y2K dengan tali paracord hitam aksen bintik merah-putih, lonceng mini putih enamel bulat, bintang akrilik wavy hitam, dan frame photostrip strip Polaroid 3 foto vintage.',
+    highlights: {
+      strap: 'Paracord 550 Hitam aksen bintik merah & rumbai dual tassel',
+      shapes: 'Frame Akrilik Polaroid Strip 3 Foto (Guts! Brave Edition)',
+      charms: 'Lonceng mini putih enamel bulat & charm bintang wavy hitam'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  {
+    id: 'col-bagcharm-earthy-mocha',
+    category: 'keychains',
+    type: 'bag_charm',
+    name: 'Autumn Earthy Mocha Tassel Bagcharm',
+    price: 15000,
+    priceFormatted: 'Rp 15.000',
+    image: '/images/bagcharm_earthy_mocha.jpg',
+    thumbs: [
+      '/images/bagcharm_earthy_mocha.jpg'
+    ],
+    description: 'Desain aesthetic vintage bertema autumn warm earth tone. Perpaduan rumbai anyaman tali katun warna espresso brown, ivory cream, dan mocha beige dengan ring clasp, charm bunga wavy cream, dan frame foto perangko klasik.',
+    highlights: {
+      strap: 'Multi-Tassel Cord Katun Espresso, Ivory Cream & Mocha dengan Ring Clasp',
+      shapes: 'Frame Vintage Postage Stamp 3 Slot Foto',
+      charms: 'Charm bunga wavy cream akrilik & manik wavy spacers'
+    },
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+
+  // --- BRACELETS (GELANG) ---
+  {
+    id: 'col-pearl-star-bracelet',
+    category: 'bracelets',
+    type: 'gelang',
+    name: 'Pearl Star Charm Bracelet',
+    price: 10000,
+    priceFormatted: 'Rp 10.000',
+    image: '/images/bracelet_pearl_star.jpg',
+    thumbs: [
+      '/images/bracelet_pearl_star.jpg',
+      '/images/bracelet_white_pearl.jpg',
+      '/images/cat_bracelets.png'
+    ],
+    description: 'Gelang dengan kombinasi mutiara pastel pink, manik bening crystal, dan charm bintang kecil yang memberi kesan feminine dan dreamy.',
+    highlights: {
+      strap: 'Elastic crystal cord anti-putus',
+      shapes: 'Baroque pearl ivory finish',
+      charms: 'Dainty star charm accent'
+    },
+    isCustomizable: false
+  },
+  {
+    id: 'col-white-pearl-bracelet',
+    category: 'bracelets',
+    type: 'gelang',
+    name: 'White Pearl & Silver Star Bracelet',
+    price: 10000,
+    priceFormatted: 'Rp 10.000',
+    image: '/images/bracelet_white_pearl.jpg',
+    thumbs: [
+      '/images/bracelet_white_pearl.jpg',
+      '/images/bracelet_crystal_bloom.jpg',
+      '/images/cat_bracelets.png'
+    ],
+    description: 'Desain pearl putih dengan kombinasi silver star charm, bead crystal, dan detail clean yang cocok untuk look minimal nan elegan.',
+    highlights: {
+      strap: 'Silver chain & smooth pearl beads',
+      shapes: 'Minimal modern wrap',
+      charms: 'Silver micro star & spacer'
+    },
+    isCustomizable: false
+  },
+  {
+    id: 'col-crystal-bloom-bracelet',
+    category: 'bracelets',
+    type: 'gelang',
+    name: 'Crystal Bloom Bracelet',
+    price: 10000,
+    priceFormatted: 'Rp 10.000',
+    image: '/images/bracelet_crystal_bloom.jpg',
+    thumbs: [
+      '/images/bracelet_crystal_bloom.jpg',
+      '/images/bracelet_sage_green.jpg',
+      '/images/cat_bracelets.png'
+    ],
+    description: 'Gelang dengan nuansa clean dan romantis, menampilkan manik crystal bening, pearl creamy, serta motif shell agar terlihat lebih feminin.',
+    highlights: {
+      strap: 'Crystal glass wire',
+      shapes: 'Floral shell motif',
+      charms: 'Iridescent shell bloom'
+    },
+    isCustomizable: false
+  },
+  {
+    id: 'col-sage-green-bracelet',
+    category: 'bracelets',
+    type: 'gelang',
+    name: 'Sage Green Pearl Bracelet',
+    price: 10000,
+    priceFormatted: 'Rp 10.000',
+    image: '/images/bracelet_sage_green.jpg',
+    thumbs: [
+      '/images/bracelet_sage_green.jpg',
+      '/images/bracelet_pearl_star.jpg',
+      '/images/cat_bracelets.png'
+    ],
+    description: 'Kombinasi pearl creamy, green glass bead, dan star accessory memberi tampilan soft pastel yang fresh, light, dan aesthetic.',
+    highlights: {
+      strap: 'Pastel cord wrap',
+      shapes: 'Sage pearl loop',
+      charms: 'Mint star charm'
+    },
+    isCustomizable: false
+  }
+];
+
 
 

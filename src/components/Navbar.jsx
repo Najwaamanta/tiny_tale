@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShoppingBag, Compass, Wrench, Search, ShieldCheck, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingBag, ShieldCheck, User, Menu, X, Settings } from 'lucide-react';
 
 export default function Navbar({
   activeView,
@@ -8,124 +8,191 @@ export default function Navbar({
   onOpenCart,
   isAdmin,
   onOpenAdminLogin,
-  onOpenAdminDashboard
+  onOpenAdminDashboard,
+  onOpenAdminAuth
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [badgeBump, setBadgeBump] = useState(false);
+
+  useEffect(() => {
+    if (cartCount > 0) {
+      setBadgeBump(true);
+      const timer = setTimeout(() => setBadgeBump(false), 350);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 25);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavClick = (view, targetId = null) => {
+    setMobileMenuOpen(false);
+    if (view === 'home' && targetId) {
+      if (activeView !== 'home') {
+        setActiveView('home');
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
+    if (view) {
+      setActiveView(view);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const isHeroMode = activeView === 'home' && !isScrolled;
+
   return (
-    <header className="site-header">
-      <div className="container nav-container">
-        {/* Brand Logo */}
-        <div className="brand-logo" onClick={() => setActiveView('home')}>
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'var(--gradient-cyber)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#0A0C10',
-              fontWeight: 900
-            }}
-          >
-            A
-          </div>
-          <span>ATELIER 92</span>
-          <span className="brand-badge">CUSTOM LAB</span>
+    <header className={`tt-navbar-header ${isHeroMode ? 'tt-navbar-hero-mode' : 'tt-navbar-solid'}`}>
+      <div className="container tt-navbar-container">
+        {/* Left: Tiny Tale Logo */}
+        <div
+          className="tt-brand-logo"
+          onClick={() => handleNavClick('home')}
+          role="button"
+          tabIndex={0}
+        >
+          <img
+            src="/images/logo.png"
+            alt="Tiny Tale"
+            className="tt-navbar-logo-img"
+          />
         </div>
 
-        {/* Navigation Links */}
-        <ul className="nav-links">
-          <li>
-            <button
-              type="button"
-              className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
-              onClick={() => setActiveView('home')}
-            >
-              Beranda
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={`nav-link ${activeView === 'studio' ? 'active' : ''}`}
-              onClick={() => setActiveView('studio')}
-            >
-              <Wrench size={16} />
-              <span>Custom Bag Charm</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={`nav-link ${activeView === 'catalog' ? 'active' : ''}`}
-              onClick={() => setActiveView('catalog')}
-            >
-              <Compass size={16} />
-              <span>Katalog Gelang & HP</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={`nav-link ${activeView === 'tracking' ? 'active' : ''}`}
-              onClick={() => setActiveView('tracking')}
-            >
-              <Search size={16} />
-              <span>Lacak Pesanan</span>
-            </button>
-          </li>
-        </ul>
+        {/* Center: Desktop Navigation Links */}
+        <nav className="tt-desktop-nav" aria-label="Main navigation">
+          <ul className="tt-nav-list">
+            <li>
+              <button
+                type="button"
+                className={`tt-nav-item ${activeView === 'home' ? 'active' : ''}`}
+                onClick={() => handleNavClick('home')}
+              >
+                Home
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={`tt-nav-item ${activeView === 'collection' ? 'active' : ''}`}
+                onClick={() => handleNavClick('collection')}
+              >
+                Collection
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={`tt-nav-item ${activeView === 'studio' || activeView === 'frames' ? 'active' : ''}`}
+                onClick={() => handleNavClick('frames')}
+              >
+                Custom
+              </button>
+            </li>
+          </ul>
+        </nav>
 
-        {/* Actions: Cart & Admin */}
-        <div className="nav-actions">
-          {/* Tracking button on mobile */}
+        {/* Right: Cart, Admin & Mobile Hamburger */}
+        <div className="tt-nav-actions">
+          {/* Admin Panel Button (Image 1) */}
           <button
             type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() => setActiveView('tracking')}
-            title="Lacak Pesanan"
-            style={{ display: 'inline-flex' }}
+            className="tt-admin-panel-btn"
+            onClick={onOpenAdminAuth || (isAdmin ? onOpenAdminDashboard : onOpenAdminLogin)}
+            title="Admin Panel"
+            aria-label="Admin Panel"
           >
-            <Search size={16} />
-            <span style={{ fontSize: '0.85rem' }}>Lacak</span>
+            <Settings size={15} className="tt-admin-gear-icon" />
+            <span>Admin Panel</span>
           </button>
 
-          {/* Cart Trigger */}
+          {/* Cart Icon / Badge Pill */}
           <button
             type="button"
-            className="btn btn-secondary btn-icon cart-btn-indicator"
+            className={`tt-cart-pill-btn ${badgeBump ? 'tt-cart-bump' : ''}`}
             onClick={onOpenCart}
-            title="Keranjang Belanja"
+            aria-label={`Keranjang belanja (${cartCount} items)`}
           >
             <ShoppingBag size={18} />
-            {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+            <span className="tt-cart-count">{cartCount}</span>
           </button>
 
-          {/* Admin Access Button */}
-          {isAdmin ? (
-            <button
-              type="button"
-              className="btn btn-lime btn-sm"
-              onClick={onOpenAdminDashboard}
-              title="Dashboard Pengelola Toko"
-            >
-              <ShieldCheck size={16} />
-              <span>Admin Mode</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={onOpenAdminLogin}
-              title="Masuk sebagai Admin Toko"
-            >
-              <User size={15} />
-              <span>Admin Login</span>
-            </button>
-          )}
+          {/* Mobile Hamburger Toggle */}
+          <button
+            type="button"
+            className="tt-hamburger-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="tt-mobile-menu">
+          <ul className="tt-mobile-nav-list">
+            <li>
+              <button
+                type="button"
+                className={`tt-mobile-nav-item ${activeView === 'home' ? 'active' : ''}`}
+                onClick={() => handleNavClick('home')}
+              >
+                Home
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={`tt-mobile-nav-item ${activeView === 'collection' ? 'active' : ''}`}
+                onClick={() => handleNavClick('collection')}
+              >
+                Collection
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={`tt-mobile-nav-item ${activeView === 'studio' || activeView === 'frames' ? 'active' : ''}`}
+                onClick={() => handleNavClick('frames')}
+              >
+                Custom Studio
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="tt-mobile-nav-item"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onOpenAdminAuth) onOpenAdminAuth();
+                  else if (isAdmin) onOpenAdminDashboard();
+                  else onOpenAdminLogin();
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EEAB0A', fontWeight: 700 }}
+              >
+                <Settings size={16} />
+                <span>Admin Panel</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
     </header>
   );
 }

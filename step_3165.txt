@@ -1,0 +1,41 @@
+Created At: 2026-11-17T09:49:08+07:00
+Completed At: 2026-11-17T09:49:08+07:00
+Created At: 2026-11-17T09:49:08+07:00
+Completed At: 2026-11-17T09:49:08+07:00
+Showing lines 1380-1415 of 1468
+1380:   position: relative;
+1381:   transition: all 0.25s ease;
+1382:   min-height: 290px;
+1383: }
+1384: 
+1385: .photostrip-picker-card.active .photostrip-paper {
+1386:   border-color: #F43F5E;
+1387:   box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.45), 0 16px 36px rgba(244, 63, 94, 0.3);
+1388: }
+1389: 
+1390: .photostrip-picker-card.active .photostrip-label {
+1391:   color: var(--accent-cyan);
+1392: }
+1393: 
+1394: .photostrip-active-badge {
+1395:   position: absolute;
+1396:   top: -10px;
+1397:   background: #F43F5E;
+1398:   color: #FFFFFF;
+1399:   font-size: 0.68rem;
+1400:   font-weight: 800;
+1401:   padding: 2px 8px;
+1402:   border-radius: 10px;
+1403:   box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4);
+1404:   z-index: 5;
+1405: }
+1406: 
+1407: .photostrip-slots-wrap {
+1408:   display: flex;
+1409:   flex-direction: column;
+1410:   gap: 5px;
+1411:   flex: 1;
+1412: }
+1413: 
+1414: .photostrip-thumb-slot {
+1415:   width: 100%;

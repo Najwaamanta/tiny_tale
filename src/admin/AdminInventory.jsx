@@ -64,30 +64,7 @@ export default function AdminInventory({
   return (
     <div>
       {/* Header bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        {/* Category filters */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[
-            { id: 'all', label: 'Semua Komponen' },
-            { id: 'low_stock', label: '⚠️ Stok Menipis (<=20)' },
-            { id: 'metal', label: 'Metal' },
-            { id: 'cyber', label: 'Cyber' },
-            { id: 'streetwear', label: 'Streetwear' },
-            { id: 'y2k', label: 'Y2K' },
-            { id: 'stone', label: 'Batu Alam' },
-            { id: 'beads', label: 'Beads & Spacers' }
-          ].map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              className={`filter-pill ${filterCategory === f.id ? 'active' : ''}`}
-              onClick={() => setFilterCategory(f.id)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
+      <div className="admin-subnav-row" style={{ justifyContent: 'flex-end' }}>
         <button
           type="button"
           className="btn btn-primary btn-sm"
@@ -107,7 +84,8 @@ export default function AdminInventory({
           </span>
         </div>
 
-        <div className="table-responsive">
+        {/* Desktop Table View */}
+        <div className="admin-desktop-table table-responsive">
           <table className="admin-table">
             <thead>
               <tr>
@@ -207,14 +185,103 @@ export default function AdminInventory({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card List View (Clean & Responsive on HP) */}
+        <div className="admin-mobile-cards">
+          {filteredCharms.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
+              <Layers size={36} color="var(--text-muted)" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontWeight: 600 }}>Tidak ada komponen aktif</div>
+            </div>
+          ) : (
+            filteredCharms.map((ch) => {
+              const isLow = (ch.stock || 0) <= 20;
+              return (
+                <div key={ch.id} className="admin-mobile-card-item">
+                  <div className="admin-mobile-card-top">
+                    <div style={{ fontSize: '2rem', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F4', borderRadius: '10px', flexShrink: 0 }}>
+                      {ch.icon || '★'}
+                    </div>
+                    <div className="admin-mobile-card-info">
+                      <div className="admin-mobile-card-title">{ch.name}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <strong style={{ fontSize: '0.92rem' }}>Rp {(ch.price || 0).toLocaleString('id-ID')}</strong>
+                        <span className={`badge ${isLow ? 'badge-rose' : 'badge-lime'}`} style={{ fontSize: '0.7rem' }}>
+                          Stok: {ch.stock || 0} unit
+                        </span>
+                      </div>
+                      <div style={{ marginTop: '4px' }}>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.68rem' }}>{ch.category}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', paddingTop: '6px', borderTop: '1px dashed var(--border-subtle)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Restock Cepat:</div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.75rem', height: '28px' }}
+                        onClick={() => onRestockCharm(ch.id, 5)}
+                      >
+                        +5
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.75rem', height: '28px' }}
+                        onClick={() => onRestockCharm(ch.id, 10)}
+                      >
+                        +10
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.75rem', height: '28px' }}
+                        onClick={() => onRestockCharm(ch.id, 25)}
+                      >
+                        +25
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="admin-mobile-card-actions">
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => setEditingCharm(ch)}
+                    >
+                      <Edit2 size={13} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      style={{ color: 'var(--accent-rose)', borderColor: 'rgba(225, 29, 72, 0.3)' }}
+                      onClick={() => {
+                        if (confirm(`Hapus charm "${ch.name}"?`)) {
+                          onDeleteCharm(ch.id);
+                        }
+                      }}
+                    >
+                      <Trash2 size={13} />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="modal-backdrop" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.2rem' }}>Tambah Charm / Komponen Baru</h3>
+        <div className="admin-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF8F4' }}>
+              <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Tambah Charm / Komponen Baru</h3>
               <button
                 type="button"
                 className="btn btn-outline btn-icon"
@@ -225,7 +292,7 @@ export default function AdminInventory({
               </button>
             </div>
 
-            <form onSubmit={handleCreateCharm} style={{ padding: '24px' }}>
+            <form onSubmit={handleCreateCharm} className="admin-modal-body">
               <div className="form-group">
                 <label className="form-label">Nama Komponen / Charm *</label>
                 <input
@@ -238,7 +305,7 @@ export default function AdminInventory({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="admin-modal-form-grid">
                 <div className="form-group">
                   <label className="form-label">Kategori</label>
                   <select
@@ -268,7 +335,7 @@ export default function AdminInventory({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="admin-modal-form-grid">
                 <div className="form-group">
                   <label className="form-label">Harga Satuan (Rp) *</label>
                   <input
@@ -303,7 +370,7 @@ export default function AdminInventory({
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '42px', fontWeight: 700 }}>
                 <span>Simpan ke Katalog Studio</span>
               </button>
             </form>
@@ -313,10 +380,10 @@ export default function AdminInventory({
 
       {/* Edit Modal */}
       {editingCharm && (
-        <div className="modal-backdrop" onClick={() => setEditingCharm(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.2rem' }}>Edit Komponen: {editingCharm.name}</h3>
+        <div className="admin-modal-overlay" onClick={() => setEditingCharm(null)}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF8F4' }}>
+              <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Edit Komponen: {editingCharm.name}</h3>
               <button
                 type="button"
                 className="btn btn-outline btn-icon"
@@ -327,7 +394,7 @@ export default function AdminInventory({
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} style={{ padding: '24px' }}>
+            <form onSubmit={handleSaveEdit} className="admin-modal-body">
               <div className="form-group">
                 <label className="form-label">Nama Komponen</label>
                 <input
@@ -339,7 +406,7 @@ export default function AdminInventory({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="admin-modal-form-grid">
                 <div className="form-group">
                   <label className="form-label">Harga (Rp)</label>
                   <input
@@ -363,7 +430,7 @@ export default function AdminInventory({
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }}>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px', height: '42px', fontWeight: 700 }}>
                 <span>Update Komponen</span>
               </button>
             </form>

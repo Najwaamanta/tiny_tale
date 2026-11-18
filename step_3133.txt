@@ -1,0 +1,105 @@
+Created At: 2026-11-17T09:45:03+07:00
+Completed At: 2026-11-17T09:45:03+07:00
+Created At: 2026-11-17T09:45:03+07:00
+Completed At: 2026-11-17T09:45:03+07:00
+Showing lines 1-100 of 599
+1: import React from 'react';
+2: import { Sparkles, ArrowRight, Camera, Check } from 'lucide-react';
+3: import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS } from '../data/initialData';
+4: 
+5: export default function FrameLayoutSelector({ onSelectTemplate, selectedTemplateId }) {
+6:   // Combine custom frames from /frames/ and photobooth layouts
+7:   const allTemplates = [
+8:     {
+9:       id: 'frame-1',
+10:       type: 'custom_frame',
+11:       frameId: 'frame-1',
+12:       layoutId: 'layout-a',
+13:       name: '01: Tiny Tale Stamp Classic',
+14:       subtitle: 'Size 6 x 2 Strip (2 Pose)',
+15:       badge: 'Classic 2-Pose',
+16:       badgeClass: 'badge-cyan',
+17:       imageSrc: '/frames/1.png',
+18:       isPublicFrame: true,
+19:       description: 'Strip photobooth navy dengan tepi bergerigi perangko klasik dan ilustrasi sardine vintage.'
+20:     },
+21:     {
+22:       id: 'frame-borcelle',
+23:       type: 'custom_frame',
+24:       frameId: 'frame-borcelle',
+25:       layoutId: 'layout-a',
+26:       name: '02: Borcelle Vintage Mosaic',
+27:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+28:       badge: 'Mosaic Emblem',
+29:       badgeClass: 'badge-lime',
+30:       imageSrc: '/frames/2.png',
+31:       isPublicFrame: true,
+32:       description: 'Template eksklusif keramik mosaic hijau tua dengan plat logam Borcelle dan emblem Tiny Tale perak.'
+33:     },
+34:     {
+35:       id: 'frame-3',
+36:       type: 'custom_frame',
+37:       frameId: 'frame-3',
+38:       layoutId: 'layout-a',
+39:       name: '03: Night Arched Comic Star',
+40:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+41:       badge: 'Comic Arched',
+42:       badgeClass: 'badge-purple',
+43:       imageSrc: '/frames/3.png',
+44:       overlayImage: '/frames/3_overlay.png',
+45:       isPublicFrame: true,
+46:       description: 'Frame lengkung hitam modern dengan aksen bintang kuning komik pop art nan playful.'
+47:     },
+48:     {
+49:       id: 'frame-4',
+50:       type: 'custom_frame',
+51:       frameId: 'frame-4',
+52:       layoutId: 'layout-a',
+53:       name: '04: Cottagecore Lily',
+54:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+55:       badge: 'Sweet Floral',
+56:       badgeClass: 'badge-rose',
+57:       imageSrc: '/frames/4.png',
+58:       overlayImage: '/frames/4_overlay.png',
+59:       isPublicFrame: true,
+60:       description: 'Desain bermotif garis pastel hijau-pink dengan hiasan bunga lili mekar nan anggun di sudut frame.'
+61:     },
+62:     {
+63:       id: 'frame-the-moment',
+64:       type: 'custom_frame',
+65:       frameId: 'frame-the-moment',
+66:       layoutId: 'layout-a',
+67:       name: '05: Archive Memory Editorial',
+68:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+69:       badge: 'Barcode Ticket',
+70:       badgeClass: 'badge-purple',
+71:       imageSrc: '/frames/5.png',
+72:       isPublicFrame: true,
+73:       description: 'Strip photobooth editorial hitam modern bergaya tiket archive dengan barcode unik dan tipografi Tiny Tale.'
+74:     },
+75:     {
+76:       id: 'frame-6',
+77:       type: 'custom_frame',
+78:       frameId: 'frame-6',
+79:       layoutId: 'layout-a',
+80:       name: '06: Brown Polka Dot Fabric',
+81:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+82:       badge: 'Linen Dots',
+83:       badgeClass: 'badge-lime',
+84:       imageSrc: '/frames/6.png',
+85:       isPublicFrame: true,
+86:       description: 'Tekstur kain kanvas cokelat bertabur motif polkadot putih dengan pinggiran tiket dan teks MEMORIES.'
+87:     },
+88:     {
+89:       id: 'frame-7',
+90:       type: 'custom_frame',
+91:       frameId: 'frame-7',
+92:       layoutId: 'layout-a',
+93:       name: '07: Pink Dainty Polka Dot',
+94:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+95:       badge: 'Pastel Dots',
+96:       badgeClass: 'badge-rose',
+97:       imageSrc: '/frames/7.png',
+98:       isPublicFrame: true,
+99:       description: 'Kain kanvas blush pink lembut dengan motif polkadot manis dan logo Tiny Tale.'
+100:     },

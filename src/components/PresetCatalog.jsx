@@ -28,8 +28,7 @@ export default function PresetCatalog({ presets = [], onRemixPreset, onDirectAdd
             {[
               { id: 'all', label: 'Semua Produk' },
               { id: 'bag_charm', label: 'Bag Charm' },
-              { id: 'gelang', label: 'Gelang' },
-              { id: 'gantungan_hp', label: 'Gantungan HP' }
+              { id: 'gelang', label: 'Gelang' }
             ].map((f) => (
               <button
                 key={f.id}

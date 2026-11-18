@@ -1,0 +1,589 @@
+import React, { useState } from 'react';
+import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus } from 'lucide-react';
+import { aggregateCustomersFromOrders, exportCustomersToExcel } from '../utils/excelExport';
+import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
+import AdminAddCustomerHistoryModal from './AdminAddCustomerHistoryModal';
+
+export default function AdminCustomers({ orders = [], collections = [], onAddOrder }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('recent'); // 'recent', 'spent', 'count'
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [downloadingItemId, setDownloadingItemId] = useState(null);
+  const [isAddHistoryOpen, setIsAddHistoryOpen] = useState(false);
+
+  // Aggregate customers from all orders
+  const customers = aggregateCustomersFromOrders(orders);
+
+  // Filter by search
+  const filteredCustomers = customers.filter((c) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.whatsapp.toLowerCase().includes(q) ||
+      c.city.toLowerCase().includes(q) ||
+      c.address.toLowerCase().includes(q)
+    );
+  });
+
+  // Sort
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    if (sortBy === 'spent') return b.totalSpent - a.totalSpent;
+    if (sortBy === 'count') return b.ordersCount - a.ordersCount;
+    return new Date(b.lastOrderDate) - new Date(a.lastOrderDate);
+  });
+
+  // Metrics
+  const totalCustomers = customers.length;
+  const repeatCustomers = customers.filter((c) => c.ordersCount > 1).length;
+  const totalLTV = customers.reduce((sum, c) => sum + c.totalSpent, 0);
+  const avgLTV = totalCustomers > 0 ? Math.round(totalLTV / totalCustomers) : 0;
+
+  const handleExportExcel = () => {
+    exportCustomersToExcel(sortedCustomers);
+  };
+
+  const handleDownloadFrame = async (item, order) => {
+    const key = `${order.id}-${item.id || item.title}`;
+    setDownloadingItemId(key);
+    try {
+      await downloadPhotostripFrame({
+        item,
+        orderId: order.id,
+        customerName: order.customer?.name || 'Customer'
+      });
+    } catch (err) {
+      console.error('Download frame error:', err);
+      alert('Gagal mengunduh frame foto. Pastikan aset frame tersedia.');
+    } finally {
+      setDownloadingItemId(null);
+    }
+  };
+
+  return (
+    <div>
+      {/* Sub-metrics */}
+      <div className="admin-metrics-grid" style={{ marginBottom: '24px' }}>
+        <div className="metric-card">
+          <div className="metric-header">
+            <span>DATABASE PELANGGAN</span>
+            <div className="metric-icon-wrap" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--accent-purple)' }}>
+              <Users size={18} />
+            </div>
+          </div>
+          <div className="metric-value">{totalCustomers} Customer</div>
+          <div className="metric-sub">Tercatat di riwayat order Tiny Tale</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-header">
+            <span>PELANGGAN LOYAL / REPEAT</span>
+            <div className="metric-icon-wrap" style={{ background: 'rgba(5, 150, 105, 0.1)', color: 'var(--accent-lime)' }}>
+              <Award size={18} />
+            </div>
+          </div>
+          <div className="metric-value">{repeatCustomers} Customer</div>
+          <div className="metric-sub">
+            {totalCustomers > 0 ? Math.round((repeatCustomers / totalCustomers) * 100) : 0}% belanja lebih dari 1 kali
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-header">
+            <span>RATA-RATA NILAI BELANJA (LTV)</span>
+            <div className="metric-icon-wrap" style={{ background: 'rgba(2, 132, 199, 0.1)', color: 'var(--accent-cyan)' }}>
+              <ShoppingBag size={18} />
+            </div>
+          </div>
+          <div className="metric-value">Rp {avgLTV.toLocaleString('id-ID')}</div>
+          <div className="metric-sub">Total belanja per akun pembeli</div>
+        </div>
+      </div>
+
+      {/* Main Table Card */}
+      <div className="admin-table-card">
+        {/* Table Top Controls */}
+        <div className="admin-table-head">
+          <div>
+            <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Users size={20} color="var(--accent-purple)" />
+              <span>Riwayat & Database Pelanggan</span>
+            </h3>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Daftar seluruh pembeli yang pernah bertransaksi kustom di toko Anda
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Search */}
+            <div style={{ position: 'relative', minWidth: '240px' }}>
+              <Search
+                size={16}
+                style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
+              />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Cari nama, WhatsApp, kota..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: '8px 14px 8px 36px',
+                  height: '40px',
+                  fontSize: '0.88rem',
+                  lineHeight: 'normal',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* Sort */}
+            <select
+              className="form-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                height: '40px',
+                padding: '8px 34px 8px 14px',
+                fontSize: '0.88rem',
+                lineHeight: 'normal',
+                width: 'auto',
+                boxSizing: 'border-box'
+              }}
+            >
+              <option value="recent">Transaksi Terbaru</option>
+              <option value="spent">Total Belanja Tertinggi</option>
+              <option value="count">Paling Sering Order</option>
+            </select>
+
+            {/* Add Purchase History Button */}
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setIsAddHistoryOpen(true)}
+              style={{
+                background: '#21201D',
+                borderColor: '#21201D',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                height: '40px',
+                padding: '0 16px'
+              }}
+              title="Catat Riwayat Pembelian dari Customer Offline / WhatsApp / Bazaar"
+            >
+              <Plus size={16} />
+              <span>Tambah Riwayat Pembelian</span>
+            </button>
+
+            {/* Export Excel Button */}
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleExportExcel}
+              style={{
+                background: '#059669',
+                borderColor: '#047857',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                height: '40px',
+                padding: '0 16px'
+              }}
+              title="Download Data Pembeli ke Excel (.xlsx)"
+            >
+              <Download size={15} />
+              <span>Download Excel Pelanggan</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="admin-desktop-table table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Pelanggan</th>
+                <th>Kontak WhatsApp</th>
+                <th>Kota & Alamat</th>
+                <th>Frekuensi Order</th>
+                <th>Total Belanja (LTV)</th>
+                <th>Pesanan Terakhir</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <Users size={36} color="var(--border-medium)" />
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                        Belum Ada Riwayat Pembeli
+                      </div>
+                      <div style={{ fontSize: '0.82rem', maxWidth: '380px' }}>
+                        Database pembeli akan otomatis terisi dan diperbarui dari setiap pesanan yang masuk melalui website.
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                sortedCustomers.map((cust) => {
+                  const cleanWA = (cust.whatsapp || '').replace(/[^0-9]/g, '');
+                  const waUrl = cleanWA.startsWith('0')
+                    ? `https://wa.me/62${cleanWA.slice(1)}`
+                    : `https://wa.me/${cleanWA}`;
+
+                  return (
+                    <tr key={cust.key}>
+                      {/* Name & Initials */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '50%',
+                              background: 'var(--pastel-lavender)',
+                              color: 'var(--accent-purple)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 800,
+                              fontSize: '0.9rem',
+                              flexShrink: 0
+                            }}
+                          >
+                            {cust.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: '0.95rem' }}>{cust.name}</strong>
+                            {cust.ordersCount > 1 && (
+                              <div style={{ marginTop: '2px' }}>
+                                <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
+                                  ⭐ VIP ({cust.ordersCount}x Order)
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* WhatsApp with click to chat */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Phone size={14} color="#059669" />
+                          <span style={{ fontWeight: 600 }}>{cust.whatsapp}</span>
+                          {cleanWA && (
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-outline btn-icon"
+                              style={{ width: '26px', height: '26px', padding: 0 }}
+                              title="Chat via WhatsApp"
+                            >
+                              <ExternalLink size={12} color="#059669" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Address */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', maxWidth: '240px' }}>
+                          <MapPin size={14} color="var(--text-muted)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                          <div>
+                            <strong>{cust.city}</strong>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'normal' }}>
+                              {cust.address}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Orders Count */}
+                      <td>
+                        <span className="badge badge-cyan" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+                          {cust.ordersCount} Transaksi
+                        </span>
+                      </td>
+
+                      {/* Total Spent */}
+                      <td>
+                        <strong style={{ fontSize: '1rem', color: 'var(--accent-lime)' }}>
+                          Rp {cust.totalSpent.toLocaleString('id-ID')}
+                        </strong>
+                      </td>
+
+                      {/* Last Order Date */}
+                      <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={13} />
+                          <span>
+                            {new Date(cust.lastOrderDate).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setSelectedCustomer(cust)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <Eye size={14} />
+                          <span>Riwayat ({cust.ordersCount})</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card List View (Clean & Responsive on HP) */}
+        <div className="admin-mobile-cards">
+          {sortedCustomers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
+              <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontWeight: 600 }}>Belum ada data pelanggan</div>
+            </div>
+          ) : (
+            sortedCustomers.map((cust, idx) => (
+              <div key={idx} className="admin-mobile-card-item">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <strong style={{ fontSize: '0.98rem' }}>{cust.name}</strong>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      {cust.whatsapp} • {cust.city}
+                    </div>
+                  </div>
+                  <span className="badge badge-cyan" style={{ fontSize: '0.75rem' }}>
+                    {cust.ordersCount}x Order
+                  </span>
+                </div>
+
+                <div className="admin-mobile-card-meta">
+                  <div><strong>Total Belanja:</strong> <span style={{ color: '#059669', fontWeight: 800 }}>Rp {cust.totalSpent.toLocaleString('id-ID')}</span></div>
+                  <div style={{ marginTop: '2px' }}><strong>Alamat:</strong> {cust.address}</div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setSelectedCustomer(cust)}
+                  style={{ width: '100%', justifyContent: 'center', height: '38px', fontWeight: 700 }}
+                >
+                  <Eye size={14} />
+                  <span>Lihat Riwayat Belanja ({cust.ordersCount})</span>
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Customer Order History Modal / Drawer */}
+      {selectedCustomer && (
+        <div className="admin-modal-overlay" onClick={() => setSelectedCustomer(null)}>
+          <div
+            className="admin-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '800px', maxHeight: '92vh' }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#FAF8F4'
+              }}
+            >
+              <div>
+                <span className="badge badge-purple" style={{ marginBottom: '4px' }}>
+                  Profil & Riwayat Pembeli
+                </span>
+                <h3 style={{ fontSize: '1.25rem', marginTop: '2px' }}>{selectedCustomer.name}</h3>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  WhatsApp: {selectedCustomer.whatsapp} • {selectedCustomer.city} • Total Belanja: Rp {selectedCustomer.totalSpent.toLocaleString('id-ID')}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-icon"
+                style={{ width: '34px', height: '34px' }}
+                onClick={() => setSelectedCustomer(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '24px', overflowY: 'auto', maxHeight: 'calc(90vh - 120px)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>
+                  Daftar Pesanan ({selectedCustomer.orders.length})
+                </h4>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Urutan transaksi dari terbaru
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {selectedCustomer.orders.map((ord) => (
+                  <div
+                    key={ord.id}
+                    style={{
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border-medium)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '18px'
+                    }}
+                  >
+                    {/* Top order summary */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        borderBottom: '1px solid var(--border-subtle)',
+                        paddingBottom: '12px',
+                        marginBottom: '14px',
+                        flexWrap: 'wrap',
+                        gap: '8px'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: '1.05rem', color: 'var(--accent-purple)' }}>
+                          {ord.id}
+                        </strong>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Clock size={13} />
+                          <span>
+                            {new Date(ord.createdAt).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                          Rp {(ord.totalAmount ?? ord.total ?? 0).toLocaleString('id-ID')}
+                        </div>
+                        <span className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}>
+                          {ord.paymentStatus === 'paid' ? 'Lunas' : 'Menunggu Bayar'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Order Items Breakdown */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {(ord.items || []).map((it, idx) => {
+                        const isBagCharm = it.productType === 'bag_charm' || it.title?.toLowerCase().includes('bag charm') || it.title?.toLowerCase().includes('bagcharm');
+                        const frameConf = resolveFrameConfig(it);
+                        const photos = getFramePhotosForItem(it);
+                        const dlKey = `${ord.id}-${it.id || idx}`;
+                        const isDownloading = downloadingItemId === dlKey;
+
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              background: 'var(--bg-secondary)',
+                              border: '1px solid var(--border-subtle)',
+                              borderRadius: '8px',
+                              padding: '12px 14px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              flexWrap: 'wrap',
+                              gap: '12px'
+                            }}
+                          >
+                            <div style={{ flex: 1, minWidth: '220px' }}>
+                              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                                {it.title} {it.quantity > 1 && `(x${it.quantity})`}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                • Model: <strong>{it.baseName || 'Custom'}</strong>
+                                {it.customLetters && <span> • Huruf: <strong>[{it.customLetters}]</strong></span>}
+                              </div>
+
+                              {/* Charm info */}
+                              {it.charms && it.charms.length > 0 && (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                  Charms: {it.charms.map((c) => c.name || c).join(', ')}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Download Frame button for Bag Charms with photo */}
+                            {isBagCharm && (
+                              <button
+                                type="button"
+                                className="btn btn-sm"
+                                disabled={isDownloading}
+                                onClick={() => handleDownloadFrame(it, ord)}
+                                style={{
+                                  background: '#4F46E5',
+                                  color: '#FFFFFF',
+                                  borderColor: '#4338CA',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  fontWeight: 700,
+                                  fontSize: '0.8rem'
+                                }}
+                                title="Download frame photostrip lengkap dengan foto yang diupload pembeli"
+                              >
+                                <Download size={14} />
+                                <span>{isDownloading ? 'Menyiapkan...' : 'Download Frame Foto'}</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add Customer Purchase History Modal */}
+      <AdminAddCustomerHistoryModal
+        isOpen={isAddHistoryOpen}
+        onClose={() => setIsAddHistoryOpen(false)}
+        onSave={(orderData) => {
+          if (onAddOrder) {
+            onAddOrder(orderData);
+          }
+        }}
+        orders={orders}
+        collections={collections}
+      />
+    </div>
+  );
+}

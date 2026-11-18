@@ -1,0 +1,145 @@
+Created At: 2026-11-15T12:50:05+07:00
+Completed At: 2026-11-15T12:50:05+07:00
+Created At: 2026-11-15T12:50:05+07:00
+Completed At: 2026-11-15T12:50:05+07:00
+Showing lines 121-260 of 452
+121:       imageSrc: '/frames/9.png',
+122:       isPublicFrame: true,
+123:       description: 'Frame putih bersih berhias polkadot hitam kontras dengan tipografi Tiny Tale minimalis.'
+124:     },
+125:     {
+126:       id: 'frame-10',
+127:       type: 'custom_frame',
+128:       frameId: 'frame-10',
+129:       layoutId: 'layout-a',
+130:       name: '10: Black Polka Dot Classic',
+131:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+132:       badge: 'Retro Dots',
+133:       badgeClass: 'badge-purple',
+134:       imageSrc: '/frames/10.png',
+135:       isPublicFrame: true,
+136:       description: 'Kain katun hitam pekat dengan polkadot putih klasik yang timeless dan estetik.'
+137:     },
+138:     {
+139:       id: 'frame-11',
+140:       type: 'custom_frame',
+141:       frameId: 'frame-11',
+142:       layoutId: 'layout-a',
+143:       name: '11: Spider-Hero Comic Edition',
+144:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+145:       badge: 'Hero Edition',
+146:       badgeClass: 'badge-rose',
+147:       imageSrc: '/frames/11.png',
+148:       isPublicFrame: true,
+149:       description: 'Desain photostrip berani bernuansa superhero komik dengan ornamen web crest dan gaya pop art.'
+150:     },
+151:     {
+152:       id: 'frame-12',
+153:       type: 'custom_frame',
+154:       frameId: 'frame-12',
+155:       layoutId: 'layout-a',
+156:       name: '12: Terracotta Watercolor Stripes',
+157:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+158:       badge: 'Artisan Stripe',
+159:       badgeClass: 'badge-rose',
+160:       imageSrc: '/frames/12.png',
+161:       isPublicFrame: true,
+162:       description: 'Sapuan kuas cat air vertikal warna terracotta dan peach hangat dengan logo Tiny Tale silver.'
+163:     },
+164:     {
+165:       id: 'frame-13',
+166:       type: 'custom_frame',
+167:       frameId: 'frame-13',
+168:       layoutId: 'layout-a',
+169:       name: '13: Retro Indie Rock & Cassette',
+170:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+171:       badge: 'Indie Rock',
+172:       badgeClass: 'badge-cyan',
+173:       imageSrc: '/frames/13.png',
+174:       isPublicFrame: true,
+175:       description: 'Nuansa rock indie 90-an dengan ornamen gitar elektrik, kaset pita vintage, dan pita film negatif.'
+176:     },
+177:     {
+178:       id: 'frame-14',
+179:       type: 'custom_frame',
+180:       frameId: 'frame-14',
+181:       layoutId: 'layout-a',
+182:       name: '14: Minimal Pure White',
+183:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+184:       badge: 'Pure Minimal',
+185:       badgeClass: 'badge-cyan',
+186:       imageSrc: '/frames/14.png',
+187:       isPublicFrame: true,
+188:       description: 'Strip photobooth vertikal klasik 3 foto dengan border putih minimalis dan logo rose gold.'
+189:     },
+190:     {
+191:       id: 'frame-15',
+192:       type: 'custom_frame',
+193:       frameId: 'frame-15',
+194:       layoutId: 'layout-a',
+195:       name: '15: Midnight Deep Blue',
+196:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+197:       badge: 'Deep Navy',
+198:       badgeClass: 'badge-purple',
+199:       imageSrc: '/frames/15.png',
+200:       isPublicFrame: true,
+201:       description: 'Warna biru midnight elegan yang memberikan kontras tajam nan estetik pada setiap foto kenanganmu.'
+202:     },
+203:     {
+204:       id: 'frame-16',
+205:       type: 'custom_frame',
+206:       frameId: 'frame-16',
+207:       layoutId: 'layout-a',
+208:       name: '16: Onyx Pitch Black',
+209:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+210:       badge: 'Onyx Black',
+211:       badgeClass: 'badge-purple',
+212:       imageSrc: '/frames/16.png',
+213:       isPublicFrame: true,
+214:       description: 'Warna hitam pekat minimalis dengan aksen logo Tiny Tale emas bernuansa modern editorial.'
+215:     },
+216:     {
+217:       id: 'frame-17',
+218:       type: 'custom_frame',
+219:       frameId: 'frame-17',
+220:       layoutId: 'layout-a',
+221:       name: '17: Vintage Maroon Royale',
+222:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+223:       badge: 'Maroon Velvet',
+224:       badgeClass: 'badge-rose',
+225:       imageSrc: '/frames/17.png',
+226:       isPublicFrame: true,
+227:       description: 'Warna merah maroon anggun nan mewah dengan logo Tiny Tale emas berkilau hangat.'
+228:     },
+229:     {
+230:       id: 'frame-18',
+231:       type: 'custom_frame',
+232:       frameId: 'frame-18',
+233:       layoutId: 'layout-a',
+234:       name: '18: Espresso Mocha Brown',
+235:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+236:       badge: 'Warm Mocha',
+237:       badgeClass: 'badge-lime',
+238:       imageSrc: '/frames/18.png',
+239:       isPublicFrame: true,
+240:       description: 'Nuansa cokelat espresso hangat yang menenangkan dengan sentuhan logo metallic Tiny Tale.'
+241:     },
+242:     {
+243:       id: 'frame-19',
+244:       type: 'custom_frame',
+245:       frameId: 'frame-19',
+246:       layoutId: 'layout-a',
+247:       name: '19: Burgundy Shimmer Foil',
+248:       subtitle: 'Size 6 x 2 Strip (3 Pose)',
+249:       badge: 'Luxury Foil',
+250:       badgeClass: 'badge-purple',
+251:       imageSrc: '/frames/19.png',
+252:       isPublicFrame: true,
+253:       description: 'Sentuhan kemewahan tekstur foil burgundy dengan kilau metalik elegan dan logo timbul emas.'
+254:     }
+255:   ];
+256: 
+257:   return (
+258:     <section className="section-frame-selector" id="pilih-frame" style={{ paddingTop: '40px', paddingBottom: '70px' }}>
+259:       <div className="container">
+260:         {/* ========================================================

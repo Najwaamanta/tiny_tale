@@ -1,116 +1,119 @@
 import React from 'react';
-import { ShieldCheck, Truck, Sparkles, MessageSquare } from 'lucide-react';
 
 export default function Footer({ onNavigate }) {
+  const handleNav = (e, view, elementId) => {
+    e.preventDefault();
+    if (elementId) {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    if (onNavigate && view) {
+      onNavigate(view);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <footer className="site-footer">
+    <footer className="tt-footer">
       <div className="container">
-        {/* Features bar */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '20px',
-            paddingBottom: '36px',
-            marginBottom: '36px',
-            borderBottom: '1px solid var(--border-subtle)'
-          }}
-        >
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0, 242, 254, 0.1)', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>100% Custom Handmade</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Dirakit satu per satu oleh artisan</div>
-            </div>
+        <div className="tt-footer-main">
+          {/* Brand Col */}
+          <div className="tt-footer-brand">
+            <img
+              src="/images/logo.png"
+              alt="Tiny Tale Studio"
+              className="tt-footer-logo"
+            />
+            <p className="tt-footer-desc">
+              Personalized, handmade accessories that capture your best memories. Designed by you, crafted by us.
+            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(163, 230, 53, 0.1)', color: 'var(--accent-lime)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={20} />
+          {/* Nav Cols */}
+          <div className="tt-footer-links-group">
+            <div className="tt-footer-col">
+              <h4 className="tt-footer-col-title">SHOP</h4>
+              <ul className="tt-footer-list">
+                <li>
+                  <a href="#koleksi-lengkap" onClick={(e) => handleNav(e, 'collection', 'koleksi-lengkap')}>
+                    Custom Keychains
+                  </a>
+                </li>
+                <li>
+                  <a href="#koleksi-lengkap" onClick={(e) => handleNav(e, 'collection', 'koleksi-lengkap')}>
+                    Custom Bracelets
+                  </a>
+                </li>
+                <li>
+                  <a href="#koleksi-lengkap" onClick={(e) => handleNav(e, 'collection', 'koleksi-lengkap')}>
+                    Photo Frames & Strips
+                  </a>
+                </li>
+              </ul>
             </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Material Anti-Karat</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Titanium alloy, stainless & 550 paracord</div>
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Truck size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Pengiriman Seluruh RI</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>SiCepat, JNE, J&T, & Instant Kurir</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.1)', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageSquare size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>WhatsApp Care</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Konsultasi desain langsung</div>
+            <div className="tt-footer-col">
+              <h4 className="tt-footer-col-title">HELP</h4>
+              <ul className="tt-footer-list">
+                <li>
+                  <a href="#custom-studio" onClick={(e) => handleNav(e, 'studio', null)}>
+                    Custom Studio
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
-        {/* Links grid */}
-        <div className="footer-grid">
-          <div className="footer-col">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'var(--gradient-cyber)', color: '#0A0C10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
-                A
-              </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem' }}>
-                ATELIER 92
-              </span>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '300px', lineHeight: 1.6 }}>
-              Studio aksesoris custom modern unisex dengan konsep "Create Your Own". Bag charm, gelang, dan gantungan HP untuk pria dan wanita yang mengekspresikan karakter personal.
-            </p>
-          </div>
+        {/* Divider */}
+        <div className="tt-footer-divider" />
 
-          <div className="footer-col">
-            <h5>Studio Kustom</h5>
-            <ul className="footer-links">
-              <li><a href="#studio-customizer" onClick={() => onNavigate('studio')}>Custom Bag Charm</a></li>
-              <li><a href="#studio-customizer" onClick={() => onNavigate('studio')}>Custom Gelang Rantai</a></li>
-              <li><a href="#studio-customizer" onClick={() => onNavigate('studio')}>Custom Gantungan HP</a></li>
-              <li><a href="#katalog-inspirasi" onClick={() => onNavigate('catalog')}>Koleksi Inspirasi Drops</a></li>
-            </ul>
-          </div>
+        {/* Bottom bar */}
+        <div className="tt-footer-bottom">
+          <p className="tt-footer-copy">
+            © 2027 Tiny Tale Studio. All rights reserved. Made with love.
+          </p>
 
-          <div className="footer-col">
-            <h5>Customer Care</h5>
-            <ul className="footer-links">
-              <li><a href="#lacak-pesanan" onClick={() => onNavigate('tracking')}>Lacak Pesanan</a></li>
-              <li><a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer">Konsultasi WhatsApp</a></li>
-              <li><a href="#">Panduan Ukuran Gelang</a></li>
-              <li><a href="#">Garansi Perakitan</a></li>
-            </ul>
-          </div>
-
-          <div className="footer-col">
-            <h5>Workshop Studio</h5>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Atelier Craft Creative Lab<br />
-              Jl. Senopati Raya No. 92<br />
-              Kebayoran Baru, Jakarta Selatan<br />
-              DKI Jakarta 12190
-            </p>
-          </div>
-        </div>
-
-        {/* Footer bottom */}
-        <div className="footer-bottom">
-          <div>© 2026 ATELIER 92 CUSTOM LAB. All rights reserved. Modern Unisex Accessories.</div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <span>Privacy Policy</span>
-            <span>Terms of Crafting</span>
-            <span>Made with Precision</span>
+          <div className="tt-footer-socials">
+            <a
+              href="https://wa.me/6281318409891?text=Halo%20Tiny%20Tale%2C%20saya%20ingin%20tanya%20dan%20pesan%20aksesoris%20custom"
+              target="_blank"
+              rel="noreferrer"
+              className="tt-social-icon"
+              aria-label="WhatsApp (+62 813-1840-9891)"
+              title="Chat WhatsApp: +62 813-1840-9891"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.17-.48-.3z" />
+              </svg>
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              className="tt-social-icon"
+              aria-label="Instagram"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
+            </a>
+            <a
+              href="https://x.com"
+              target="_blank"
+              rel="noreferrer"
+              className="tt-social-icon"
+              aria-label="X (Twitter)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>

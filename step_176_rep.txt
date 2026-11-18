@@ -1,0 +1,9 @@
+    templateId: 'layout-a',
+    isCustomizable: true
+  },
+  // --- PHONE STRAPS (GANTUNGAN HP) ---
+  {
+    id: 'col-phone-strap-velvet',
+    category: 'straps',
+    type: 'phone_strap',
+    name: 'Velvet Phone Strap Charm',

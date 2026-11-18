@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, AlertTriangle } from 'lucide-react';
 
 export default function CartModal({
   isOpen,
@@ -7,183 +7,367 @@ export default function CartModal({
   cartItems = [],
   onUpdateQuantity,
   onRemoveItem,
+  onClearCart,
   onProceedCheckout
 }) {
   if (!isOpen) return null;
 
-  const totalAmount = cartItems.reduce((acc, item) => acc + (item.subtotal || item.unitPrice * (item.quantity || 1)), 0);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleQuantityChange = (item, delta) => {
+    const currentQty = Number(item.quantity) || 1;
+    if (currentQty + delta < 1) {
+      setItemToDelete(item);
+      return;
+    }
+    const targetKey = item.cartItemId || item.id;
+    if (onUpdateQuantity) {
+      onUpdateQuantity(targetKey, delta);
+    }
+  };
+
+  const totalAmount = cartItems.reduce(
+    (acc, item) => acc + (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1)),
+    0
+  );
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+      <div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: '640px', position: 'relative', overflow: 'hidden' }}
+      >
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            padding: '18px 24px',
+            borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ShoppingBag size={20} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '1.25rem' }}>Keranjang Kustom ({cartItems.length})</h3>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                background: 'rgba(0, 242, 254, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <ShoppingBag size={20} color="var(--accent-cyan)" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Keranjang Pesanan</h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} kustom
+              </span>
+            </div>
           </div>
-          <button
-            type="button"
-            className="btn btn-outline btn-icon"
-            style={{ width: '34px', height: '34px' }}
-            onClick={onClose}
-          >
-            <X size={18} />
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {cartItems.length > 0 && onClearCart && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowClearConfirm(true)}
+                style={{ fontSize: '0.78rem', padding: '6px 12px', color: 'var(--text-muted)' }}
+                title="Hapus semua item di keranjang"
+              >
+                Kosongkan
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="btn btn-outline btn-icon"
+              style={{ width: '34px', height: '34px' }}
+              onClick={onClose}
+              title="Tutup Keranjang"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px 24px' }}>
+        <div style={{ padding: '20px 24px', maxHeight: '60vh', overflowY: 'auto' }}>
           {cartItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-              <p style={{ fontSize: '1.05rem', marginBottom: '8px' }}>Keranjang kustommu masih kosong.</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Rancang aksesoris pertamamu di Studio Kustomisasi!
+            <div style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-secondary)' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'var(--bg-tertiary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
+                <ShoppingBag size={28} color="var(--text-muted)" />
+              </div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-primary)' }}>
+                Keranjang pesananmu masih kosong
+              </h4>
+              <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', maxWidth: '340px', margin: '0 auto' }}>
+                Pilih koleksi aksesoris favoritmu atau rancang gantungan tas unikmu sendiri di Studio Kustomisasi!
               </p>
             </div>
           ) : (
-            <div className="cart-items-list">
-              {cartItems.map((item) => (
-                <div key={item.cartItemId} className="cart-item-card">
-                  {/* Thumbnail: Photostrip or Color Swatch */}
-                  <div className="cart-item-thumb">
-                    {item.frameImage ? (
-                      <div
-                        style={{
-                          width: '26px',
-                          height: '48px',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                          border: `1.5px solid ${item.hardwareColor || '#94A3B8'}`,
-                          background: '#0B0D11'
-                        }}
-                      >
-                        <img
-                          src={item.frameImage}
-                          alt={item.frameName || 'Frame'}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          width: '26px',
-                          height: '26px',
-                          borderRadius: '50%',
-                          background: item.cordColor || '#111317',
-                          border: `2px solid ${item.hardwareColor || '#94A3B8'}`
-                        }}
-                      />
-                    )}
-                  </div>
+            <div className="cart-items-list" style={{ margin: 0 }}>
+              {cartItems.map((item, idx) => {
+                const itemKey = item.cartItemId || item.id || `cart-it-${idx}`;
+                const itemUnitPrice = Number(item.unitPrice || item.price || 0);
+                const itemQty = Number(item.quantity || 1);
+                const itemTotal = itemUnitPrice * itemQty;
 
-                  {/* Info */}
-                  <div className="cart-item-info">
-                    <div className="cart-item-title">{item.title}</div>
-                    <div className="cart-item-details">
-                      {item.frameName ? (
-                        <div>
-                          Template: <strong style={{ color: 'var(--accent-cyan)' }}>{item.frameName}</strong>
-                        </div>
-                      ) : null}
-                      Hardware: <strong>{item.hardwareName}</strong>
-                      {item.customLetters && (
-                        <span> | Inisial: <strong style={{ color: 'var(--accent-cyan)' }}>{item.customLetters}</strong></span>
+                return (
+                  <div key={itemKey} className="cart-item-card">
+                    {/* Thumbnail: Product Photo or Photostrip */}
+                    <div className="cart-item-thumb">
+                      {item.image ? (
+                        <img src={item.image} alt={item.title} />
+                      ) : item.frameImage ? (
+                        <img src={item.frameImage} alt={item.frameName || 'Frame'} />
+                      ) : (
+                        <div
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '50%',
+                            background: item.cordColor || '#00F2FE',
+                            border: `2px solid ${item.hardwareColor || '#94A3B8'}`
+                          }}
+                        />
                       )}
                     </div>
 
-                    {/* Frame Photos Thumbnails */}
-                    {item.framePhotos && item.framePhotos.some(Boolean) && (
-                      <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Foto ({item.framePhotos.filter(Boolean).length}/3):</span>
-                        {item.framePhotos.map((photo, pIdx) => (
-                          photo ? (
-                            <img
-                              key={pIdx}
-                              src={photo}
-                              alt={`Slot ${pIdx + 1}`}
-                              style={{
-                                width: '20px',
-                                height: '24px',
-                                borderRadius: '3px',
-                                objectFit: 'cover',
-                                border: '1px solid var(--accent-cyan)'
-                              }}
-                            />
-                          ) : (
-                            <div
-                              key={pIdx}
-                              style={{
-                                width: '20px',
-                                height: '24px',
-                                borderRadius: '3px',
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px dashed var(--border-subtle)'
-                              }}
-                            />
-                          )
-                        ))}
-                      </div>
-                    )}
-
-                    {item.charms && item.charms.length > 0 && (
-                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {item.charms.map((ch, idx) => (
-                          <span key={idx} style={{ fontSize: '0.75rem', background: 'var(--bg-primary)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
-                            {ch.icon} {ch.name}
+                    {/* Item Information */}
+                    <div className="cart-item-info">
+                      <div className="cart-item-title" style={{ fontSize: '0.96rem' }}>
+                        {item.title}
+                        {item.productType === 'bundling' && (
+                          <span
+                            className="badge badge-purple"
+                            style={{ fontSize: '0.68rem', padding: '1px 6px', marginLeft: '6px' }}
+                          >
+                            Paket Bundling
                           </span>
-                        ))}
+                        )}
                       </div>
-                    )}
 
-                    <div className="cart-item-price">
-                      Rp {(item.unitPrice || 0).toLocaleString('id-ID')}
+                      {/* Bundling Package Choices Details */}
+                      {item.bundleChoices && (
+                        <div
+                          style={{
+                            marginTop: '6px',
+                            background: '#F9FAFB',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '10px',
+                            padding: '8px 10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '5px'
+                          }}
+                        >
+                          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#4F46E5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Pilihan Isi Paket:
+                          </div>
+                          {item.bundleChoices.item1 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem' }}>
+                              {item.bundleChoices.item1.image && (
+                                <img
+                                  src={item.bundleChoices.item1.image}
+                                  alt=""
+                                  style={{ width: '22px', height: '22px', borderRadius: '4px', objectFit: 'cover' }}
+                                />
+                              )}
+                              <span>
+                                <strong>{item.bundleChoices.item1.label || 'Item 1'}:</strong> {item.bundleChoices.item1.name}
+                              </span>
+                            </div>
+                          )}
+                          {item.bundleChoices.item2 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem' }}>
+                              {item.bundleChoices.item2.image && (
+                                <img
+                                  src={item.bundleChoices.item2.image}
+                                  alt=""
+                                  style={{ width: '22px', height: '22px', borderRadius: '4px', objectFit: 'cover' }}
+                                />
+                              )}
+                              <span>
+                                <strong>{item.bundleChoices.item2.label || 'Item 2'}:</strong> {item.bundleChoices.item2.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="cart-item-details" style={{ fontSize: '0.8rem', marginTop: '2px', lineHeight: 1.45 }}>
+                        {item.frameName && (
+                          <div>
+                            Template: <strong style={{ color: 'var(--accent-cyan)' }}>{item.frameName}</strong>
+                          </div>
+                        )}
+                        {item.cordColorName && (
+                          <div>
+                            Warna Tali: <strong>{item.cordColorName}</strong>
+                          </div>
+                        )}
+                        {item.hardwareName && (
+                          <div>
+                            Hardware: <strong>{item.hardwareName}</strong>
+                          </div>
+                        )}
+                        {item.customLetters && (
+                          <div>
+                            Manik Inisial: <strong style={{ color: 'var(--accent-cyan)' }}>{item.customLetters}</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Photostrip Mini Slots Preview */}
+                      {item.framePhotos && item.framePhotos.some(Boolean) && (
+                        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                            Foto ({item.framePhotos.filter(Boolean).length}/3):
+                          </span>
+                          {item.framePhotos.map((photo, pIdx) =>
+                            photo ? (
+                              <img
+                                key={pIdx}
+                                src={photo}
+                                alt={`Slot ${pIdx + 1}`}
+                                style={{
+                                  width: '20px',
+                                  height: '24px',
+                                  borderRadius: '3px',
+                                  objectFit: 'cover',
+                                  border: '1px solid var(--accent-cyan)'
+                                }}
+                              />
+                            ) : null
+                          )}
+                        </div>
+                      )}
+
+                      {/* Charms Pills */}
+                      {item.charms && item.charms.length > 0 && (
+                        <div style={{ marginTop: '5px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {item.charms.map((ch, cIdx) => (
+                            <span
+                              key={cIdx}
+                              style={{
+                                fontSize: '0.72rem',
+                                background: 'var(--bg-primary)',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-secondary)'
+                              }}
+                            >
+                              {ch.icon || '★'} {ch.name || ch}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Pricing */}
+                      <div className="cart-item-price" style={{ marginTop: '6px' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--accent-cyan)', fontSize: '0.98rem' }}>
+                          Rp {itemTotal.toLocaleString('id-ID')}
+                        </span>
+                        {itemQty > 1 && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '6px' }}>
+                            (@ Rp {itemUnitPrice.toLocaleString('id-ID')})
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Quantity Controls */}
-                  <div className="qty-counter">
+                    {/* Quantity Controls */}
+                    <div className="qty-counter">
+                      <button
+                        type="button"
+                        className="qty-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuantityChange(item, -1);
+                        }}
+                        title={itemQty === 1 ? 'Hapus item' : 'Kurangi jumlah'}
+                        aria-label="Kurangi jumlah"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="qty-value">
+                        {itemQty}
+                      </span>
+                      <button
+                        type="button"
+                        className="qty-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuantityChange(item, 1);
+                        }}
+                        title="Tambah jumlah"
+                        aria-label="Tambah jumlah"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+
+                    {/* Delete Button */}
                     <button
                       type="button"
-                      className="qty-btn"
-                      onClick={() => onUpdateQuantity(item.cartItemId, -1)}
+                      className="btn btn-outline btn-icon"
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderColor: 'transparent',
+                        color: 'var(--accent-rose)',
+                        marginLeft: '4px'
+                      }}
+                      onClick={() => setItemToDelete(item)}
+                      title="Hapus item ini dari keranjang"
                     >
-                      <Minus size={14} />
-                    </button>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
-                      {item.quantity || 1}
-                    </span>
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      onClick={() => onUpdateQuantity(item.cartItemId, 1)}
-                    >
-                      <Plus size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
-
-                  {/* Delete Button */}
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-icon"
-                    style={{ width: '36px', height: '36px', borderColor: 'transparent', color: 'var(--accent-rose)' }}
-                    onClick={() => onRemoveItem(item.cartItemId)}
-                    title="Hapus dari keranjang"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer Checkout */}
         {cartItems.length > 0 && (
-          <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total Pesanan (Belum Ongkir)</span>
-              <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)' }}>
+          <div
+            style={{
+              padding: '18px 24px',
+              borderTop: '1px solid var(--border-subtle)',
+              background: 'var(--bg-primary)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total Pesanan</span>
+              <span
+                style={{
+                  fontSize: '1.35rem',
+                  fontWeight: 800,
+                  color: 'var(--accent-cyan)',
+                  fontFamily: 'var(--font-display)'
+                }}
+              >
                 Rp {totalAmount.toLocaleString('id-ID')}
               </span>
             </div>
@@ -194,9 +378,186 @@ export default function CartModal({
               style={{ width: '100%' }}
               onClick={onProceedCheckout}
             >
-              <span>Lanjut ke Pengiriman & Pembayaran</span>
+              <span>Pembayaran</span>
               <ArrowRight size={18} />
             </button>
+          </div>
+        )}
+
+        {/* ========================================================
+            POPUP KONFIRMASI HAPUS ITEM (Sesuai Permintaan Pengguna)
+            ======================================================== */}
+        {itemToDelete && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.72)',
+              backdropFilter: 'blur(5px)',
+              zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={() => setItemToDelete(null)}
+          >
+            <div
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '24px 20px',
+                maxWidth: '380px',
+                width: '100%',
+                textAlign: 'center',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                animation: 'scaleIn 0.2s ease-out'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#EF4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  border: '1.5px solid rgba(239, 68, 68, 0.3)'
+                }}
+              >
+                <Trash2 size={26} />
+              </div>
+
+              <h4 style={{ fontSize: '1.15rem', marginBottom: '8px', color: 'var(--text-primary)' }}>
+                Hapus dari Keranjang?
+              </h4>
+
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+                Apakah anda yakin ingin menghapusnya?
+                <br />
+                <strong style={{ color: 'var(--text-primary)', display: 'block', marginTop: '6px' }}>
+                  "{itemToDelete.title}"
+                </strong>
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setItemToDelete(null)}
+                  style={{ height: '40px', fontWeight: 600 }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    background: '#EF4444',
+                    color: '#FFFFFF',
+                    borderColor: '#DC2626',
+                    fontWeight: 700,
+                    height: '40px'
+                  }}
+                  onClick={() => {
+                    onRemoveItem(itemToDelete.cartItemId || itemToDelete.id);
+                    setItemToDelete(null);
+                  }}
+                >
+                  Ya, Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* POPUP KONFIRMASI KOSONGKAN SEMUA KERANJANG */}
+        {showClearConfirm && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.72)',
+              backdropFilter: 'blur(5px)',
+              zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={() => setShowClearConfirm(false)}
+          >
+            <div
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '24px 20px',
+                maxWidth: '380px',
+                width: '100%',
+                textAlign: 'center',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#EF4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  border: '1.5px solid rgba(239, 68, 68, 0.3)'
+                }}
+              >
+                <AlertTriangle size={26} />
+              </div>
+
+              <h4 style={{ fontSize: '1.15rem', marginBottom: '8px', color: 'var(--text-primary)' }}>
+                Kosongkan Keranjang?
+              </h4>
+
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+                Apakah Anda yakin ingin menghapus semua ({cartItems.length}) item dari keranjang belanja?
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowClearConfirm(false)}
+                  style={{ height: '40px', fontWeight: 600 }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    background: '#EF4444',
+                    color: '#FFFFFF',
+                    borderColor: '#DC2626',
+                    fontWeight: 700,
+                    height: '40px'
+                  }}
+                  onClick={() => {
+                    if (onClearCart) onClearCart();
+                    setShowClearConfirm(false);
+                  }}
+                >
+                  Ya, Kosongkan
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
