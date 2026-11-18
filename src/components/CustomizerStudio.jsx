@@ -949,29 +949,6 @@ export default function CustomizerStudio({
                 onChangeFrame={handleGoToFrameSelectionPage}
                 isFrameConfirmed={isFrameConfirmed}
               />
-
-              {/* Frame Specs Pill */}
-              <div className="tt-preview-card-footer">
-                <div>
-                  <div className="tt-preview-footer-sub">FRAME & AKSEN TERPILIH</div>
-                  <div className="tt-preview-footer-title">
-                    {activeFrame ? `${activeFrame.name} (${slotCount} Slot)` : `${activeLayout.name} (${activeLayout.poseText})`}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#4F46E5', fontWeight: 600, marginTop: '2px' }}>
-                    Tali: Twisted Loop & Dual Tassel • Aksen (Bintang & Lonceng): {ACCENT_COLORS.find(c => c.id === accentColor)?.name || 'Hitam'}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="tt-preview-footer-sub">ESTIMASI RAKIT</div>
-                  <span className="tt-preview-footer-eta">1-2 Hari Kerja</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Hint Matching Image 2 Reference */}
-            <div className="tt-preview-hint">
-              <span className="tt-preview-hint-sparkle">✨</span>
-              <span>Customize on the right to see live preview updates</span>
             </div>
           </div>
 
