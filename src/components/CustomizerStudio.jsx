@@ -218,21 +218,21 @@ export default function CustomizerStudio({
   const activeFrame = BAG_CHARM_FRAMES.find((f) => f.id === selectedFrameId) || (
     currentTemplate && (currentTemplate.frameId === selectedFrameId || currentTemplate.id === selectedFrameId)
       ? {
+        id: selectedFrameId,
+        name: currentTemplate.name,
+        image: currentTemplate.imageSrc,
+        overlayImage: currentTemplate.overlayImage || (resolveFrameNum(selectedFrameId) ? `/frames/${resolveFrameNum(selectedFrameId)}_overlay.png` : null),
+        slots: getFrameSlots(selectedFrameId)
+      }
+      : (selectedFrameId && typeof selectedFrameId === 'string' && selectedFrameId.startsWith('frame-')
+        ? {
           id: selectedFrameId,
-          name: currentTemplate.name,
-          image: currentTemplate.imageSrc,
-          overlayImage: currentTemplate.overlayImage || (resolveFrameNum(selectedFrameId) ? `/frames/${resolveFrameNum(selectedFrameId)}_overlay.png` : null),
+          name: `Frame ${selectedFrameId.replace('frame-', '')}`,
+          image: `/frames/${selectedFrameId.replace('frame-', '')}.png`,
+          overlayImage: `/frames/${selectedFrameId.replace('frame-', '')}_overlay.png`,
           slots: getFrameSlots(selectedFrameId)
         }
-      : (selectedFrameId && typeof selectedFrameId === 'string' && selectedFrameId.startsWith('frame-')
-          ? {
-              id: selectedFrameId,
-              name: `Frame ${selectedFrameId.replace('frame-', '')}`,
-              image: `/frames/${selectedFrameId.replace('frame-', '')}.png`,
-              overlayImage: `/frames/${selectedFrameId.replace('frame-', '')}_overlay.png`,
-              slots: getFrameSlots(selectedFrameId)
-            }
-          : null)
+        : null)
   );
 
   // Determine current active slots
@@ -307,8 +307,8 @@ export default function CustomizerStudio({
   const selectedCharmsObjects = bundlingSession
     ? []
     : selectedCharmIds
-        .map((id) => availableCharms.find((c) => c.id === id))
-        .filter(Boolean);
+      .map((id) => availableCharms.find((c) => c.id === id))
+      .filter(Boolean);
 
   // Price Calculation
   const basePrice = currentProduct?.basePrice || 15000;
