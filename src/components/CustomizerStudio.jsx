@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, ShoppingBag, Plus, Trash2, Check, RefreshCw, AlertCircle, Info, Upload, Image as ImageIcon, Camera, CheckCircle2, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Sparkles, ShoppingBag, Plus, Trash2, Check, RefreshCw, AlertCircle, Info, Upload, Image as ImageIcon, Camera, CheckCircle2, ChevronRight, ArrowRight, ArrowLeft, Search, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import VisualCanvas from './VisualCanvas';
 import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS, SAMPLE_FRAME_PHOTOS, getFrameSlots, PARACORD_MODELS, PARACORD_LENGTHS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
+import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector';
 
 export default function CustomizerStudio({
   products = [],
@@ -21,9 +22,69 @@ export default function CustomizerStudio({
   const currentProduct = products.find((p) => p.type === 'bag_charm') || products[0];
 
   // Bundling Session Multi-step State (For Couple / Bestie 2: 2 Bagcharms)
-  const [bundle2Step, setBundle2Step] = useState(1); // 1 = Bagcharm 1, 2 = Bagcharm 2
-  const [bagcharm1Data, setBagcharm1Data] = useState(null);
-  const [bagcharm2Data, setBagcharm2Data] = useState(null);
+  const [bundle2Step, setBundle2Step] = useState(() => bundlingSession?.bundle2ActiveBagcharm || 1);
+  const [bagcharm1Data, setBagcharm1Data] = useState(() => bundlingSession?.savedBagcharm1 || null);
+  const [bagcharm2Data, setBagcharm2Data] = useState(() => bundlingSession?.savedBagcharm2 || null);
+
+  // Frame Modal Selector State
+  const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
+  const [isFrameConfirmed, setIsFrameConfirmed] = useState(false);
+  const [frameSearch, setFrameSearch] = useState('');
+  const [framePoseFilter, setFramePoseFilter] = useState('all');
+
+  // Synchronize bundlingSession data to prevent losing saved bagcharm
+  useEffect(() => {
+    if (bundlingSession?.savedBagcharm1 && !bagcharm1Data) {
+      setBagcharm1Data(bundlingSession.savedBagcharm1);
+    }
+    if (bundlingSession?.savedBagcharm2 && !bagcharm2Data) {
+      setBagcharm2Data(bundlingSession.savedBagcharm2);
+    }
+    if (bundlingSession?.bundle2ActiveBagcharm && bundlingSession.bundle2ActiveBagcharm !== bundle2Step) {
+      setBundle2Step(bundlingSession.bundle2ActiveBagcharm);
+    }
+  }, [bundlingSession]);
+
+  // Handler to select frame inside Customizer Studio without unmounting
+  const handleSelectFrameInStudio = (template) => {
+    if (!template) return;
+    if (template.type === 'custom_frame') {
+      setSelectedFrameId(template.frameId || template.id);
+      setSelectedLayoutId(template.layoutId || 'layout-a');
+    } else {
+      setSelectedLayoutId(template.layoutId || 'layout-a');
+      setSelectedFrameId(template.frameId || null);
+    }
+    setIsFrameConfirmed(true);
+    setIsFrameModalOpen(false);
+
+    // Keep active bundle 2 state synced
+    if (bundlingSession && bundlingSession.bundleType === 2) {
+      if (bundle2Step === 1) {
+        setBagcharm1Data((prev) => prev ? {
+          ...prev,
+          frameId: template.frameId || template.id,
+          frameName: template.name,
+          frameImage: template.imageSrc,
+          layoutId: template.layoutId || 'layout-a'
+        } : null);
+        if (bundlingSession) {
+          bundlingSession.selectedFrame1 = template;
+        }
+      } else if (bundle2Step === 2) {
+        setBagcharm2Data((prev) => prev ? {
+          ...prev,
+          frameId: template.frameId || template.id,
+          frameName: template.name,
+          frameImage: template.imageSrc,
+          layoutId: template.layoutId || 'layout-a'
+        } : null);
+        if (bundlingSession) {
+          bundlingSession.selectedFrame2 = template;
+        }
+      }
+    }
+  };
 
   // Layout & Frame selection states (Matching Image 2)
   const [selectedLayoutId, setSelectedLayoutId] = useState(currentTemplate?.layoutId || 'layout-a');
@@ -198,23 +259,33 @@ export default function CustomizerStudio({
         paracordLength
       };
       setBagcharm1Data(currentB1);
+      if (bundlingSession) {
+        bundlingSession.savedBagcharm1 = currentB1;
+        bundlingSession.bundle2ActiveBagcharm = 2;
+      }
 
       // 2. Load Step 2 Bagcharm 2
-      if (bagcharm2Data) {
-        setSelectedFrameId(bagcharm2Data.frameId);
-        setSelectedLayoutId(bagcharm2Data.layoutId || 'layout-a');
-        setFramePhotos([...bagcharm2Data.framePhotos]);
-        setSelectedColor(bagcharm2Data.selectedColor || '#18181B');
-        setAccentColor(bagcharm2Data.accentColor || 'hitam');
-        setCustomLetters(bagcharm2Data.customLetters || '');
+      const b2 = bagcharm2Data || bundlingSession?.savedBagcharm2;
+      if (b2) {
+        setSelectedFrameId(b2.frameId);
+        setSelectedLayoutId(b2.layoutId || 'layout-a');
+        setFramePhotos([...b2.framePhotos]);
+        setSelectedColor(b2.selectedColor || '#18181B');
+        setAccentColor(b2.accentColor || 'hitam');
+        setCustomLetters(b2.customLetters || '');
+        if (b2.paracordModel) setParacordModel(b2.paracordModel);
+        if (b2.paracordLength) setParacordLength(b2.paracordLength);
+        setIsFrameConfirmed(true);
       } else {
         const f2 = bundlingSession?.selectedFrame2;
         if (f2) {
-          setSelectedFrameId(f2.id);
+          setSelectedFrameId(f2.id || f2.frameId);
           setSelectedLayoutId(f2.layoutId || 'layout-a');
+          setIsFrameConfirmed(true);
         } else {
           setSelectedFrameId('frame-borcelle');
           setSelectedLayoutId('layout-a');
+          setIsFrameConfirmed(false);
         }
         setFramePhotos([null, null, null, null, null, null]);
         setCustomLetters('');
@@ -236,9 +307,13 @@ export default function CustomizerStudio({
         paracordLength
       };
       setBagcharm2Data(currentB2);
+      if (bundlingSession) {
+        bundlingSession.savedBagcharm2 = currentB2;
+        bundlingSession.bundle2ActiveBagcharm = 1;
+      }
 
       // 2. Restore Step 1 Bagcharm 1
-      const b1 = bagcharm1Data;
+      const b1 = bagcharm1Data || bundlingSession?.savedBagcharm1;
       if (b1) {
         setSelectedFrameId(b1.frameId);
         setSelectedLayoutId(b1.layoutId || 'layout-a');
@@ -246,6 +321,9 @@ export default function CustomizerStudio({
         setSelectedColor(b1.selectedColor || '#18181B');
         setAccentColor(b1.accentColor || 'hitam');
         setCustomLetters(b1.customLetters || '');
+        if (b1.paracordModel) setParacordModel(b1.paracordModel);
+        if (b1.paracordLength) setParacordLength(b1.paracordLength);
+        setIsFrameConfirmed(true);
       }
       setBundle2Step(1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -267,12 +345,14 @@ export default function CustomizerStudio({
       paracordLength
     };
     setBagcharm1Data(currentB1);
-
-    if (onGoToFrameForBagcharm2) {
-      onGoToFrameForBagcharm2(currentB1);
-    } else {
-      handleSwitchBundle2Step(2);
+    if (bundlingSession) {
+      bundlingSession.savedBagcharm1 = currentB1;
+      bundlingSession.bundle2ActiveBagcharm = 2;
     }
+    handleSwitchBundle2Step(2);
+    // Open frame modal in-studio so user can pick Bagcharm 2 frame seamlessly without leaving
+    setIsFrameModalOpen(true);
+    setIsFrameConfirmed(false);
   };
 
   // Layout change handler
@@ -335,7 +415,7 @@ export default function CustomizerStudio({
     if (bundlingSession) {
       if (bundlingSession.bundleType === 2) {
         // Bundle 2 (2 Bagcharm)
-        const currentB2 = {
+        const currentActive = {
           frameId: selectedFrameId,
           frameName: activeFrame?.name || layoutName,
           frameImage: activeFrame?.image || '/frames/2.png',
@@ -344,14 +424,23 @@ export default function CustomizerStudio({
           customLetters: customLetters.toUpperCase().trim()
         };
 
-        const b1 = bagcharm1Data || {
+        const b1 = bundle2Step === 1 ? currentActive : (bagcharm1Data || bundlingSession.savedBagcharm1 || {
           frameId: bundlingSession.selectedFrame1?.id || 'frame-1',
           frameName: bundlingSession.selectedFrame1?.name || 'Bagcharm 1',
           frameImage: bundlingSession.selectedFrame1?.imageSrc || '/frames/1.png',
           framePhotos: [],
           cordColorName: 'Hitam Polos',
           customLetters: ''
-        };
+        });
+
+        const b2 = bundle2Step === 2 ? currentActive : (bagcharm2Data || bundlingSession.savedBagcharm2 || {
+          frameId: bundlingSession.selectedFrame2?.id || 'frame-borcelle',
+          frameName: bundlingSession.selectedFrame2?.name || 'Bagcharm 2',
+          frameImage: bundlingSession.selectedFrame2?.imageSrc || '/frames/2.png',
+          framePhotos: [],
+          cordColorName: 'Hitam Polos',
+          customLetters: ''
+        });
 
         const bundlePayload = {
           id: bundlingSession.bundleId || 'col-bundle-couple-2',
@@ -500,7 +589,7 @@ export default function CustomizerStudio({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={onBackToFrames}
+              onClick={() => setIsFrameModalOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -525,7 +614,7 @@ export default function CustomizerStudio({
             <button
               type="button"
               className="btn btn-outline btn-sm"
-              onClick={onBackToFrames}
+              onClick={() => setIsFrameModalOpen(true)}
               style={{
                 fontSize: '0.82rem',
                 borderRadius: 'var(--radius-full)',
@@ -544,7 +633,7 @@ export default function CustomizerStudio({
               background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
               border: '1.5px solid #818CF8',
               borderRadius: '16px',
-              padding: '14px 20px',
+              padding: '12px 20px',
               marginBottom: '20px',
               display: 'flex',
               alignItems: 'center',
@@ -556,132 +645,98 @@ export default function CustomizerStudio({
           >
             {bundlingSession.bundleType === 2 ? (
               /* BUNDLE 2 (2 BAGCHARM) BANNER */
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', flex: 1 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span
-                      style={{
-                        background: '#4F46E5',
-                        color: '#FFF',
-                        fontSize: '0.72rem',
-                        fontWeight: 800,
-                        padding: '2px 8px',
-                        borderRadius: '999px',
-                        textTransform: 'uppercase'
-                      }}
-                    >
-                      Paket Bundling 2
-                    </span>
-                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#312E81' }}>
-                      Rp 28.000 (Paket 2 Bagcharm Hemat)
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.84rem', color: '#4338CA', marginTop: '3px' }}>
-                    {bundle2Step === 1 ? (
-                      <span>
-                        Sedang mengedit <strong>Bagcharm 1</strong> ({activeFrame?.name || 'Frame 1'}) • Pasang foto, warna tali & inisial!
-                      </span>
-                    ) : (
-                      <span>
-                        Sedang mengedit <strong>Bagcharm 2</strong> ({activeFrame?.name || 'Frame 2'}) • Bagcharm 1 sudah siap!
-                      </span>
-                    )}
-                  </div>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '12px' }}>
+                <span
+                  style={{
+                    background: '#4F46E5',
+                    color: '#FFF',
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    padding: '4px 14px',
+                    borderRadius: '999px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  Paket Bundling 2
+                </span>
 
-                {/* Step Switcher Tabs */}
-                <div style={{ display: 'flex', background: '#FFFFFF', padding: '3px', borderRadius: '10px', border: '1px solid #C7D2FE', marginLeft: 'auto' }}>
+                {onClearBundlingSession && (
                   <button
                     type="button"
-                    onClick={() => handleSwitchBundle2Step(1)}
+                    onClick={onClearBundlingSession}
+                    className="btn btn-secondary btn-sm"
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: bundle2Step === 1 ? '#4F46E5' : 'transparent',
-                      color: bundle2Step === 1 ? '#FFFFFF' : '#4F46E5',
-                      fontWeight: 700,
                       fontSize: '0.78rem',
-                      cursor: 'pointer'
+                      padding: '5px 14px',
+                      borderRadius: '999px',
+                      color: '#DC2626',
+                      borderColor: '#FCA5A5'
                     }}
                   >
-                    1. Bagcharm 1 {bagcharm1Data ? '✓' : ''}
+                    Batal Bundling
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchBundle2Step(2)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: bundle2Step === 2 ? '#4F46E5' : 'transparent',
-                      color: bundle2Step === 2 ? '#FFFFFF' : '#4F46E5',
-                      fontWeight: 700,
-                      fontSize: '0.78rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    2. Bagcharm 2
-                  </button>
-                </div>
+                )}
               </div>
             ) : (
               /* BUNDLE 3 (1 GELANG & 1 BAGCHARM) BANNER */
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                {bundlingSession.selectedGelang?.image && (
-                  <img
-                    src={bundlingSession.selectedGelang.image}
-                    alt={bundlingSession.selectedGelang.name}
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      objectFit: 'cover',
-                      border: '2px solid #6366F1'
-                    }}
-                  />
-                )}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  {bundlingSession.selectedGelang?.image && (
+                    <img
+                      src={bundlingSession.selectedGelang.image}
+                      alt={bundlingSession.selectedGelang.name}
                       style={{
-                        background: '#4F46E5',
-                        color: '#FFF',
-                        fontSize: '0.72rem',
-                        fontWeight: 800,
-                        padding: '2px 8px',
-                        borderRadius: '999px',
-                        textTransform: 'uppercase'
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                        border: '2px solid #6366F1'
                       }}
-                    >
-                      Paket Bundling 3
-                    </span>
-                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#312E81' }}>
-                      Rp {Number(bundlingSession.bundlePrice || 27000).toLocaleString('id-ID')} (Hemat Paket)
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.84rem', color: '#4338CA', marginTop: '3px' }}>
-                    Gelang: <strong>{bundlingSession.selectedGelang?.name || 'Gelang Pilihan'}</strong> (Terpilih) • Sekarang kustom Bagcharm pasangan Anda!
+                    />
+                  )}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        style={{
+                          background: '#4F46E5',
+                          color: '#FFF',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                          textTransform: 'uppercase'
+                        }}
+                      >
+                        Paket Bundling 3
+                      </span>
+                      <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#312E81' }}>
+                        Rp {Number(bundlingSession.bundlePrice || 27000).toLocaleString('id-ID')} (Hemat Paket)
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.84rem', color: '#4338CA', marginTop: '3px' }}>
+                      Gelang: <strong>{bundlingSession.selectedGelang?.name || 'Gelang Pilihan'}</strong> (Terpilih) • Sekarang kustom Bagcharm pasangan Anda!
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {onClearBundlingSession && (
-              <button
-                type="button"
-                onClick={onClearBundlingSession}
-                className="btn btn-secondary btn-sm"
-                style={{
-                  fontSize: '0.78rem',
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  color: '#DC2626',
-                  borderColor: '#FCA5A5'
-                }}
-              >
-                Batal Bundling
-              </button>
+                {onClearBundlingSession && (
+                  <button
+                    type="button"
+                    onClick={onClearBundlingSession}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      fontSize: '0.78rem',
+                      padding: '5px 14px',
+                      borderRadius: '999px',
+                      color: '#DC2626',
+                      borderColor: '#FCA5A5'
+                    }}
+                  >
+                    Batal Bundling
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -690,7 +745,93 @@ export default function CustomizerStudio({
         <div className="studio-grid">
           {/* LEFT: Real-Time Preview (Matching Image 2 Reference) */}
           <div className="tt-preview-column">
-            <div className="tt-preview-label">REAL-TIME PREVIEW</div>
+            {/* Step Switcher Tabs Centered Above REAL-TIME PREVIEW */}
+            {bundlingSession && bundlingSession.bundleType === 2 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    background: '#EEF2FF',
+                    padding: '4px',
+                    borderRadius: '14px',
+                    border: '1.5px solid #C7D2FE',
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.1)'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchBundle2Step(1)}
+                    style={{
+                      padding: '8px 20px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: bundle2Step === 1 ? '#4F46E5' : 'transparent',
+                      color: bundle2Step === 1 ? '#FFFFFF' : '#4338CA',
+                      fontWeight: 700,
+                      fontSize: '0.84rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>1. Bagcharm 1</span>
+                    {bagcharm1Data && (
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          background: bundle2Step === 1 ? 'rgba(255,255,255,0.3)' : '#10B981',
+                          color: '#FFFFFF',
+                          padding: '1px 6px',
+                          borderRadius: '999px',
+                          fontWeight: 800
+                        }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchBundle2Step(2)}
+                    style={{
+                      padding: '8px 20px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: bundle2Step === 2 ? '#4F46E5' : 'transparent',
+                      color: bundle2Step === 2 ? '#FFFFFF' : '#4338CA',
+                      fontWeight: 700,
+                      fontSize: '0.84rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>2. Bagcharm 2</span>
+                    {bagcharm2Data && (
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          background: bundle2Step === 2 ? 'rgba(255,255,255,0.3)' : '#10B981',
+                          color: '#FFFFFF',
+                          padding: '1px 6px',
+                          borderRadius: '999px',
+                          fontWeight: 800
+                        }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="tt-preview-label" style={{ textAlign: 'center' }}>REAL-TIME PREVIEW</div>
 
             <div className="tt-preview-card">
               <div className="tt-preview-card-header">
@@ -731,6 +872,8 @@ export default function CustomizerStudio({
                 onSlotClick={(slotIdx) => handleTriggerUpload(slotIdx)}
                 zoomMode={zoomMode}
                 onToggleZoom={(val) => setZoomMode(val)}
+                onChangeFrame={() => setIsFrameModalOpen(true)}
+                isFrameConfirmed={isFrameConfirmed}
               />
 
               {/* Frame Specs Pill */}
@@ -1288,6 +1431,362 @@ export default function CustomizerStudio({
           </div>
         </div>
       </div>
+
+      {/* IN-STUDIO FRAME SELECTOR MODAL */}
+      {isFrameModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsFrameModalOpen(false);
+          }}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid #E2E8F0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#F8FAFC'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} color="#4F46E5" />
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                    Pilih Desain Frame Photostrip
+                  </h3>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                  Ganti frame kapan saja tanpa khawatir — foto dan aksen kustom yang sudah dipasang tetap tersimpan!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFrameModalOpen(false)}
+                style={{
+                  background: '#EDF2F7',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#475569',
+                  transition: 'background 0.2s'
+                }}
+                aria-label="Tutup"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div
+              style={{
+                padding: '14px 24px',
+                borderBottom: '1px solid #E2E8F0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+                background: '#FFFFFF'
+              }}
+            >
+              {/* Search input */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#F1F5F9',
+                  borderRadius: '12px',
+                  padding: '6px 12px',
+                  flex: 1,
+                  minWidth: '200px'
+                }}
+              >
+                <Search size={16} color="#94A3B8" style={{ marginRight: '8px' }} />
+                <input
+                  type="text"
+                  placeholder="Cari nama frame atau tema..."
+                  value={frameSearch}
+                  onChange={(e) => setFrameSearch(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    fontSize: '0.84rem',
+                    width: '100%',
+                    color: '#0F172A'
+                  }}
+                />
+                {frameSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setFrameSearch('')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    <X size={14} color="#94A3B8" />
+                  </button>
+                )}
+              </div>
+
+              {/* Pose filter pills */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {[
+                  { id: 'all', label: 'Semua (30)' },
+                  { id: '2', label: '2 Pose' },
+                  { id: '3', label: '3 Pose' },
+                  { id: '4', label: '4 Pose' }
+                ].map((flt) => (
+                  <button
+                    key={flt.id}
+                    type="button"
+                    onClick={() => setFramePoseFilter(flt.id)}
+                    style={{
+                      background: framePoseFilter === flt.id ? '#4F46E5' : '#F1F5F9',
+                      color: framePoseFilter === flt.id ? '#FFFFFF' : '#475569',
+                      border: 'none',
+                      borderRadius: '999px',
+                      padding: '6px 12px',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {flt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Body: Frame Grid */}
+            <div
+              style={{
+                padding: '20px 24px',
+                overflowY: 'auto',
+                flex: 1,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '16px'
+              }}
+            >
+              {ALL_FRAME_TEMPLATES
+                .filter((tmpl) => {
+                  const q = frameSearch.toLowerCase().trim();
+                  if (q) {
+                    const match =
+                      tmpl.name.toLowerCase().includes(q) ||
+                      (tmpl.subtitle && tmpl.subtitle.toLowerCase().includes(q)) ||
+                      (tmpl.description && tmpl.description.toLowerCase().includes(q));
+                    if (!match) return false;
+                  }
+                  if (framePoseFilter === '2') {
+                    return tmpl.subtitle?.includes('2 Pose') || tmpl.badge?.includes('2-Pose');
+                  }
+                  if (framePoseFilter === '3') {
+                    return tmpl.subtitle?.includes('3 Pose') || tmpl.badge?.includes('3-Pose');
+                  }
+                  if (framePoseFilter === '4') {
+                    return tmpl.subtitle?.includes('4 Pose') || tmpl.badge?.includes('4-Pose');
+                  }
+                  return true;
+                })
+                .map((tmpl) => {
+                  const isCurrent =
+                    selectedFrameId === tmpl.frameId ||
+                    selectedFrameId === tmpl.id ||
+                    (selectedFrameId === 'frame-borcelle' && tmpl.id === 'frame-borcelle') ||
+                    (selectedFrameId === 'frame-the-moment' && tmpl.id === 'frame-5');
+
+                  return (
+                    <div
+                      key={tmpl.id}
+                      onClick={() => handleSelectFrameInStudio(tmpl)}
+                      style={{
+                        border: isCurrent ? '2.5px solid #10B981' : '1.5px solid #E2E8F0',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        background: isCurrent ? '#F0FDF4' : '#FFFFFF',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative',
+                        boxShadow: isCurrent
+                          ? '0 6px 16px rgba(16, 185, 129, 0.2)'
+                          : '0 2px 6px rgba(0,0,0,0.04)'
+                      }}
+                    >
+                      {/* Frame image preview */}
+                      <div
+                        style={{
+                          height: '220px',
+                          background: '#F8FAFC',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '10px',
+                          position: 'relative'
+                        }}
+                      >
+                        <img
+                          src={tmpl.imageSrc}
+                          alt={tmpl.name}
+                          style={{
+                            maxHeight: '100%',
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            borderRadius: '6px'
+                          }}
+                          loading="lazy"
+                        />
+                        {isCurrent && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              background: '#10B981',
+                              color: '#FFFFFF',
+                              borderRadius: '999px',
+                              padding: '3px 8px',
+                              fontSize: '0.7rem',
+                              fontWeight: 800,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.4)'
+                            }}
+                          >
+                            <Check size={12} strokeWidth={3} /> Terpilih
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Info */}
+                      <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                              background: '#EEF2FF',
+                              color: '#4F46E5',
+                              padding: '2px 8px',
+                              borderRadius: '999px'
+                            }}
+                          >
+                            {tmpl.badge || (tmpl.subtitle?.includes('2 Pose') ? '2 Pose' : (tmpl.subtitle?.includes('4 Pose') ? '4 Pose' : '3 Pose'))}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.84rem',
+                            fontWeight: 700,
+                            color: '#0F172A',
+                            lineHeight: 1.3,
+                            marginBottom: '4px'
+                          }}
+                        >
+                          {tmpl.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: 'auto', paddingTop: '8px' }}>
+                          {tmpl.subtitle || 'Photostrip Bag Charm'}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectFrameInStudio(tmpl);
+                          }}
+                          style={{
+                            marginTop: '10px',
+                            width: '100%',
+                            background: isCurrent ? '#10B981' : '#4F46E5',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '7px 10px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {isCurrent ? (
+                            <>
+                              <Check size={14} /> Frame Aktif
+                            </>
+                          ) : (
+                            'Pilih Frame Ini'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: '12px 24px',
+                borderTop: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                Total 30 Desain Photostrip Tersedia
+              </span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsFrameModalOpen(false)}
+                style={{ borderRadius: '999px', padding: '6px 16px', fontSize: '0.82rem' }}
+              >
+                Selesai / Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

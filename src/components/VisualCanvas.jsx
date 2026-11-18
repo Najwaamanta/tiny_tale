@@ -17,7 +17,9 @@ export default function VisualCanvas({
   framePhotos = [],
   onSlotClick = null,
   zoomMode = false,
-  onToggleZoom = null
+  onToggleZoom = null,
+  onChangeFrame = null,
+  isFrameConfirmed = false
 }) {
   const hwColor = hardware?.color || '#F3E5AB'; // Soft gold/silver by default like ref image
   const hwBorder = hardware?.border || '#D4AF37';
@@ -126,9 +128,21 @@ export default function VisualCanvas({
 
   return (
     <div className="canvas-viewport" id="custom-live-canvas">
-      {/* Zoom Mode Toggle Button */}
+      {/* Zoom Mode Toggle Button & Ganti Frame Button */}
       {productType === 'bag_charm' && (
-        <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 10 }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '14px',
+            left: '14px',
+            right: '14px',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap'
+          }}
+        >
           <div className="canvas-view-toggle">
             <button
               type="button"
@@ -145,6 +159,33 @@ export default function VisualCanvas({
               Close-up Zoom
             </button>
           </div>
+
+          {onChangeFrame && (
+            <button
+              type="button"
+              onClick={onChangeFrame}
+              style={{
+                background: isFrameConfirmed ? '#10B981' : '#2563EB',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '999px',
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isFrameConfirmed
+                  ? '0 2px 8px rgba(16, 185, 129, 0.4)'
+                  : '0 2px 8px rgba(37, 99, 235, 0.4)'
+              }}
+              title="Ganti desain frame photostrip"
+            >
+              <span>{isFrameConfirmed ? '✓ Frame Terpilih' : 'Ganti Frame / Layout'}</span>
+            </button>
+          )}
         </div>
       )}
 
