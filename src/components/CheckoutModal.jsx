@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw } from 'lucide-react';
+import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useBodyScrollLock } from '../utils/scrollLock';
 
@@ -108,39 +108,41 @@ export default function CheckoutModal({
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const orderData = {
-        customer: {
-          name: customerName.trim(),
-          whatsapp: whatsapp.trim(),
-          address: '-',
-          city: '-',
-          courier: '-',
-          courierCost: 0,
-          notes: ''
-        },
-        items: cartItems,
-        totalAmount: grandTotal,
-        paymentMethod: 'QRIS',
-        paymentProofUrl: paymentProofUrl
-      };
+    const orderData = {
+      customer: {
+        name: customerName.trim(),
+        whatsapp: whatsapp.trim(),
+        address: '-',
+        city: '-',
+        courier: '-',
+        courierCost: 0,
+        notes: ''
+      },
+      items: cartItems,
+      totalAmount: grandTotal,
+      paymentMethod: 'QRIS',
+      paymentProofUrl: paymentProofUrl
+    };
 
-      const order = onCreateOrder(orderData);
-      setCreatedOrder(order);
-      setIsSubmitting(false);
+    const order = onCreateOrder(orderData);
+    setCreatedOrder(order);
+    setIsSubmitting(false);
 
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-    }, 500);
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+
+    // Langsung arahkan ke WhatsApp dengan detail pesanan
+    const waUrl = `https://wa.me/6281318409891?text=${generateWhatsAppMessage(order)}`;
+    window.open(waUrl, '_blank');
   };
 
   // WhatsApp Order payload message
-  const generateWhatsAppMessage = () => {
-    if (!createdOrder) return '';
-    const itemLines = createdOrder.items.map((it, idx) => {
+  const generateWhatsAppMessage = (order = createdOrder) => {
+    if (!order) return '';
+    const itemLines = (order.items || []).map((it, idx) => {
       const header = `${idx + 1}. *${it.title}* (Qty: ${it.quantity || 1}) - Rp ${(it.subtotal || it.unitPrice || 0).toLocaleString('id-ID')}`;
       if (it.bundleChoices) {
         const item1Str = it.bundleChoices.item1 ? `\n   • ${it.bundleChoices.item1.label || 'Item 1'}: ${it.bundleChoices.item1.name}` : '';
@@ -154,12 +156,12 @@ export default function CheckoutModal({
     }).join('\n\n');
 
     const msg = `Halo Tiny Tale! Saya telah melakukan pembayaran QRIS untuk pesanan:\n\n` +
-      `*NOMOR ORDER:* ${createdOrder.id}\n` +
-      `*Nama Pemesan:* ${createdOrder.customer.name}\n` +
-      `*No. WhatsApp:* ${createdOrder.customer.whatsapp}\n` +
+      `*NOMOR ORDER:* ${order.id}\n` +
+      `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
+      `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
       `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
       `*Detail Item Kustom:*\n${itemLines}\n\n` +
-      `*TOTAL PEMBAYARAN: Rp ${createdOrder.totalAmount.toLocaleString('id-ID')}*\n\n` +
+      `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
       `Bukti pembayaran sudah saya upload di sistem. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`;
 
     return encodeURIComponent(msg);
@@ -374,12 +376,12 @@ export default function CheckoutModal({
                     textAlign: 'center'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span className="badge badge-purple" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '12px', textAlign: 'center' }}>
+                    <span className="badge badge-purple" style={{ fontSize: '0.74rem', fontWeight: 700, padding: '4px 12px' }}>
                       QRIS STANDAR NASIONAL
                     </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      Tiny Tale • NMID: ID1026641495415
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                      Tiny Tale • NMID: <strong style={{ color: 'var(--text-primary)' }}>ID1026641495415</strong>
                     </span>
                   </div>
 
@@ -410,13 +412,20 @@ export default function CheckoutModal({
                   <div style={{ marginTop: '8px', marginBottom: '14px' }}>
                     <a
                       href="/images/qris.jpg"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      download="QRIS-TinyTale.jpg"
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.76rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      style={{ fontSize: '0.78rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '999px', fontWeight: 600 }}
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = '/images/qris.jpg';
+                        link.download = 'QRIS-TinyTale.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
                     >
-                      <ExternalLink size={13} />
-                      <span>Buka / Simpan Gambar QRIS</span>
+                      <Download size={14} />
+                      <span>Unduh QRIS</span>
                     </a>
                   </div>
 
@@ -432,11 +441,15 @@ export default function CheckoutModal({
                 </div>
 
                 {/* 3. UPLOAD BUKTI PEMBAYARAN */}
-                <div style={{ marginTop: '16px' }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 600 }}>Upload Bukti Pembayaran *</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Screenshot / Foto Struk</span>
-                  </label>
+                <div style={{ marginTop: '18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px 8px', marginBottom: '8px' }}>
+                    <label className="form-label" style={{ margin: 0, fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                      Upload Bukti Pembayaran <span style={{ color: '#EF4444' }}>*</span>
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      (Screenshot / Foto Struk)
+                    </span>
+                  </div>
 
                   <input
                     type="file"
@@ -578,10 +591,11 @@ export default function CheckoutModal({
                 <button
                   type="submit"
                   className="btn btn-primary btn-lg"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   disabled={isSubmitting || isCompressing}
                 >
-                  {isSubmitting ? 'Memproses Pesanan...' : 'Konfirmasi & Kirim Pesanan'}
+                  <Send size={18} />
+                  <span>{isSubmitting ? 'Memproses Pesanan...' : 'Konfirmasi Pesanan'}</span>
                 </button>
               </div>
             </form>
