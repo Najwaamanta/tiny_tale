@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function CheckoutModal({
   isOpen,
@@ -8,6 +9,8 @@ export default function CheckoutModal({
   cartItems = [],
   onCreateOrder
 }) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   // Form states - Only Name and WhatsApp as requested

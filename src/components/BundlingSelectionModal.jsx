@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShoppingBag, ArrowRight, ArrowLeft, Camera, Upload, Trash2, Heart, Search } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector.jsx';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function BundlingSelectionModal({
   isOpen,
@@ -11,6 +12,8 @@ export default function BundlingSelectionModal({
   onConfirm,
   onGoToCustomStudio
 }) {
+  useBodyScrollLock(Boolean(isOpen && bundlingProduct));
+
   if (!isOpen || !bundlingProduct) return null;
 
   // Determine exact bundle type: 1, 2, or 3

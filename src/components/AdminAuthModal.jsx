@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
+  useBodyScrollLock(isOpen);
+
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');

@@ -19,6 +19,7 @@ import Footer from './components/Footer';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 import AdminAuthModal from './components/AdminAuthModal';
+import { useBodyScrollLock } from './utils/scrollLock';
 
 export default function App() {
   // Reactive local snapshot of store
@@ -31,6 +32,9 @@ export default function App() {
   const [isAdminLoginView, setIsAdminLoginView] = useState(false);
   const [isAdminDashboardView, setIsAdminDashboardView] = useState(false);
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
+
+  // Prevent background scrolling when any modal is open
+  useBodyScrollLock(Boolean(isCartOpen || isCheckoutOpen || isAdminAuthModalOpen));
 
   // Template selection state for Bag Charm customizer
   const [selectedTemplate, setSelectedTemplate] = useState({

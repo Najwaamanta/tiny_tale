@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, AlertTriangle, Check } from 'lucide-react';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function CartModal({
   isOpen,
@@ -10,6 +11,8 @@ export default function CartModal({
   onClearCart,
   onProceedCheckout
 }) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const [itemToDelete, setItemToDelete] = useState(null);

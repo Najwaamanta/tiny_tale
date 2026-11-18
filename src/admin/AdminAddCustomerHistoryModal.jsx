@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Plus, Trash2, Users, Calendar, ShoppingBag, CreditCard, Sparkles, Check, AlertCircle, MapPin, Phone } from 'lucide-react';
 import { aggregateCustomersFromOrders } from '../utils/excelExport';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function AdminAddCustomerHistoryModal({
   isOpen,
@@ -9,6 +10,8 @@ export default function AdminAddCustomerHistoryModal({
   orders = [],
   collections = []
 }) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   // Existing customers database for auto-matching

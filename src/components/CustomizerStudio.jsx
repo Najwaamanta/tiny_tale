@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import VisualCanvas from './VisualCanvas';
 import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS, SAMPLE_FRAME_PHOTOS, getFrameSlots, PARACORD_MODELS, PARACORD_LENGTHS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function CustomizerStudio({
   products = [],
@@ -33,6 +34,7 @@ export default function CustomizerStudio({
 
   // Frame Modal Selector State
   const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
+  useBodyScrollLock(isFrameModalOpen);
   const [isFrameConfirmed, setIsFrameConfirmed] = useState(true);
   const [frameSearch, setFrameSearch] = useState('');
   const [framePoseFilter, setFramePoseFilter] = useState('all');

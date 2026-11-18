@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Package, User, CreditCard, Image as ImageIcon, Calendar, Check, AlertCircle } from 'lucide-react';
+import { useBodyScrollLock } from '../utils/scrollLock';
 
 export default function AdminAddOrderModal({
   isOpen,
@@ -7,6 +8,8 @@ export default function AdminAddOrderModal({
   onSave,
   collections = []
 }) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   // Customer state

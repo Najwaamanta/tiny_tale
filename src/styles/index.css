@@ -305,8 +305,17 @@ button, input, select, textarea {
   color: var(--text-muted);
 }
 
+/* Prevent body scrolling when any modal is open */
+body.modal-open,
+html.modal-open {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
 /* Modals */
-.modal-backdrop {
+.modal-backdrop,
+.tt-auth-modal-overlay,
+.admin-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(20, 19, 18, 0.55);
@@ -318,9 +327,14 @@ button, input, select, textarea {
   justify-content: center;
   padding: 20px;
   animation: fadeIn 0.2s ease-out;
+  overscroll-behavior: contain !important;
+  touch-action: none !important;
 }
 
-.modal-content {
+.modal-content,
+.modal-container,
+.tt-auth-modal-card,
+.admin-modal-content {
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
@@ -331,6 +345,8 @@ button, input, select, textarea {
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
 }
 
 /* Animations */
