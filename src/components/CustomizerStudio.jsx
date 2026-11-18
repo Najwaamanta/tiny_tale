@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, ShoppingBag, Plus, Trash2, Check, RefreshCw, AlertCircle, Info, Upload, Image as ImageIcon, Camera, CheckCircle2, ChevronRight, ArrowRight, ArrowLeft, Search, X } from 'lucide-react';
+import { Sparkles, ShoppingBag, Plus, Trash2, Check, RefreshCw, AlertCircle, Info, Upload, Image as ImageIcon, Camera, CheckCircle2, ChevronRight, ArrowRight, ArrowLeft, Search, X, Sliders } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import VisualCanvas from './VisualCanvas';
+import PhotoAdjustModal from './PhotoAdjustModal';
 import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS, SAMPLE_FRAME_PHOTOS, getFrameSlots, PARACORD_MODELS, PARACORD_LENGTHS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector';
 import { useBodyScrollLock } from '../utils/scrollLock';
@@ -56,6 +57,16 @@ export default function CustomizerStudio({
   const [framePhotos, setFramePhotos] = useState(
     activeInitialData?.framePhotos || [null, null, null, null, null, null]
   );
+  // Store raw original uncropped uploaded photos
+  const [rawPhotos, setRawPhotos] = useState(
+    activeInitialData?.rawPhotos || activeInitialData?.framePhotos || [null, null, null, null, null, null]
+  );
+  // Saved transform configs per slot: { [slotIdx]: { zoom, panX, panY, rotate, flipX, originalSrc } }
+  const [photoAdjustments, setPhotoAdjustments] = useState(
+    activeInitialData?.photoAdjustments || {}
+  );
+  // Current slot being edited in PhotoAdjustModal (number or null)
+  const [adjustingSlotIndex, setAdjustingSlotIndex] = useState(null);
   const [zoomMode, setZoomMode] = useState(false);
 
   // Bag Charm Hardware & Charm customizations
@@ -239,6 +250,18 @@ export default function CustomizerStudio({
   const activeSlots = activeFrame?.slots || activeLayout.slots;
 
   const slotCount = activeSlots.length;
+
+  // Target slot info for Canva-style adjust modal
+  const targetSlot = adjustingSlotIndex !== null ? activeSlots[adjustingSlotIndex] : null;
+  const targetSlotRatio = (() => {
+    if (!targetSlot) return 1.35;
+    const wPct = parseFloat(targetSlot.width) || 75;
+    const hPct = parseFloat(targetSlot.height) || 24;
+    const slotW = 164 * (wPct / 100);
+    const slotH = 380 * (hPct / 100);
+    return slotW / slotH || 1.35;
+  })();
+  const targetSlotRadius = targetSlot?.borderRadius || '8px';
 
   // Active hardware
   const activeHardware = currentProduct?.hardwareFinishes?.find((h) => h.id === selectedHwId) || currentProduct?.hardwareFinishes?.[0];
@@ -466,14 +489,46 @@ export default function CustomizerStudio({
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target.result;
+      // 1. Store raw uncropped photo
+      setRawPhotos((prev) => {
+        const next = [...prev];
+        next[slotIndex] = dataUrl;
+        return next;
+      });
+      // 2. Set as frame photo initially
       setFramePhotos((prev) => {
         const next = [...prev];
         next[slotIndex] = dataUrl;
         return next;
       });
+      // 3. Reset previous adjustment for this slot
+      setPhotoAdjustments((prev) => ({
+        ...prev,
+        [slotIndex]: { zoom: 1, panX: 0, panY: 0, rotate: 0, flipX: false, originalSrc: dataUrl }
+      }));
+      // 4. Open Canva-style adjust modal immediately so user can easily crop & adjust!
+      setAdjustingSlotIndex(slotIndex);
     };
     reader.readAsDataURL(file);
     event.target.value = '';
+  };
+
+  const handleApplyPhotoAdjust = (croppedDataUrl, transformConfig) => {
+    if (adjustingSlotIndex === null) return;
+    const slotIdx = adjustingSlotIndex;
+
+    setFramePhotos((prev) => {
+      const next = [...prev];
+      next[slotIdx] = croppedDataUrl;
+      return next;
+    });
+
+    if (transformConfig) {
+      setPhotoAdjustments((prev) => ({
+        ...prev,
+        [slotIdx]: transformConfig
+      }));
+    }
   };
 
   const handleRemovePhoto = (slotIndex) => {
@@ -482,15 +537,28 @@ export default function CustomizerStudio({
       next[slotIndex] = null;
       return next;
     });
+    setRawPhotos((prev) => {
+      const next = [...prev];
+      next[slotIndex] = null;
+      return next;
+    });
+    setPhotoAdjustments((prev) => {
+      const next = { ...prev };
+      delete next[slotIndex];
+      return next;
+    });
   };
 
   const handleUseSamplePhotos = () => {
-    const samples = [...SAMPLE_FRAME_PHOTOS, ...SAMPLE_FRAME_PHOTOS];
-    setFramePhotos(samples.slice(0, 6));
+    const samples = [...SAMPLE_FRAME_PHOTOS, ...SAMPLE_FRAME_PHOTOS].slice(0, 6);
+    setFramePhotos(samples);
+    setRawPhotos(samples);
   };
 
   const handleClearAllPhotos = () => {
     setFramePhotos([null, null, null, null, null, null]);
+    setRawPhotos([null, null, null, null, null, null]);
+    setPhotoAdjustments({});
   };
 
   // Add to Bag action
@@ -943,7 +1011,13 @@ export default function CustomizerStudio({
                 selectedFrame={activeFrame}
                 selectedLayoutId={selectedLayoutId}
                 framePhotos={framePhotos}
-                onSlotClick={(slotIdx) => handleTriggerUpload(slotIdx)}
+                onSlotClick={(slotIdx) => {
+                  if (framePhotos[slotIdx]) {
+                    setAdjustingSlotIndex(slotIdx);
+                  } else {
+                    handleTriggerUpload(slotIdx);
+                  }
+                }}
                 zoomMode={zoomMode}
                 onToggleZoom={(val) => setZoomMode(val)}
                 onChangeFrame={handleGoToFrameSelectionPage}
@@ -1000,8 +1074,14 @@ export default function CustomizerStudio({
                     <div key={idx} className="photo-slot-card">
                       <div
                         className={`photo-slot-preview-box ${hasPhoto ? 'has-photo' : ''} ${isOval ? 'is-oval' : ''}`}
-                        onClick={() => handleTriggerUpload(idx)}
-                        title="Klik untuk memilih foto"
+                        onClick={() => {
+                          if (hasPhoto) {
+                            setAdjustingSlotIndex(idx);
+                          } else {
+                            handleTriggerUpload(idx);
+                          }
+                        }}
+                        title={hasPhoto ? "Klik untuk mengatur posisi / zoom foto" : "Klik untuk memilih foto"}
                       >
                         {hasPhoto ? (
                           <img src={framePhotos[idx]} alt={slot.label || `Foto ${idx + 1}`} />
@@ -1024,6 +1104,18 @@ export default function CustomizerStudio({
                       </div>
 
                       <div className="photo-slot-actions">
+                        {hasPhoto && (
+                          <button
+                            type="button"
+                            className="adjust-photo-btn"
+                            onClick={() => setAdjustingSlotIndex(idx)}
+                            title="Atur posisi & zoom foto (Canva-style)"
+                          >
+                            <Sliders size={12} />
+                            <span>Atur</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           className="upload-file-btn"
@@ -1837,6 +1929,22 @@ export default function CustomizerStudio({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Canva-style Photo Adjust / Crop Modal */}
+      {adjustingSlotIndex !== null && (
+        <PhotoAdjustModal
+          isOpen={adjustingSlotIndex !== null}
+          onClose={() => setAdjustingSlotIndex(null)}
+          imageSrc={rawPhotos[adjustingSlotIndex] || framePhotos[adjustingSlotIndex]}
+          slotIndex={adjustingSlotIndex}
+          slotLabel={activeSlots[adjustingSlotIndex]?.label || `Foto ${adjustingSlotIndex + 1}`}
+          slotRatio={targetSlotRatio}
+          slotRadius={targetSlotRadius}
+          initialTransform={photoAdjustments[adjustingSlotIndex]}
+          onApply={handleApplyPhotoAdjust}
+          onChangePhoto={(idx) => handleTriggerUpload(idx)}
+        />
       )}
     </section>
   );

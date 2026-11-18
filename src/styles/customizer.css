@@ -1033,6 +1033,29 @@
   gap: 6px;
 }
 
+.adjust-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 11px;
+  border-radius: 8px;
+  background: #EEF2FF;
+  color: #4F46E5;
+  border: 1px solid #C7D2FE;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.adjust-photo-btn:hover {
+  background: #4F46E5;
+  color: #FFFFFF;
+  border-color: #4F46E5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
 .upload-file-btn {
   display: inline-flex;
   align-items: center;
@@ -1192,6 +1215,7 @@
 .canvas-btn-text-short {
   display: none;
 }
+
 .canvas-btn-text-full {
   display: inline;
 }
@@ -1207,6 +1231,7 @@
   .canvas-btn-text-full {
     display: none;
   }
+
   .canvas-btn-text-short {
     display: inline;
   }
@@ -1443,7 +1468,13 @@
     font-size: 0.68rem;
   }
 
-  .upload-file-btn {
+  .adjust-photo-btn {
+    padding: 5px 9px;
+    font-size: 0.7rem;
+    gap: 3px;
+  }
+
+.upload-file-btn {
     padding: 5px 9px;
     font-size: 0.7rem;
     gap: 3px;
