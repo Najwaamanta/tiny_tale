@@ -446,15 +446,27 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                   <div style={{ marginTop: '2px' }}><strong>Alamat:</strong> {cust.address}</div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', width: '100%', boxSizing: 'border-box' }}>
                   <button
                     type="button"
-                    className="btn btn-outline"
+                    className="btn btn-secondary"
                     onClick={() => setSelectedCustomer(cust)}
-                    style={{ flex: 1, justifyContent: 'center', height: '38px', fontWeight: 700 }}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      justifyContent: 'center',
+                      height: '38px',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      padding: '0 10px',
+                      borderRadius: '8px',
+                      gap: '6px'
+                    }}
                   >
-                    <Eye size={14} />
-                    <span>Lihat Riwayat Belanja ({cust.ordersCount})</span>
+                    <Eye size={15} style={{ flexShrink: 0 }} />
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Riwayat Belanja ({cust.ordersCount})
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -462,17 +474,21 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                     onClick={() => handleDeleteCustomer(cust)}
                     title="Hapus riwayat pembeli"
                     style={{
+                      flexShrink: 0,
                       height: '38px',
                       padding: '0 14px',
                       color: '#E11D48',
                       borderColor: 'rgba(225, 29, 72, 0.3)',
+                      background: 'rgba(225, 29, 72, 0.04)',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      fontWeight: 700
+                      gap: '5px',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      borderRadius: '8px'
                     }}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={14} style={{ flexShrink: 0 }} />
                     <span>Hapus</span>
                   </button>
                 </div>

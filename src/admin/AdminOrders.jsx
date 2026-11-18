@@ -289,40 +289,124 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
 
               return (
                 <div key={ord.id} className="admin-mobile-card-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                     <div>
-                      <strong style={{ fontSize: '0.98rem', color: 'var(--accent-purple)' }}>{ord.id}</strong>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      <strong style={{ fontSize: '1rem', color: 'var(--accent-purple)', fontFamily: 'var(--font-display)' }}>
+                        {ord.id}
+                      </strong>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
                       </div>
                     </div>
-                    <span className="badge badge-lime">
+                    <span
+                      className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}
+                      style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '12px' }}
+                    >
                       {ord.paymentStatus === 'paid' ? 'Lunas' : 'Menunggu'}
                     </span>
                   </div>
 
-                  <div className="admin-mobile-card-meta">
-                    <div><strong>Pemesan:</strong> {ord.customer?.name || 'Pelanggan'} ({ord.customer?.whatsapp || '-'})</div>
-                    <div><strong>Total:</strong> Rp {(ord.totalAmount || ord.total || 0).toLocaleString('id-ID')} ({itemsCount} item)</div>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-                      {(ord.paymentProof || ord.paymentProofUrl) && (
-                        <span className="badge badge-purple" style={{ fontSize: '0.68rem' }}>🧾 Bukti Bayar QRIS</span>
-                      )}
-                      {hasFrame && (
-                        <span className="badge badge-purple" style={{ fontSize: '0.68rem' }}>🖼️ Frame Foto Tersedia</span>
+                  <div
+                    className="admin-mobile-card-meta"
+                    style={{
+                      background: '#F8FAFC',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '6px' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>Pemesan: </span>
+                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.84rem' }}>{ord.customer?.name || 'Pelanggan'}</strong>
+                      </div>
+                      {ord.customer?.whatsapp && ord.customer.whatsapp !== '-' && (
+                        <a
+                          href={`https://wa.me/${ord.customer.whatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: '0.72rem',
+                            color: '#059669',
+                            background: 'rgba(5, 150, 105, 0.08)',
+                            padding: '2px 7px',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                          title="Buka Chat WhatsApp Pelanggan"
+                        >
+                          <Phone size={11} />
+                          <span>{ord.customer.whatsapp}</span>
+                        </a>
                       )}
                     </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>Total: </span>
+                        <strong style={{ color: 'var(--accent-purple)', fontSize: '0.9rem' }}>
+                          Rp {(ord.totalAmount || ord.total || 0).toLocaleString('id-ID')}
+                        </strong>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginLeft: '4px' }}>
+                          ({itemsCount} item)
+                        </span>
+                      </div>
+                    </div>
+
+                    {((ord.paymentProof || ord.paymentProofUrl) || hasFrame) && (
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '2px', paddingTop: '6px', borderTop: '1px dashed var(--border-subtle)' }}>
+                        {(ord.paymentProof || ord.paymentProofUrl) && (
+                          <span className="badge badge-purple" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                            🧾 Bukti Bayar QRIS
+                          </span>
+                        )}
+                        {hasFrame && (
+                          <span className="badge badge-cyan" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                            🖼️ Frame Foto Tersedia
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginTop: '8px',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <button
                       type="button"
-                      className="btn btn-outline"
+                      className="btn btn-secondary"
                       onClick={() => handleOpenDetail(ord)}
-                      style={{ flex: 1, justifyContent: 'center', height: '38px', fontWeight: 700 }}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        justifyContent: 'center',
+                        height: '38px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        padding: '0 10px',
+                        borderRadius: '8px',
+                        gap: '6px'
+                      }}
                     >
-                      <Eye size={14} />
-                      <span>Lihat Panduan & Frame</span>
+                      <Eye size={15} style={{ flexShrink: 0 }} />
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        Panduan & Frame
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -330,17 +414,21 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                       onClick={() => handleDeleteOrder(ord)}
                       title="Hapus pesanan"
                       style={{
+                        flexShrink: 0,
                         height: '38px',
                         padding: '0 14px',
                         color: '#E11D48',
                         borderColor: 'rgba(225, 29, 72, 0.3)',
+                        background: 'rgba(225, 29, 72, 0.04)',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
-                        fontWeight: 700
+                        gap: '5px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        borderRadius: '8px'
                       }}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} style={{ flexShrink: 0 }} />
                       <span>Hapus</span>
                     </button>
                   </div>
