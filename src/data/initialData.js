@@ -237,7 +237,7 @@ export const SAMPLE_FRAME_PHOTOS = [
 export const BAG_CHARM_FRAMES = [
   {
     id: 'frame-1',
-    name: '01: Tiny Tale Stamp Classic',
+    name: 'Frame 1',
     subtitle: 'Classic Perforated Stamp & Sardines',
     badge: '2 Slot Stamp',
     image: '/frames/1.png',
@@ -252,7 +252,7 @@ export const BAG_CHARM_FRAMES = [
   },
   {
     id: 'frame-borcelle',
-    name: 'Borcelle Vintage Mosaic',
+    name: 'Frame 2',
     subtitle: 'Classic Green Tile & Silver Emblem',
     badge: '3 Slot Mosaic',
     image: '/frames/2.png',
@@ -268,7 +268,7 @@ export const BAG_CHARM_FRAMES = [
   },
   {
     id: 'frame-the-moment',
-    name: 'Archive Memory Editorial',
+    name: 'Frame 5',
     subtitle: 'Modern Ticket & Barcode Strip',
     badge: '3 Slot Persegi',
     image: '/frames/5.png',
@@ -284,7 +284,7 @@ export const BAG_CHARM_FRAMES = [
   },
   {
     id: 'frame-3',
-    name: '03: Night Arched Comic Star',
+    name: 'Frame 3',
     subtitle: 'Night Arched & Pop Comic Star',
     badge: '3 Slot Arched',
     image: '/frames/3.png',
@@ -300,7 +300,7 @@ export const BAG_CHARM_FRAMES = [
   },
   {
     id: 'frame-4',
-    name: '04: Cottagecore Lily',
+    name: 'Frame 4',
     subtitle: 'Pastel Stripes & Elegant Lily Bloom',
     badge: '3 Slot Floral',
     image: '/frames/4.png',

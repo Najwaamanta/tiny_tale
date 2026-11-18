@@ -103,11 +103,8 @@ export function resolveFrameConfig(item = {}) {
   ];
 
   let frameDisplayName = item.frameName || frame?.name;
-  if (!frameDisplayName || frameDisplayName.includes('#')) {
-    if (num === '1') frameDisplayName = '01: Tiny Tale Stamp Classic (2 Slot Stamp)';
-    else if (num === '2') frameDisplayName = '02: Borcelle Vintage Mosaic (3 Slot)';
-    else if (num === '5') frameDisplayName = '05: Archive Memory Editorial (3 Slot)';
-    else frameDisplayName = `Photostrip Frame #${num}`;
+  if (!frameDisplayName || frameDisplayName.includes('#') || frameDisplayName.includes(':')) {
+    frameDisplayName = `Frame ${num || '1'}`;
   }
 
   return {

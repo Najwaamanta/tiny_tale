@@ -60,11 +60,11 @@ export default function BundlingSelectionModal({
 
   // ALL 30 Frames for Bagcharm
   const allFrames = ALL_FRAME_TEMPLATES && ALL_FRAME_TEMPLATES.length > 0 ? ALL_FRAME_TEMPLATES : [
-    { id: 'frame-1', name: '01: Tiny Tale Stamp Classic', badge: '2 Slot Stamp', imageSrc: '/frames/1.png' },
-    { id: 'frame-borcelle', name: '02: Borcelle Vintage Mosaic', badge: '3 Slot Mosaic', imageSrc: '/frames/2.png' },
-    { id: 'frame-3', name: '03: Night Arched Comic Star', badge: '3 Slot Arched', imageSrc: '/frames/3.png' },
-    { id: 'frame-4', name: '04: Cottagecore Lily', badge: '3 Slot Floral', imageSrc: '/frames/4.png' },
-    { id: 'frame-the-moment', name: '05: Archive Memory Editorial', badge: '3 Slot Persegi', imageSrc: '/frames/5.png' }
+    { id: 'frame-1', name: 'Frame 1', badge: '2 Slot Stamp', imageSrc: '/frames/1.png' },
+    { id: 'frame-borcelle', name: 'Frame 2', badge: '3 Slot Mosaic', imageSrc: '/frames/2.png' },
+    { id: 'frame-3', name: 'Frame 3', badge: '3 Slot Arched', imageSrc: '/frames/3.png' },
+    { id: 'frame-4', name: 'Frame 4', badge: '3 Slot Floral', imageSrc: '/frames/4.png' },
+    { id: 'frame-the-moment', name: 'Frame 5', badge: '3 Slot Persegi', imageSrc: '/frames/5.png' }
   ];
 
   // Step state (for Bundle 1 & 2)

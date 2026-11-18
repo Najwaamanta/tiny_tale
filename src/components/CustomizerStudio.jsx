@@ -496,8 +496,8 @@ export default function CustomizerStudio({
   // Add to Bag action
   const handleAddToCart = () => {
     const layoutName = activeFrame?.name || (selectedFrameId === 'frame-borcelle'
-      ? 'Borcelle Vintage Mosaic'
-      : (selectedFrameId === 'frame-the-moment' ? 'The Moment Classic' : activeLayout.name));
+      ? 'Frame 2'
+      : (selectedFrameId === 'frame-the-moment' ? 'Frame 5' : (activeLayout?.name || 'Frame 1')));
 
     // Handle Bundling Session (Bundle 2 or Bundle 3)
     if (bundlingSession) {

@@ -42,7 +42,7 @@ export default function App() {
     type: 'custom_frame',
     frameId: 'frame-borcelle',
     layoutId: 'layout-a',
-    name: 'Borcelle Vintage Mosaic'
+    name: 'Frame 2'
   });
 
   // Studio preset remix config
