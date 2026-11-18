@@ -327,7 +327,7 @@ export default function VisualCanvas({
            ------------------------------------------------------------------ */
         <svg
           className="canvas-svg"
-          viewBox="60 10 270 505"
+          viewBox="82 10 250 505"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >

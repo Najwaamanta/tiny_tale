@@ -143,6 +143,13 @@ textarea {
     padding-right: 14px;
   }
 
+  @media (max-width: 400px) {
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+
   .modal-backdrop {
     padding: 12px 8px;
     align-items: flex-end;

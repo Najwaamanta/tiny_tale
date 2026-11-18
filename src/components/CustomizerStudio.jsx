@@ -752,8 +752,8 @@ export default function CustomizerStudio({
               </div>
             ) : (
               /* BUNDLE 3 (1 GELANG & 1 BAGCHARM) BANNER */
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '14px', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, flex: '1 1 240px' }}>
                   {bundlingSession.selectedGelang?.image && (
                     <img
                       src={bundlingSession.selectedGelang.image}
@@ -763,12 +763,13 @@ export default function CustomizerStudio({
                         height: '48px',
                         borderRadius: '12px',
                         objectFit: 'cover',
-                        border: '2px solid #6366F1'
+                        border: '2px solid #6366F1',
+                        flexShrink: 0
                       }}
                     />
                   )}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span
                         style={{
                           background: '#4F46E5',
@@ -777,7 +778,8 @@ export default function CustomizerStudio({
                           fontWeight: 800,
                           padding: '2px 8px',
                           borderRadius: '999px',
-                          textTransform: 'uppercase'
+                          textTransform: 'uppercase',
+                          flexShrink: 0
                         }}
                       >
                         Paket Bundling 3
@@ -786,7 +788,7 @@ export default function CustomizerStudio({
                         Rp {Number(bundlingSession.bundlePrice || 27000).toLocaleString('id-ID')} (Hemat Paket)
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.84rem', color: '#4338CA', marginTop: '3px' }}>
+                    <div style={{ fontSize: '0.84rem', color: '#4338CA', marginTop: '3px', wordBreak: 'break-word' }}>
                       Gelang: <strong>{bundlingSession.selectedGelang?.name || 'Gelang Pilihan'}</strong> (Terpilih) • Sekarang kustom Bagcharm pasangan Anda!
                     </div>
                   </div>
@@ -1247,7 +1249,7 @@ export default function CustomizerStudio({
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px', width: '100%', minWidth: 0 }}>
                     {availableCharms.map((ch) => {
                       const isSelected = selectedCharmIds.includes(ch.id);
                       return (
