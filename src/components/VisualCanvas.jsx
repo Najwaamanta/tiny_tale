@@ -140,10 +140,13 @@ export default function VisualCanvas({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            flexWrap: 'wrap'
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
           }}
         >
-          <div className="canvas-view-toggle">
+          <div className="canvas-view-toggle" style={{ flexShrink: 0 }}>
             <button
               type="button"
               className={!zoomMode ? 'active' : ''}
@@ -165,12 +168,14 @@ export default function VisualCanvas({
               type="button"
               onClick={onChangeFrame}
               style={{
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
                 background: isFrameConfirmed ? '#10B981' : '#2563EB',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '999px',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
+                padding: '5px 12px',
+                fontSize: '0.74rem',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -183,7 +188,7 @@ export default function VisualCanvas({
               }}
               title="Ganti desain frame photostrip"
             >
-              <span>{isFrameConfirmed ? '✓ Frame Terpilih' : 'Ganti Frame / Layout'}</span>
+              <span>{isFrameConfirmed ? '✓ Ganti Frame' : 'Ganti Frame'}</span>
             </button>
           )}
         </div>

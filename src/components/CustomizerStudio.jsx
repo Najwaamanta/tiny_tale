@@ -621,7 +621,7 @@ export default function CustomizerStudio({
                 padding: '7px 14px'
               }}
             >
-              Ganti Frame / Layout
+              Ganti Frame
             </button>
           </div>
         </div>
