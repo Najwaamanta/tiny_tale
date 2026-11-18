@@ -673,7 +673,7 @@ export default function CustomizerStudio({
       <div className="container">
         {/* Top Header & Breadcrumb Bar with Back Button */}
         <div className="studio-top-bar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -682,20 +682,19 @@ export default function CustomizerStudio({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 fontWeight: 600,
-                padding: '7px 14px',
-                borderRadius: 'var(--radius-full)'
+                padding: '6px 13px',
+                borderRadius: 'var(--radius-full)',
+                flexShrink: 0
               }}
             >
               ← Pilihan Frame
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-              <span className="badge badge-cyan" style={{ fontWeight: 700, fontSize: '0.78rem' }}>
-                {activeFrame ? activeFrame.name : activeLayout.name} ({slotCount} Foto)
-              </span>
-            </div>
+            <span className="badge badge-cyan" style={{ fontWeight: 700, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+              {activeFrame ? activeFrame.name : activeLayout.name} ({slotCount} Foto)
+            </span>
           </div>
         </div>
 
@@ -954,7 +953,7 @@ export default function CustomizerStudio({
                 <div>
                   <div className="tt-preview-footer-sub">FRAME & AKSEN TERPILIH</div>
                   <div className="tt-preview-footer-title">
-                    {activeFrame ? `${activeFrame.name} (3 Slot)` : `${activeLayout.name} (${activeLayout.poseText})`}
+                    {activeFrame ? `${activeFrame.name} (${slotCount} Slot)` : `${activeLayout.name} (${activeLayout.poseText})`}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: '#4F46E5', fontWeight: 600, marginTop: '2px' }}>
                     Tali: Twisted Loop & Dual Tassel • Aksen (Bintang & Lonceng): {ACCENT_COLORS.find(c => c.id === accentColor)?.name || 'Hitam'}

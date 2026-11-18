@@ -131,16 +131,17 @@ export default function VisualCanvas({
       {/* Zoom Mode Toggle Button & Ganti Frame Button */}
       {productType === 'bag_charm' && (
         <div
+          className="canvas-top-controls"
           style={{
             position: 'absolute',
-            top: '14px',
-            left: '14px',
-            right: '14px',
+            top: '10px',
+            left: '10px',
+            right: '10px',
             zIndex: 10,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '8px',
+            gap: '6px',
             pointerEvents: 'none'
           }}
         >
@@ -164,6 +165,7 @@ export default function VisualCanvas({
           {onChangeFrame && (
             <button
               type="button"
+              className="canvas-change-frame-btn"
               onClick={onChangeFrame}
               style={{
                 pointerEvents: 'auto',
@@ -173,12 +175,12 @@ export default function VisualCanvas({
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '999px',
-                padding: '6px 14px',
-                fontSize: '0.74rem',
+                padding: '5px 12px',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '4px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: isFrameConfirmed
@@ -323,7 +325,7 @@ export default function VisualCanvas({
            ------------------------------------------------------------------ */
         <svg
           className="canvas-svg"
-          viewBox="55 60 290 455"
+          viewBox="55 12 290 502"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >

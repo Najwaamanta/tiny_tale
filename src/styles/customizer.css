@@ -157,12 +157,12 @@
   }
 
   .canvas-viewport {
-    height: 350px;
-    border-radius: 16px;
+    height: 395px;
+    border-radius: 18px;
   }
 
   .canvas-svg {
-    max-height: 340px;
+    max-height: 385px;
   }
 
   .tt-preview-card-footer {
@@ -186,11 +186,12 @@
 
 @media (max-width: 400px) {
   .canvas-viewport {
-    height: 310px;
+    height: 380px;
+    border-radius: 16px;
   }
 
   .canvas-svg {
-    max-height: 300px;
+    max-height: 370px;
   }
 }
 
@@ -1130,7 +1131,22 @@
   }
   .canvas-view-toggle button {
     font-size: 0.68rem;
-    padding: 4px 10px;
+    padding: 4px 8px;
+  }
+  .canvas-change-frame-btn {
+    font-size: 0.68rem !important;
+    padding: 4px 10px !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .canvas-view-toggle button {
+    font-size: 0.62rem;
+    padding: 3px 6px;
+  }
+  .canvas-change-frame-btn {
+    font-size: 0.64rem !important;
+    padding: 3px 8px !important;
   }
 }
 
