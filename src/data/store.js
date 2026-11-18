@@ -419,7 +419,11 @@ class Store {
 
     this.orders = [newOrder, ...this.orders];
     setStorage(STORAGE_KEYS.ORDERS, this.orders);
-    this.clearCart();
+
+    // Remove only purchased items from the cart, leaving unselected items for future checkout
+    const purchasedKeys = new Set((items || []).map((it) => it.cartItemId || it.id));
+    this.cart = this.cart.filter((item) => !purchasedKeys.has(item.cartItemId || item.id));
+    setStorage(STORAGE_KEYS.CART, this.cart);
     this.notify();
 
     // Async sync to MySQL database

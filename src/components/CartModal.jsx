@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, AlertTriangle, Check } from 'lucide-react';
 
 export default function CartModal({
   isOpen,
@@ -15,6 +15,53 @@ export default function CartModal({
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // Set of selected item keys
+  const [selectedKeys, setSelectedKeys] = useState(() => {
+    return new Set(cartItems.map((item, idx) => item.cartItemId || item.id || `cart-it-${idx}`));
+  });
+
+  // Synchronize selection with cart items
+  useEffect(() => {
+    const allKeys = cartItems.map((item, idx) => item.cartItemId || item.id || `cart-it-${idx}`);
+    setSelectedKeys((prev) => {
+      if (prev.size === 0 && allKeys.length > 0) {
+        return new Set(allKeys);
+      }
+      const next = new Set();
+      allKeys.forEach((k) => {
+        if (prev.has(k)) {
+          next.add(k);
+        } else {
+          // Check new items added to cart by default
+          next.add(k);
+        }
+      });
+      return next;
+    });
+  }, [cartItems]);
+
+  const toggleSelectItem = (key) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const isAllSelected = cartItems.length > 0 && selectedKeys.size === cartItems.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedKeys(new Set());
+    } else {
+      setSelectedKeys(new Set(cartItems.map((item, idx) => item.cartItemId || item.id || `cart-it-${idx}`)));
+    }
+  };
+
   const handleQuantityChange = (item, delta) => {
     const currentQty = Number(item.quantity) || 1;
     if (currentQty + delta < 1) {
@@ -27,7 +74,13 @@ export default function CartModal({
     }
   };
 
-  const totalAmount = cartItems.reduce(
+  // Only calculate total for selected items
+  const selectedItems = cartItems.filter((item, idx) => {
+    const key = item.cartItemId || item.id || `cart-it-${idx}`;
+    return selectedKeys.has(key);
+  });
+
+  const totalAmount = selectedItems.reduce(
     (acc, item) => acc + (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1)),
     0
   );
@@ -123,33 +176,117 @@ export default function CartModal({
               </p>
             </div>
           ) : (
-            <div className="cart-items-list" style={{ margin: 0 }}>
-              {cartItems.map((item, idx) => {
-                const itemKey = item.cartItemId || item.id || `cart-it-${idx}`;
-                const itemUnitPrice = Number(item.unitPrice || item.price || 0);
-                const itemQty = Number(item.quantity || 1);
-                const itemTotal = itemUnitPrice * itemQty;
+            <div>
+              {/* Select All Checkbox Bar */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  marginBottom: '14px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-md)',
+                  userSelect: 'none'
+                }}
+              >
+                <div
+                  onClick={toggleSelectAll}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '5px',
+                      border: isAllSelected ? '2px solid var(--accent-cyan)' : '2px solid var(--border-medium)',
+                      background: isAllSelected ? 'var(--accent-cyan)' : 'var(--bg-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    {isAllSelected && <Check size={14} color="#000" strokeWidth={3} />}
+                  </div>
+                  <span>Pilih Semua ({cartItems.length} item)</span>
+                </div>
 
-                return (
-                  <div key={itemKey} className="cart-item-card">
-                    {/* Thumbnail: Product Photo or Photostrip */}
-                    <div className="cart-item-thumb">
-                      {item.image ? (
-                        <img src={item.image} alt={item.title} />
-                      ) : item.frameImage ? (
-                        <img src={item.frameImage} alt={item.frameName || 'Frame'} />
-                      ) : (
-                        <div
-                          style={{
-                            width: '34px',
-                            height: '34px',
-                            borderRadius: '50%',
-                            background: item.cordColor || '#00F2FE',
-                            border: `2px solid ${item.hardwareColor || '#94A3B8'}`
-                          }}
-                        />
-                      )}
-                    </div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: selectedItems.length > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
+                    {selectedItems.length}
+                  </strong> dari {cartItems.length} dipilih
+                </span>
+              </div>
+
+              {/* Items List */}
+              <div className="cart-items-list" style={{ margin: 0 }}>
+                {cartItems.map((item, idx) => {
+                  const itemKey = item.cartItemId || item.id || `cart-it-${idx}`;
+                  const isSelected = selectedKeys.has(itemKey);
+                  const itemUnitPrice = Number(item.unitPrice || item.price || 0);
+                  const itemQty = Number(item.quantity || 1);
+                  const itemTotal = itemUnitPrice * itemQty;
+
+                  return (
+                    <div
+                      key={itemKey}
+                      className="cart-item-card"
+                      style={{
+                        transition: 'all 0.15s ease',
+                        border: isSelected ? '1px solid rgba(0, 242, 254, 0.4)' : '1px solid var(--border-subtle)',
+                        background: isSelected ? 'rgba(0, 242, 254, 0.02)' : 'var(--bg-tertiary)'
+                      }}
+                    >
+                      {/* Checkbox per Item */}
+                      <div
+                        onClick={() => toggleSelectItem(itemKey)}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '5px',
+                          border: isSelected ? '2px solid var(--accent-cyan)' : '2px solid var(--border-medium)',
+                          background: isSelected ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          transition: 'all 0.15s ease'
+                        }}
+                        title={isSelected ? 'Batalkan pilihan item ini' : 'Pilih item ini untuk dibeli'}
+                      >
+                        {isSelected && <Check size={14} color="#000" strokeWidth={3} />}
+                      </div>
+
+                      {/* Thumbnail: Product Photo or Photostrip */}
+                      <div className="cart-item-thumb" style={{ opacity: isSelected ? 1 : 0.65 }}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} />
+                        ) : item.frameImage ? (
+                          <img src={item.frameImage} alt={item.frameName || 'Frame'} />
+                        ) : (
+                          <div
+                            style={{
+                              width: '34px',
+                              height: '34px',
+                              borderRadius: '50%',
+                              background: item.cordColor || '#00F2FE',
+                              border: `2px solid ${item.hardwareColor || '#94A3B8'}`
+                            }}
+                          />
+                        )}
+                      </div>
 
                     {/* Item Information */}
                     <div className="cart-item-info">
@@ -346,43 +483,67 @@ export default function CartModal({
                 );
               })}
             </div>
-          )}
-        </div>
-
-        {/* Footer Checkout */}
-        {cartItems.length > 0 && (
-          <div
-            style={{
-              padding: '18px 24px',
-              borderTop: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total Pesanan</span>
-              <span
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  color: 'var(--accent-cyan)',
-                  fontFamily: 'var(--font-display)'
-                }}
-              >
-                Rp {totalAmount.toLocaleString('id-ID')}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              style={{ width: '100%' }}
-              onClick={onProceedCheckout}
-            >
-              <span>Pembayaran</span>
-              <ArrowRight size={18} />
-            </button>
           </div>
         )}
+      </div>
+
+      {/* Footer Checkout */}
+      {cartItems.length > 0 && (
+        <div
+          style={{
+            padding: '18px 24px',
+            borderTop: '1px solid var(--border-subtle)',
+            background: 'var(--bg-primary)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total Pesanan</span>
+              <div style={{ fontSize: '0.78rem', color: selectedItems.length > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
+                {selectedItems.length > 0 ? `${selectedItems.length} item dipilih` : 'Belum ada item yang dipilih'}
+              </div>
+            </div>
+            <span
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: selectedItems.length > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                fontFamily: 'var(--font-display)'
+              }}
+            >
+              Rp {totalAmount.toLocaleString('id-ID')}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-lg"
+            style={{
+              width: '100%',
+              opacity: selectedItems.length === 0 ? 0.45 : 1,
+              cursor: selectedItems.length === 0 ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            disabled={selectedItems.length === 0}
+            onClick={() => {
+              if (selectedItems.length === 0) return;
+              if (onProceedCheckout) {
+                onProceedCheckout(selectedItems);
+              }
+            }}
+          >
+            <span>
+              {selectedItems.length > 0
+                ? `Pembayaran (${selectedItems.length} item)`
+                : 'Pilih Item untuk Dibeli'}
+            </span>
+            <ArrowRight size={18} />
+          </button>
+        </div>
+      )}
 
         {/* ========================================================
             POPUP KONFIRMASI HAPUS ITEM (Sesuai Permintaan Pengguna)

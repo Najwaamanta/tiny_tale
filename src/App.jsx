@@ -62,6 +62,7 @@ export default function App() {
   const [orders, setOrders] = useState(() => store.getOrders());
   const [collections, setCollections] = useState(() => store.getCollections());
   const [cart, setCart] = useState(() => store.getCart());
+  const [checkoutItems, setCheckoutItems] = useState([]);
   const [cartCount, setCartCount] = useState(() =>
     store.getCart().reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
   );
@@ -256,13 +257,20 @@ export default function App() {
     setCartCount(fresh.reduce((sum, it) => sum + (Number(it.quantity) || 1), 0));
   };
 
-  const handleProceedCheckout = () => {
+  const handleProceedCheckout = (selectedItems) => {
+    const itemsToBuy = selectedItems && selectedItems.length > 0 ? selectedItems : cart;
+    setCheckoutItems(itemsToBuy);
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   };
 
   const handleCreateOrder = (orderData) => {
-    return store.createOrder(orderData);
+    const order = store.createOrder(orderData);
+    const freshCart = [...store.getCart()];
+    setCart(freshCart);
+    setCartCount(freshCart.reduce((sum, it) => sum + (Number(it.quantity) || 1), 0));
+    setCheckoutItems([]);
+    return order;
   };
 
   // Admin handlers
@@ -484,7 +492,7 @@ export default function App() {
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        cartItems={cart}
+        cartItems={checkoutItems.length > 0 ? checkoutItems : cart}
         onCreateOrder={handleCreateOrder}
       />
 
