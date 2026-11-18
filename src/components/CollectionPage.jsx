@@ -302,24 +302,15 @@ export default function CollectionPage({
                   <span>+ Pilih Koleksi & Masukkan Keranjang ({activeItem.priceFormatted})</span>
                 </button>
               ) : activeItem.isCustomizable ? (
-                <div className="tt-customizable-actions">
-                  <button
-                    type="button"
-                    className="tt-btn-customize-now tt-btn-studio"
-                    onClick={() => onCustomizeItem && onCustomizeItem(activeItem)}
-                  >
-                    <Sparkles size={18} className="tt-btn-icon" />
-                    <span>Mulai Custom di Studio</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="tt-btn-customize-now tt-btn-direct-buy"
-                    onClick={handleBuyShowcaseItem}
-                  >
-                    <ShoppingBag size={18} className="tt-btn-icon" />
-                    <span>+ Beli Langsung ({activeItem.priceFormatted})</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="tt-btn-customize-now"
+                  onClick={() => onCustomizeItem && onCustomizeItem(activeItem)}
+                  style={{ background: '#21201D', color: '#ffffff' }}
+                >
+                  <Sparkles size={18} />
+                  <span>Mulai Custom di Studio</span>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -500,43 +491,14 @@ export default function CollectionPage({
                           + Pilih Koleksi & Pesan
                         </button>
                       ) : itemIsCustomizable ? (
-                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                          <button
-                            type="button"
-                            className="col-order-pill-btn"
-                            style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem' }}
-                            onClick={() => onCustomizeItem && onCustomizeItem(item)}
-                          >
-                            + Custom
-                          </button>
-                          <button
-                            type="button"
-                            className="col-order-pill-btn"
-                            style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem', background: '#21201D', color: '#ffffff' }}
-                            onClick={() => {
-                              if (onAddToCart) {
-                                const colorOpt = getBraceletColorOptions(item);
-                                const chosenColor = colorOpt ? (selectedColors[item.id] || colorOpt[0].label) : null;
-                                onAddToCart({
-                                  productType: item.type,
-                                  title: chosenColor ? `${item.name} (${chosenColor})` : item.name,
-                                  unitPrice: item.price,
-                                  quantity: 1,
-                                  subtotal: item.price,
-                                  image: item.image,
-                                  variant: chosenColor || undefined,
-                                  color: chosenColor || undefined,
-                                  customization: chosenColor ? { color: chosenColor } : null
-                                });
-                                confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
-                                setAddedToast(true);
-                                setTimeout(() => setAddedToast(false), 2400);
-                              }
-                            }}
-                          >
-                            + Beli
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="col-order-pill-btn"
+                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                          onClick={() => onCustomizeItem && onCustomizeItem(item)}
+                        >
+                          + Custom
+                        </button>
                       ) : (
                         <button
                           type="button"
@@ -688,43 +650,14 @@ export default function CollectionPage({
                           + Pilih Koleksi & Pesan
                         </button>
                       ) : isCustom ? (
-                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                          <button
-                            type="button"
-                            className="col-order-pill-btn"
-                            style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem' }}
-                            onClick={() => onCustomizeItem && onCustomizeItem(rec)}
-                          >
-                            + Custom
-                          </button>
-                          <button
-                            type="button"
-                            className="col-order-pill-btn"
-                            style={{ flex: 1, padding: '8px 6px', fontSize: '0.8rem', background: '#21201D', color: '#ffffff' }}
-                            onClick={() => {
-                              if (onAddToCart) {
-                                const colorOpt = getBraceletColorOptions(rec);
-                                const chosenColor = colorOpt ? (selectedColors[rec.id] || colorOpt[0].label) : null;
-                                onAddToCart({
-                                  productType: rec.type,
-                                  title: chosenColor ? `${rec.name} (${chosenColor})` : rec.name,
-                                  unitPrice: rec.price,
-                                  quantity: 1,
-                                  subtotal: rec.price,
-                                  image: rec.image,
-                                  variant: chosenColor || undefined,
-                                  color: chosenColor || undefined,
-                                  customization: chosenColor ? { color: chosenColor } : null
-                                });
-                                confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
-                                setAddedToast(true);
-                                setTimeout(() => setAddedToast(false), 2400);
-                              }
-                            }}
-                          >
-                            + Beli
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="col-order-pill-btn"
+                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                          onClick={() => onCustomizeItem && onCustomizeItem(rec)}
+                        >
+                          + Custom
+                        </button>
                       ) : (
                         <button
                           type="button"
