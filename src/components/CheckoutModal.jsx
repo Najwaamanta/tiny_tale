@@ -181,9 +181,11 @@ export default function CheckoutModal({
         {/* Header */}
         <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span className="badge badge-cyan" style={{ marginBottom: '4px' }}>Checkout Cepat</span>
+            <span className={`badge ${createdOrder ? 'badge-lime' : 'badge-cyan'}`} style={{ marginBottom: '4px' }}>
+              {createdOrder ? 'Pesanan Sukses' : 'Checkout Cepat'}
+            </span>
             <h3 style={{ fontSize: '1.25rem' }}>
-              {createdOrder ? 'Pesanan Berhasil Dibuat!' : 'Pembayaran Pesanan'}
+              {createdOrder ? 'Pesanan Berhasil!' : 'Pembayaran Pesanan'}
             </h3>
           </div>
           <button
@@ -201,26 +203,26 @@ export default function CheckoutModal({
           {createdOrder ? (
             /* SUCCESS CONFIRMATION VIEW */
             <div>
-              <div style={{ textAlign: 'center', padding: '12px 0 20px' }}>
+              <div style={{ textAlign: 'center', padding: '10px 0 18px' }}>
                 <div
                   style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '60px',
+                    height: '60px',
                     borderRadius: '50%',
                     background: 'rgba(163, 230, 53, 0.15)',
                     color: 'var(--accent-lime)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 16px',
+                    margin: '0 auto 14px',
                     border: '2px solid rgba(163, 230, 53, 0.4)'
                   }}
                 >
-                  <CheckCircle2 size={36} />
+                  <CheckCircle2 size={34} />
                 </div>
-                <h4 style={{ fontSize: '1.35rem', marginBottom: '8px' }}>Terima Kasih, {createdOrder.customer.name}!</h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
-                  Pembayaran QRIS dan bukti transfer telah kami terima. Pesanan Anda kini masuk ke antrean perakitan Atelier Studio.
+                <h4 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>Terima Kasih, {createdOrder.customer.name}!</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto' }}>
+                  Pesananmu telah terkonfirmasi ke WhatsApp dan bukti pembayaran QRIS telah kami terima. Tim studio kami akan segera merakit pesanan kustommu!
                 </p>
               </div>
 
@@ -259,34 +261,47 @@ export default function CheckoutModal({
                 </button>
               </div>
 
-              {/* WhatsApp Notification CTA Button */}
-              <div style={{ marginBottom: '18px' }}>
+              {/* Primary Action Button: Selesai & Kembali ke Beranda */}
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  borderRadius: 'var(--radius-md)'
+                }}
+                onClick={onClose}
+              >
+                <span>Selesai & Kembali ke Beranda</span>
+                <CheckCircle2 size={18} />
+              </button>
+
+              {/* Optional Subtle WhatsApp link if user closed tab accidentally */}
+              <div style={{ textAlign: 'center', marginTop: '12px' }}>
                 <a
                   href={`https://wa.me/6281318409891?text=${generateWhatsAppMessage()}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-lime btn-lg"
-                  style={{ width: '100%', textDecoration: 'none' }}
+                  style={{
+                    fontSize: '0.76rem',
+                    color: 'var(--text-muted)',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Buka kembali chat WhatsApp jika tertutup"
                 >
-                  <Send size={18} />
-                  <span>Konfirmasi ke WhatsApp Kami</span>
-                  <ExternalLink size={14} />
+                  <span>Chat WhatsApp tertutup? Buka kembali di sini</span>
+                  <ExternalLink size={12} />
                 </a>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '6px' }}>
-                  Pengerajin kami siap memverifikasi detail kustom dan memproses perakitan Anda.
-                </p>
               </div>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-                onClick={onClose}
-              >
-                <span>Selesai & Kembali ke Beranda</span>
-                <CheckCircle2 size={16} />
-              </button>
             </div>
           ) : (
             /* CHECKOUT FORM VIEW */
