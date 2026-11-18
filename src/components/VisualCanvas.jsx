@@ -151,14 +151,16 @@ export default function VisualCanvas({
               className={!zoomMode ? 'active' : ''}
               onClick={() => onToggleZoom && onToggleZoom(false)}
             >
-              Charm View
+              <span className="canvas-btn-text-full">Charm View</span>
+              <span className="canvas-btn-text-short">Charm</span>
             </button>
             <button
               type="button"
               className={zoomMode ? 'active' : ''}
               onClick={() => onToggleZoom && onToggleZoom(true)}
             >
-              Close-up Zoom
+              <span className="canvas-btn-text-full">Close-up Zoom</span>
+              <span className="canvas-btn-text-short">Zoom</span>
             </button>
           </div>
 
@@ -325,7 +327,7 @@ export default function VisualCanvas({
            ------------------------------------------------------------------ */
         <svg
           className="canvas-svg"
-          viewBox="55 12 290 502"
+          viewBox="60 10 270 505"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
