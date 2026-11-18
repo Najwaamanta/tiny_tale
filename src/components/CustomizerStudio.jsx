@@ -697,21 +697,6 @@ export default function CustomizerStudio({
               </span>
             </div>
           </div>
-
-          <div className="studio-desktop-only-btn" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={handleGoToFrameSelectionPage}
-              style={{
-                fontSize: '0.82rem',
-                borderRadius: 'var(--radius-full)',
-                padding: '7px 14px'
-              }}
-            >
-              Ganti Frame
-            </button>
-          </div>
         </div>
 
         {/* Active Bundling Notice Banner */}
