@@ -1260,9 +1260,9 @@ export default function BundlingSelectionModal({
               onClick={onClose}
               style={{
                 flex: '0 0 auto',
-                padding: '10px 18px',
+                padding: '10px 14px',
                 borderRadius: '12px',
-                fontSize: '0.86rem',
+                fontSize: '0.84rem',
                 fontWeight: 600,
                 color: '#6B7280',
                 borderColor: '#D1D5DB'
@@ -1274,13 +1274,13 @@ export default function BundlingSelectionModal({
             {bundleType === 1 && (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary bundling-action-submit-btn"
                 onClick={handleConfirmBundle1}
                 disabled={!selectedGelang1 || !selectedGelang2}
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  padding: '11px 12px',
+                  padding: '11px 10px',
                   borderRadius: '12px',
                   background: selectedGelang1 && selectedGelang2 ? '#21201D' : '#9CA3AF',
                   borderColor: selectedGelang1 && selectedGelang2 ? '#21201D' : '#9CA3AF',
@@ -1290,7 +1290,7 @@ export default function BundlingSelectionModal({
                   justifyContent: 'center',
                   gap: '6px',
                   fontWeight: 700,
-                  fontSize: '0.84rem',
+                  fontSize: '0.82rem',
                   whiteSpace: 'nowrap',
                   boxShadow: selectedGelang1 && selectedGelang2 ? '0 4px 12px rgba(33, 32, 29, 0.2)' : 'none'
                 }}
@@ -1305,50 +1305,60 @@ export default function BundlingSelectionModal({
             {bundleType === 2 && (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary bundling-action-submit-btn"
                 onClick={handleProceedToStudioBundle2}
                 disabled={!selectedFrame1 || !selectedFrame2}
                 style={{
-                  flex: 2,
-                  padding: '12px',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '11px 10px',
+                  borderRadius: '12px',
                   background: selectedFrame1 && selectedFrame2 ? '#4F46E5' : '#9CA3AF',
                   borderColor: selectedFrame1 && selectedFrame2 ? '#4F46E5' : '#9CA3AF',
                   cursor: selectedFrame1 && selectedFrame2 ? 'pointer' : 'not-allowed',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
+                  gap: '6px',
                   fontWeight: 700,
+                  fontSize: '0.82rem',
                   boxShadow: selectedFrame1 && selectedFrame2 ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none'
                 }}
               >
-                <span>Lanjut Kustom 2 Bagcharm</span>
-                <ArrowRight size={18} />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Lanjut Kustom 2 Bagcharm
+                </span>
+                <ArrowRight size={16} style={{ flexShrink: 0 }} />
               </button>
             )}
 
             {bundleType === 3 && (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary bundling-action-submit-btn"
                 onClick={handleProceedToStudioBundle3}
                 disabled={!selectedGelangB3}
                 style={{
-                  flex: 2,
-                  padding: '12px',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '11px 10px',
+                  borderRadius: '12px',
                   background: selectedGelangB3 ? '#4F46E5' : '#9CA3AF',
                   borderColor: selectedGelangB3 ? '#4F46E5' : '#9CA3AF',
                   cursor: selectedGelangB3 ? 'pointer' : 'not-allowed',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
+                  gap: '6px',
                   fontWeight: 700,
+                  fontSize: '0.82rem',
                   boxShadow: selectedGelangB3 ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none'
                 }}
               >
-                <span>Lanjut Kustom Bagcharm</span>
-                <ArrowRight size={18} />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Lanjut Kustom Bagcharm
+                </span>
+                <ArrowRight size={16} style={{ flexShrink: 0 }} />
               </button>
             )}
           </div>

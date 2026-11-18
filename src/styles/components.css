@@ -3001,10 +3001,20 @@
     padding: 14px 16px 12px !important;
   }
   .bundling-modal-footer {
-    padding: 12px 14px !important;
+    padding: 10px 12px !important;
     gap: 8px !important;
   }
   .bundling-summary-box {
     padding: 8px 10px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .bundling-modal-footer {
+    padding: 8px 10px !important;
+  }
+  .bundling-action-submit-btn {
+    font-size: 0.78rem !important;
+    padding: 10px 8px !important;
   }
 }
