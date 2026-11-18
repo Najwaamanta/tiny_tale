@@ -540,23 +540,23 @@ export default function CustomizerStudio({
               name: b1.frameName,
               frameId: b1.frameId,
               frameName: b1.frameName,
-              image: b1.frameImage,
-              framePhotos: b1.framePhotos,
-              cordColorName: b1.cordColorName,
-              customLetters: b1.customLetters
+              image: b1.image || b1.frameImage || '/frames/1.png',
+              framePhotos: b1.framePhotos || [],
+              cordColorName: b1.cordColorName || 'Hitam Polos',
+              customLetters: b1.customLetters || ''
             },
             item2: {
               label: 'Bagcharm 2',
-              name: currentB2.frameName,
-              frameId: currentB2.frameId,
-              frameName: currentB2.frameName,
-              image: currentB2.frameImage,
-              framePhotos: currentB2.framePhotos,
-              cordColorName: currentB2.cordColorName,
-              customLetters: currentB2.customLetters
+              name: b2.frameName,
+              frameId: b2.frameId,
+              frameName: b2.frameName,
+              image: b2.image || b2.frameImage || '/frames/2.png',
+              framePhotos: b2.framePhotos || [],
+              cordColorName: b2.cordColorName || 'Hitam Polos',
+              customLetters: b2.customLetters || ''
             }
           },
-          bundleDescription: `Bagcharm 1: ${b1.frameName} | Bagcharm 2: ${currentB2.frameName}`
+          bundleDescription: `Bagcharm 1: ${b1.frameName} | Bagcharm 2: ${b2.frameName}`
         };
 
         onAddToCart(bundlePayload);
@@ -1420,7 +1420,7 @@ export default function CustomizerStudio({
                           }}
                         >
                           <ShoppingBag size={18} />
-                          <span>+ Masukkan ke Keranjang</span>
+                          <span>Masukkan Keranjang</span>
                         </button>
                       </div>
                     )}
@@ -1459,7 +1459,7 @@ export default function CustomizerStudio({
                       }}
                     >
                       <ShoppingBag size={18} />
-                      <span>+ Masukkan Paket Bundling ke Keranjang</span>
+                      <span>Masukkan Keranjang</span>
                     </button>
                   </>
                 )
@@ -1486,7 +1486,7 @@ export default function CustomizerStudio({
                     onClick={handleAddToCart}
                   >
                     <ShoppingBag size={18} />
-                    <span>Add to Cart</span>
+                    <span>Masukkan Keranjang</span>
                   </button>
                 </>
               )}
