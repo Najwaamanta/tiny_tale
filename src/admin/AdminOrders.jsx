@@ -658,16 +658,18 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
         </div>
       )}
       {/* Add Manual Order Modal */}
-      <AdminAddOrderModal
-        isOpen={isAddOrderOpen}
-        onClose={() => setIsAddOrderOpen(false)}
-        onSave={(orderData) => {
-          if (onAddOrder) {
-            onAddOrder(orderData);
-          }
-        }}
-        collections={collections}
-      />
+      {isAddOrderOpen && (
+        <AdminAddOrderModal
+          isOpen={isAddOrderOpen}
+          onClose={() => setIsAddOrderOpen(false)}
+          onSave={(orderData) => {
+            if (onAddOrder) {
+              onAddOrder(orderData);
+            }
+          }}
+          collections={collections}
+        />
+      )}
     </div>
   );
 }

@@ -13,19 +13,17 @@ export default function CartModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Set of selected item keys
   const [selectedKeys, setSelectedKeys] = useState(() => {
-    return new Set(cartItems.map((item, idx) => item.cartItemId || item.id || `cart-it-${idx}`));
+    return new Set(cartItems.map((item, idx) => item?.cartItemId || item?.id || `cart-it-${idx}`));
   });
 
   // Synchronize selection with cart items
   useEffect(() => {
-    const allKeys = cartItems.map((item, idx) => item.cartItemId || item.id || `cart-it-${idx}`);
+    const allKeys = cartItems.map((item, idx) => item?.cartItemId || item?.id || `cart-it-${idx}`);
     setSelectedKeys((prev) => {
       if (prev.size === 0 && allKeys.length > 0) {
         return new Set(allKeys);
@@ -42,6 +40,8 @@ export default function CartModal({
       return next;
     });
   }, [cartItems]);
+
+  if (!isOpen) return null;
 
   const toggleSelectItem = (key) => {
     setSelectedKeys((prev) => {

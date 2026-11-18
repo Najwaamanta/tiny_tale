@@ -10,8 +10,6 @@ export default function AdminAddOrderModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   // Customer state
   const [customerName, setCustomerName] = useState('');
   const [customerWhatsApp, setCustomerWhatsApp] = useState('');
@@ -51,6 +49,8 @@ export default function AdminAddOrderModal({
   }, [itemsSubtotal, isManualTotal]);
 
   const [formError, setFormError] = useState('');
+
+  if (!isOpen) return null;
 
   // Add a new empty item
   const handleAddItem = () => {

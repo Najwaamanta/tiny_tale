@@ -39,6 +39,48 @@ export default function CustomizerStudio({
   const [frameSearch, setFrameSearch] = useState('');
   const [framePoseFilter, setFramePoseFilter] = useState('all');
 
+  // Helper to get active step's initial data
+  const activeInitialData = bundlingSession?.bundleType === 2
+    ? (initialBundle2Step === 2 ? initialBagcharm2 : initialBagcharm1)
+    : studioDraft;
+
+  // Layout & Frame selection states (Matching Image 2)
+  const [selectedLayoutId, setSelectedLayoutId] = useState(
+    currentTemplate?.layoutId || activeInitialData?.layoutId || 'layout-a'
+  );
+  const [selectedFrameId, setSelectedFrameId] = useState(
+    currentTemplate
+      ? (currentTemplate.type === 'custom_frame' ? currentTemplate.frameId : null)
+      : (activeInitialData?.frameId || 'frame-borcelle')
+  );
+  const [framePhotos, setFramePhotos] = useState(
+    activeInitialData?.framePhotos || [null, null, null, null, null, null]
+  );
+  const [zoomMode, setZoomMode] = useState(false);
+
+  // Bag Charm Hardware & Charm customizations
+  const [selectedHwId, setSelectedHwId] = useState('');
+  const [selectedColor, setSelectedColor] = useState(activeInitialData?.selectedColor || '#18181B');
+  const [paracordModel, setParacordModel] = useState(activeInitialData?.paracordModel || 'twisted-loop-tassel');
+  const [paracordLength, setParacordLength] = useState(activeInitialData?.paracordLength || 'long');
+  const [accentColor, setAccentColor] = useState(activeInitialData?.accentColor || 'hitam');
+  const starColor = accentColor;
+  const bellColor = accentColor;
+  const [customLetters, setCustomLetters] = useState(activeInitialData?.customLetters || '');
+  const [selectedCharmIds, setSelectedCharmIds] = useState(activeInitialData?.selectedCharmIds || []);
+  const [charmCategoryFilter, setCharmCategoryFilter] = useState('all');
+  const [addedToast, setAddedToast] = useState(false);
+
+  // Hidden file inputs for up to 6 photo slots
+  const fileInputRef0 = useRef(null);
+  const fileInputRef1 = useRef(null);
+  const fileInputRef2 = useRef(null);
+  const fileInputRef3 = useRef(null);
+  const fileInputRef4 = useRef(null);
+  const fileInputRef5 = useRef(null);
+  const fileInputRefs = [fileInputRef0, fileInputRef1, fileInputRef2, fileInputRef3, fileInputRef4, fileInputRef5];
+
+
   // Synchronize bundlingSession data to prevent losing saved bagcharm
   useEffect(() => {
     if (bundlingSession?.savedBagcharm1 && !bagcharm1Data) {
@@ -160,46 +202,6 @@ export default function CustomizerStudio({
     }
   };
 
-  // Helper to get active step's initial data
-  const activeInitialData = bundlingSession?.bundleType === 2
-    ? (initialBundle2Step === 2 ? initialBagcharm2 : initialBagcharm1)
-    : studioDraft;
-
-  // Layout & Frame selection states (Matching Image 2)
-  const [selectedLayoutId, setSelectedLayoutId] = useState(
-    currentTemplate?.layoutId || activeInitialData?.layoutId || 'layout-a'
-  );
-  const [selectedFrameId, setSelectedFrameId] = useState(
-    currentTemplate
-      ? (currentTemplate.type === 'custom_frame' ? currentTemplate.frameId : null)
-      : (activeInitialData?.frameId || 'frame-borcelle')
-  );
-  const [framePhotos, setFramePhotos] = useState(
-    activeInitialData?.framePhotos || [null, null, null, null, null, null]
-  );
-  const [zoomMode, setZoomMode] = useState(false);
-
-  // Bag Charm Hardware & Charm customizations
-  const [selectedHwId, setSelectedHwId] = useState('');
-  const [selectedColor, setSelectedColor] = useState(activeInitialData?.selectedColor || '#18181B');
-  const [paracordModel, setParacordModel] = useState(activeInitialData?.paracordModel || 'twisted-loop-tassel');
-  const [paracordLength, setParacordLength] = useState(activeInitialData?.paracordLength || 'long');
-  const [accentColor, setAccentColor] = useState(activeInitialData?.accentColor || 'hitam');
-  const starColor = accentColor;
-  const bellColor = accentColor;
-  const [customLetters, setCustomLetters] = useState(activeInitialData?.customLetters || '');
-  const [selectedCharmIds, setSelectedCharmIds] = useState(activeInitialData?.selectedCharmIds || []);
-  const [charmCategoryFilter, setCharmCategoryFilter] = useState('all');
-  const [addedToast, setAddedToast] = useState(false);
-
-  // Hidden file inputs for up to 6 photo slots
-  const fileInputRef0 = useRef(null);
-  const fileInputRef1 = useRef(null);
-  const fileInputRef2 = useRef(null);
-  const fileInputRef3 = useRef(null);
-  const fileInputRef4 = useRef(null);
-  const fileInputRef5 = useRef(null);
-  const fileInputRefs = [fileInputRef0, fileInputRef1, fileInputRef2, fileInputRef3, fileInputRef4, fileInputRef5];
 
   // Active Layout and Frame resolution
   const activeLayout = PHOTOSTRIP_LAYOUTS.find((l) => l.id === selectedLayoutId) || PHOTOSTRIP_LAYOUTS[0];
@@ -239,7 +241,7 @@ export default function CustomizerStudio({
   const slotCount = activeSlots.length;
 
   // Active hardware
-  const activeHardware = currentProduct?.hardwareFinishes.find((h) => h.id === selectedHwId) || currentProduct?.hardwareFinishes[0];
+  const activeHardware = currentProduct?.hardwareFinishes?.find((h) => h.id === selectedHwId) || currentProduct?.hardwareFinishes?.[0];
 
   useEffect(() => {
     if (initialConfig) {

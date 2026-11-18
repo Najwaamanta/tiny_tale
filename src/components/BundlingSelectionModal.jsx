@@ -14,8 +14,6 @@ export default function BundlingSelectionModal({
 }) {
   useBodyScrollLock(Boolean(isOpen && bundlingProduct));
 
-  if (!isOpen || !bundlingProduct) return null;
-
   // Determine exact bundle type: 1, 2, or 3
   const getBundleType = (prod) => {
     const id = prod?.id || '';
@@ -35,7 +33,7 @@ export default function BundlingSelectionModal({
 
   // If Bundle 2 (2 Bagcharm), never show modal - redirect directly to custom studio!
   useEffect(() => {
-    if (bundleType === 2) {
+    if (isOpen && bundleType === 2) {
       if (onGoToCustomStudio) {
         onGoToCustomStudio({
           bundlingProduct,
@@ -44,13 +42,11 @@ export default function BundlingSelectionModal({
       }
       onClose();
     }
-  }, [bundleType]);
-
-  if (bundleType === 2) return null;
+  }, [isOpen, bundleType]);
 
   // Available bracelets from live collections
-  const availableBracelets = collections.filter(
-    (c) => c.category === 'bracelets' || c.type === 'gelang' || c.id?.includes('bracelet')
+  const availableBracelets = (collections || []).filter(
+    (c) => c?.category === 'bracelets' || c?.type === 'gelang' || c?.id?.includes('bracelet')
   );
 
   // Fallback if collections is empty
@@ -101,6 +97,8 @@ export default function BundlingSelectionModal({
       setSelectedFrame2(allFrames[1] || allFrames[0]);
     }
   }, [bundlingProduct?.id]);
+
+  if (!isOpen || !bundlingProduct || bundleType === 2) return null;
 
   // Filtered frames by search
   const filteredFrames = allFrames.filter((f) => {

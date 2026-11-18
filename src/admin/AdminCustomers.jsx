@@ -701,17 +701,19 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
         </div>
       )}
       {/* Add Customer Purchase History Modal */}
-      <AdminAddCustomerHistoryModal
-        isOpen={isAddHistoryOpen}
-        onClose={() => setIsAddHistoryOpen(false)}
-        onSave={(orderData) => {
-          if (onAddOrder) {
-            onAddOrder(orderData);
-          }
-        }}
-        orders={orders}
-        collections={collections}
-      />
+      {isAddHistoryOpen && (
+        <AdminAddCustomerHistoryModal
+          isOpen={isAddHistoryOpen}
+          onClose={() => setIsAddHistoryOpen(false)}
+          onSave={(orderData) => {
+            if (onAddOrder) {
+              onAddOrder(orderData);
+            }
+          }}
+          orders={orders}
+          collections={collections}
+        />
+      )}
     </div>
   );
 }

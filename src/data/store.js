@@ -210,7 +210,7 @@ class Store {
 
   // --- Cart Operations ---
   getCart() {
-    return this.cart;
+    return Array.isArray(this.cart) ? this.cart.filter(Boolean) : [];
   }
 
   areItemsIdentical(a, b) {

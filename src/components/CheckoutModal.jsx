@@ -11,8 +11,6 @@ export default function CheckoutModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   // Form states - Only Name and WhatsApp as requested
   const [customerName, setCustomerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -26,6 +24,8 @@ export default function CheckoutModal({
   const [copiedOrderId, setCopiedOrderId] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  if (!isOpen) return null;
 
   // Calculations - Direct subtotal without courier shipping cost
   const itemsSubtotal = cartItems.reduce((acc, i) => acc + (i.subtotal || (i.unitPrice || 0) * (i.quantity || 1)), 0);

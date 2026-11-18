@@ -12,8 +12,6 @@ export default function AdminAddCustomerHistoryModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   // Existing customers database for auto-matching
   const existingCustomers = useMemo(() => aggregateCustomersFromOrders(orders), [orders]);
 
@@ -56,6 +54,8 @@ export default function AdminAddCustomerHistoryModal({
   }, [itemsSubtotal, isManualTotal]);
 
   const [formError, setFormError] = useState('');
+
+  if (!isOpen) return null;
 
   // Check if WhatsApp matches an existing customer
   const cleanCurrentWA = customerWhatsApp.replace(/[^0-9]/g, '');

@@ -69,16 +69,16 @@ export default function App() {
   const [cart, setCart] = useState(() => store.getCart());
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [cartCount, setCartCount] = useState(() =>
-    store.getCart().reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+    store.getCart().filter(Boolean).reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0)
   );
   const [isLiveDbConnected, setIsLiveDbConnected] = useState(() => store.isLiveDbConnected);
   const [isSyncingDb, setIsSyncingDb] = useState(() => store.isSyncing);
 
   useEffect(() => {
     const syncStore = () => {
-      const freshCart = [...store.getCart()];
+      const freshCart = [...store.getCart()].filter(Boolean);
       setCart(freshCart);
-      setCartCount(freshCart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0));
+      setCartCount(freshCart.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0));
       setCollections([...store.getCollections()]);
       setOrders([...store.getOrders()]);
       setIsLiveDbConnected(store.isLiveDbConnected);
@@ -516,30 +516,36 @@ export default function App() {
       <Footer onNavigate={setActiveView} />
 
       {/* Cart Modal */}
-      <CartModal
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cart}
-        onUpdateQuantity={handleUpdateCartQuantity}
-        onRemoveItem={handleRemoveFromCart}
-        onClearCart={handleClearCart}
-        onProceedCheckout={handleProceedCheckout}
-      />
+      {isCartOpen && (
+        <CartModal
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cartItems={cart}
+          onUpdateQuantity={handleUpdateCartQuantity}
+          onRemoveItem={handleRemoveFromCart}
+          onClearCart={handleClearCart}
+          onProceedCheckout={handleProceedCheckout}
+        />
+      )}
 
       {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        cartItems={checkoutItems.length > 0 ? checkoutItems : cart}
-        onCreateOrder={handleCreateOrder}
-      />
+      {isCheckoutOpen && (
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          cartItems={checkoutItems.length > 0 ? checkoutItems : cart}
+          onCreateOrder={handleCreateOrder}
+        />
+      )}
 
       {/* Admin Authorization Modal (Screenshot 2 Match) */}
-      <AdminAuthModal
-        isOpen={isAdminAuthModalOpen}
-        onClose={() => setIsAdminAuthModalOpen(false)}
-        onSuccess={handleAdminAuthSuccess}
-      />
+      {isAdminAuthModalOpen && (
+        <AdminAuthModal
+          isOpen={isAdminAuthModalOpen}
+          onClose={() => setIsAdminAuthModalOpen(false)}
+          onSuccess={handleAdminAuthSuccess}
+        />
+      )}
 
       {/* Floating WhatsApp Quick Action Button (Image 2 Reference Match) */}
       <a
