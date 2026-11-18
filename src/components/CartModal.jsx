@@ -245,17 +245,18 @@ export default function CartModal({
                       style={{
                         transition: 'all 0.15s ease',
                         border: isSelected ? '1px solid rgba(0, 242, 254, 0.4)' : '1px solid var(--border-subtle)',
-                        background: isSelected ? 'rgba(0, 242, 254, 0.02)' : 'var(--bg-tertiary)'
+                        background: isSelected ? 'rgba(0, 242, 254, 0.02)' : 'var(--bg-tertiary)',
+                        alignItems: 'center'
                       }}
                     >
                       {/* Checkbox per Item */}
                       <div
                         onClick={() => toggleSelectItem(itemKey)}
                         style={{
-                          width: '20px',
-                          height: '20px',
-                          minWidth: '20px',
-                          borderRadius: '5px',
+                          width: '22px',
+                          height: '22px',
+                          minWidth: '22px',
+                          borderRadius: '6px',
                           border: isSelected ? '2px solid var(--accent-cyan)' : '2px solid var(--border-medium)',
                           background: isSelected ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
                           display: 'flex',
@@ -263,8 +264,10 @@ export default function CartModal({
                           justifyContent: 'center',
                           cursor: 'pointer',
                           flexShrink: 0,
-                          marginTop: '3px',
-                          transition: 'all 0.15s ease'
+                          alignSelf: 'center',
+                          margin: 'auto 0',
+                          transition: 'all 0.15s ease',
+                          boxShadow: isSelected ? '0 2px 6px rgba(0, 242, 254, 0.25)' : 'none'
                         }}
                         title={isSelected ? 'Batalkan pilihan item ini' : 'Pilih item ini untuk dibeli'}
                       >
@@ -282,7 +285,8 @@ export default function CartModal({
                           minHeight: '56px',
                           borderRadius: '8px',
                           flexShrink: 0,
-                          marginTop: '2px'
+                          alignSelf: 'center',
+                          margin: 'auto 0'
                         }}
                       >
                         {item.image ? (
