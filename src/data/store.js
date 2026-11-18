@@ -36,6 +36,37 @@ function setStorage(key, data) {
   }
 }
 
+function mapDbProductsToCollections(dbProducts) {
+  if (!Array.isArray(dbProducts)) return [];
+  return dbProducts.map((p) => {
+    const initialMatch = INITIAL_COLLECTIONS.find((ic) => ic.id === p.id);
+    const hasCustomImage = p.image && (p.image.startsWith('data:image') || (initialMatch && p.image !== initialMatch.image));
+    const effectiveThumbs = hasCustomImage
+      ? [p.image]
+      : (p.thumbs && p.thumbs.length > 0 ? p.thumbs : (initialMatch?.thumbs || [p.image || '/images/cat_bagcharms.png']));
+
+    return {
+      id: p.id,
+      category: p.category || (p.type === 'gelang' ? 'bracelets' : (p.type === 'bundling' ? 'bundling' : 'keychains')),
+      type: p.type || (p.category === 'bracelets' ? 'gelang' : (p.category === 'bundling' ? 'bundling' : 'bag_charm')),
+      name: p.name,
+      price: Number(p.price || 0),
+      priceFormatted: `Rp ${Number(p.price || 0).toLocaleString('id-ID')}`,
+      image: p.image || '/images/cat_bagcharms.png',
+      thumbs: effectiveThumbs,
+      description: p.description || initialMatch?.description || '',
+      highlights: {
+        strap: p.highlights_strap || (p.highlights && p.highlights.strap) || initialMatch?.highlights?.strap || '',
+        shapes: p.highlights_shapes || (p.highlights && p.highlights.shapes) || initialMatch?.highlights?.shapes || '',
+        charms: p.highlights_charms || (p.highlights && p.highlights.charms) || initialMatch?.highlights?.charms || ''
+      },
+      stock: p.stock !== undefined ? Number(p.stock) : 50,
+      isCustomizable: Boolean(p.is_customizable !== undefined ? p.is_customizable : p.isCustomizable),
+      templateId: p.template_id || p.templateId || 'layout-a'
+    };
+  });
+}
+
 class Store {
   constructor() {
     this.listeners = new Set();
@@ -49,6 +80,7 @@ class Store {
     this.isAdmin = getStorage(STORAGE_KEYS.ADMIN_AUTH, false);
 
     this.isLiveDbConnected = false;
+    this.isSyncing = true;
     this.lastSyncTime = null;
     this.syncInterval = null;
 
@@ -58,7 +90,43 @@ class Store {
 
   // --- Realtime MySQL Database Synchronization ---
   async syncRealtime() {
+    this.isSyncing = true;
     let changed = false;
+
+    // 1. Fast path: try single-roundtrip bulk sync endpoint (/api/sync)
+    try {
+      const syncRes = await fetch('/api/sync').catch(() => null);
+      if (syncRes && syncRes.ok) {
+        const data = await syncRes.json();
+        if (data && data.success) {
+          if (Array.isArray(data.orders)) {
+            this.orders = data.orders;
+            setStorage(STORAGE_KEYS.ORDERS, this.orders);
+            changed = true;
+          }
+          if (Array.isArray(data.charms)) {
+            this.charms = data.charms;
+            setStorage(STORAGE_KEYS.CHARMS, this.charms);
+            changed = true;
+          }
+          if (Array.isArray(data.products)) {
+            this.collections = mapDbProductsToCollections(data.products);
+            setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
+            changed = true;
+          }
+
+          this.isLiveDbConnected = true;
+          this.isSyncing = false;
+          this.lastSyncTime = new Date();
+          this.notify();
+          return { success: true, count: this.orders.length, time: this.lastSyncTime };
+        }
+      }
+    } catch (e) {
+      // Fall through to individual endpoints fallback
+    }
+
+    // 2. Fallback: individual endpoints
     try {
       const [ordRes, charmRes, prodRes] = await Promise.all([
         fetch('/api/orders').catch(() => null),
@@ -87,46 +155,21 @@ class Store {
       if (prodRes && prodRes.ok) {
         const dbProducts = await prodRes.json();
         if (Array.isArray(dbProducts)) {
-          this.collections = dbProducts.map((p) => {
-            const initialMatch = INITIAL_COLLECTIONS.find((ic) => ic.id === p.id);
-            const hasCustomImage = p.image && (p.image.startsWith('data:image') || (initialMatch && p.image !== initialMatch.image));
-            const effectiveThumbs = hasCustomImage
-              ? [p.image]
-              : (p.thumbs && p.thumbs.length > 0 ? p.thumbs : (initialMatch?.thumbs || [p.image || '/images/cat_bagcharms.png']));
-
-            return {
-              id: p.id,
-              category: p.category || (p.type === 'gelang' ? 'bracelets' : (p.type === 'bundling' ? 'bundling' : 'keychains')),
-              type: p.type || (p.category === 'bracelets' ? 'gelang' : (p.category === 'bundling' ? 'bundling' : 'bag_charm')),
-              name: p.name,
-              price: Number(p.price || 0),
-              priceFormatted: `Rp ${Number(p.price || 0).toLocaleString('id-ID')}`,
-              image: p.image || '/images/cat_bagcharms.png',
-              thumbs: effectiveThumbs,
-              description: p.description || initialMatch?.description || '',
-              highlights: {
-                strap: p.highlights_strap || (p.highlights && p.highlights.strap) || initialMatch?.highlights?.strap || '',
-                shapes: p.highlights_shapes || (p.highlights && p.highlights.shapes) || initialMatch?.highlights?.shapes || '',
-                charms: p.highlights_charms || (p.highlights && p.highlights.charms) || initialMatch?.highlights?.charms || ''
-              },
-              stock: p.stock !== undefined ? Number(p.stock) : 50,
-              isCustomizable: Boolean(p.is_customizable !== undefined ? p.is_customizable : p.isCustomizable),
-              templateId: p.template_id || p.templateId || 'layout-a'
-            };
-          });
+          this.collections = mapDbProductsToCollections(dbProducts);
           setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
           changed = true;
         }
       }
 
       this.isLiveDbConnected = Boolean(ordRes && ordRes.ok);
+      this.isSyncing = false;
       this.lastSyncTime = new Date();
-      if (changed) {
-        this.notify();
-      }
+      this.notify();
       return { success: true, count: this.orders.length, time: this.lastSyncTime };
     } catch (e) {
       this.isLiveDbConnected = false;
+      this.isSyncing = false;
+      this.notify();
       return { success: false, error: e.message };
     }
   }

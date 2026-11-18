@@ -20,8 +20,11 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'defaultdb',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: 2,
+  maxIdle: 1,
+  idleTimeout: 10000,
+  enableKeepAlive: true,
+  connectTimeout: 7000,
   ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
@@ -273,75 +276,98 @@ app.put('/api/charms/:id/stock', async (req, res) => {
   }
 });
 
+// Helper to format orders and their line items
+function formatOrders(orders, items) {
+  return orders.map((order) => {
+    const orderItems = items
+      .filter((it) => it.order_id === order.id)
+      .map((it) => {
+        let cDetails = {};
+        try {
+          cDetails = typeof it.custom_details === 'string' ? JSON.parse(it.custom_details) : (it.custom_details || {});
+        } catch (e) {
+          cDetails = {};
+        }
+        return {
+          id: it.id,
+          productType: it.product_type,
+          title: it.title,
+          unitPrice: it.unit_price,
+          quantity: it.quantity,
+          subtotal: it.subtotal,
+          image: it.image,
+          customDetails: cDetails,
+          framePhotos: cDetails.framePhotos || it.framePhotos || [],
+          frameId: cDetails.frameId || it.frameId || null,
+          frameName: cDetails.frameName || it.frameName || '',
+          baseName: cDetails.baseName || it.baseName || '',
+          cordColor: cDetails.cordColor || it.cordColor || '',
+          cordColorName: cDetails.cordColorName || it.cordColorName || '',
+          hardwareName: cDetails.hardwareName || it.hardwareName || '',
+          customLetters: cDetails.customLetters || it.customLetters || '',
+          charms: cDetails.charms || it.charms || []
+        };
+      });
+
+    const totalAmt = order.total_price || 0;
+    const craftingStat = order.order_status === 'processing' ? 'in_crafting' : (order.order_status || 'in_crafting');
+
+    return {
+      id: order.id,
+      createdAt: order.created_at,
+      customer: {
+        name: order.customer_name || 'Pelanggan',
+        whatsapp: order.customer_whatsapp || '-',
+        address: order.address || '-',
+        city: order.city || '-',
+        courier: order.courier || 'SiCepat Reguler',
+        courierCost: order.courier_cost || 0,
+        notes: order.notes || ''
+      },
+      items: orderItems,
+      total: totalAmt,
+      totalAmount: totalAmt,
+      paymentMethod: order.payment_method || 'QRIS',
+      paymentStatus: order.payment_status || 'paid',
+      paymentProof: order.payment_proof || null,
+      paymentProofUrl: order.payment_proof || null,
+      orderStatus: order.order_status || 'processing',
+      craftingStatus: craftingStat,
+      shippingTrackingNumber: order.tracking_number || '',
+      trackingNumber: order.tracking_number || '',
+      craftingNotes: order.notes || ''
+    };
+  });
+}
+
+// Optimized single-roundtrip sync endpoint (fetches products, charms, and orders in one shot)
+app.get('/api/sync', async (req, res) => {
+  try {
+    const [[products], [charms], [orders], [items]] = await Promise.all([
+      pool.query('SELECT * FROM products ORDER BY created_at DESC'),
+      pool.query('SELECT * FROM charms ORDER BY category, name ASC'),
+      pool.query('SELECT * FROM orders ORDER BY created_at DESC'),
+      pool.query('SELECT * FROM order_items')
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      charms,
+      orders: formatOrders(orders, items)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 4. Orders & Order Items
 app.get('/api/orders', async (req, res) => {
   try {
     const [orders] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
     const [items] = await pool.query('SELECT * FROM order_items');
 
-    // Attach items to orders
-    const ordersWithItems = orders.map((order) => {
-      const orderItems = items
-        .filter((it) => it.order_id === order.id)
-        .map((it) => {
-          let cDetails = {};
-          try {
-            cDetails = typeof it.custom_details === 'string' ? JSON.parse(it.custom_details) : (it.custom_details || {});
-          } catch (e) {
-            cDetails = {};
-          }
-          return {
-            id: it.id,
-            productType: it.product_type,
-            title: it.title,
-            unitPrice: it.unit_price,
-            quantity: it.quantity,
-            subtotal: it.subtotal,
-            image: it.image,
-            customDetails: cDetails,
-            framePhotos: cDetails.framePhotos || it.framePhotos || [],
-            frameId: cDetails.frameId || it.frameId || null,
-            frameName: cDetails.frameName || it.frameName || '',
-            baseName: cDetails.baseName || it.baseName || '',
-            cordColor: cDetails.cordColor || it.cordColor || '',
-            cordColorName: cDetails.cordColorName || it.cordColorName || '',
-            hardwareName: cDetails.hardwareName || it.hardwareName || '',
-            customLetters: cDetails.customLetters || it.customLetters || '',
-            charms: cDetails.charms || it.charms || []
-          };
-        });
-
-      const totalAmt = order.total_price || 0;
-      const craftingStat = order.order_status === 'processing' ? 'in_crafting' : (order.order_status || 'in_crafting');
-
-      return {
-        id: order.id,
-        createdAt: order.created_at,
-        customer: {
-          name: order.customer_name || 'Pelanggan',
-          whatsapp: order.customer_whatsapp || '-',
-          address: order.address || '-',
-          city: order.city || '-',
-          courier: order.courier || 'SiCepat Reguler',
-          courierCost: order.courier_cost || 0,
-          notes: order.notes || ''
-        },
-        items: orderItems,
-        total: totalAmt,
-        totalAmount: totalAmt,
-        paymentMethod: order.payment_method || 'QRIS',
-        paymentStatus: order.payment_status || 'paid',
-        paymentProof: order.payment_proof || null,
-        paymentProofUrl: order.payment_proof || null,
-        orderStatus: order.order_status || 'processing',
-        craftingStatus: craftingStat,
-        shippingTrackingNumber: order.tracking_number || '',
-        trackingNumber: order.tracking_number || '',
-        craftingNotes: order.notes || ''
-      };
-    });
-
-    res.json(ordersWithItems);
+    res.json(formatOrders(orders, items));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

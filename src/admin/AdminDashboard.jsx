@@ -13,6 +13,7 @@ export default function AdminDashboard({
   products = [],
   collections = [],
   isLiveDbConnected = true,
+  isSyncingDb = false,
   onManualSync,
   onUpdateOrderStatus,
   onAddOrder,
@@ -70,9 +71,9 @@ export default function AdminDashboard({
               <div
                 className="admin-header-status-badge"
                 style={{
-                  background: isLiveDbConnected ? '#ECFDF5' : '#FEF3C7',
-                  border: `1px solid ${isLiveDbConnected ? '#A7F3D0' : '#FDE68A'}`,
-                  color: isLiveDbConnected ? '#065F46' : '#92400E'
+                  background: isLiveDbConnected ? '#ECFDF5' : (isSyncingDb ? '#EFF6FF' : '#FEF3C7'),
+                  border: `1px solid ${isLiveDbConnected ? '#A7F3D0' : (isSyncingDb ? '#BFDBFE' : '#FDE68A')}`,
+                  color: isLiveDbConnected ? '#065F46' : (isSyncingDb ? '#1D4ED8' : '#92400E')
                 }}
               >
                 <span
@@ -80,11 +81,15 @@ export default function AdminDashboard({
                     width: '7px',
                     height: '7px',
                     borderRadius: '50%',
-                    background: isLiveDbConnected ? '#10B981' : '#F59E0B',
-                    boxShadow: isLiveDbConnected ? '0 0 6px #10B981' : 'none'
+                    background: isLiveDbConnected ? '#10B981' : (isSyncingDb ? '#3B82F6' : '#F59E0B'),
+                    boxShadow: isLiveDbConnected ? '0 0 6px #10B981' : (isSyncingDb ? '0 0 6px #3B82F6' : 'none')
                   }}
                 />
-                <span>{isLiveDbConnected ? 'MySQL Live Realtime' : 'Database Offline'}</span>
+                <span>
+                  {isLiveDbConnected
+                    ? 'MySQL Live Realtime'
+                    : (isSyncingDb ? 'Menghubungkan Database...' : 'Database Offline')}
+                </span>
               </div>
             </div>
             <div className="admin-header-user">

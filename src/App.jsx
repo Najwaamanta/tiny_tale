@@ -65,6 +65,8 @@ export default function App() {
   const [cartCount, setCartCount] = useState(() =>
     store.getCart().reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
   );
+  const [isLiveDbConnected, setIsLiveDbConnected] = useState(() => store.isLiveDbConnected);
+  const [isSyncingDb, setIsSyncingDb] = useState(() => store.isSyncing);
 
   useEffect(() => {
     const syncStore = () => {
@@ -73,6 +75,8 @@ export default function App() {
       setCartCount(freshCart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0));
       setCollections([...store.getCollections()]);
       setOrders([...store.getOrders()]);
+      setIsLiveDbConnected(store.isLiveDbConnected);
+      setIsSyncingDb(store.isSyncing);
       setTick((t) => t + 1);
     };
 
@@ -84,7 +88,7 @@ export default function App() {
   // Real-time synchronization loop when Admin Dashboard is active
   useEffect(() => {
     if (isAdmin && isAdminDashboardView) {
-      store.startRealtimeSync(3000);
+      store.startRealtimeSync(15000);
       return () => {
         store.stopRealtimeSync();
       };
@@ -290,7 +294,8 @@ export default function App() {
         charms={charms}
         products={products}
         collections={collections}
-        isLiveDbConnected={store.isLiveDbConnected}
+        isLiveDbConnected={isLiveDbConnected}
+        isSyncingDb={isSyncingDb}
         onManualSync={() => store.syncRealtime()}
         onUpdateOrderStatus={(id, updates) => store.updateOrderStatus(id, updates)}
         onAddOrder={(orderData) => store.addManualOrder(orderData)}
