@@ -302,23 +302,21 @@ export default function CollectionPage({
                   <span>+ Pilih Koleksi & Masukkan Keranjang ({activeItem.priceFormatted})</span>
                 </button>
               ) : activeItem.isCustomizable ? (
-                <div style={{ display: 'flex', gap: '10px', width: '100%', flexWrap: 'wrap' }}>
+                <div className="tt-customizable-actions">
                   <button
                     type="button"
-                    className="tt-btn-customize-now"
+                    className="tt-btn-customize-now tt-btn-studio"
                     onClick={() => onCustomizeItem && onCustomizeItem(activeItem)}
-                    style={{ flex: 1, minWidth: '180px' }}
                   >
-                    <Sparkles size={18} />
+                    <Sparkles size={18} className="tt-btn-icon" />
                     <span>Mulai Custom di Studio</span>
                   </button>
                   <button
                     type="button"
-                    className="tt-btn-customize-now"
+                    className="tt-btn-customize-now tt-btn-direct-buy"
                     onClick={handleBuyShowcaseItem}
-                    style={{ background: '#21201D', flex: 1, minWidth: '180px' }}
                   >
-                    <ShoppingBag size={18} />
+                    <ShoppingBag size={18} className="tt-btn-icon" />
                     <span>+ Beli Langsung ({activeItem.priceFormatted})</span>
                   </button>
                 </div>
