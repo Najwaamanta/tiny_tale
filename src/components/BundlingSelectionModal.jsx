@@ -196,6 +196,7 @@ export default function BundlingSelectionModal({
       >
         {/* Modal Header */}
         <div
+          className="bundling-modal-header"
           style={{
             padding: '20px 24px 16px',
             background: '#FAF9F6',
@@ -224,7 +225,7 @@ export default function BundlingSelectionModal({
               <Sparkles size={22} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="bundling-header-meta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="badge badge-purple" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                   Kustomisasi Paket Bundling
                 </span>
@@ -295,7 +296,7 @@ export default function BundlingSelectionModal({
               >
                 {currentStep === 1 ? '1' : '✓'}
               </span>
-              <span>{bundleType === 1 ? '1. Pilih Gelang Pertama' : '1. Pilih Frame Bagcharm 1'}</span>
+              <span>{bundleType === 1 ? 'Gelang 1' : 'Bagcharm 1'}</span>
             </button>
 
             <button
@@ -333,7 +334,7 @@ export default function BundlingSelectionModal({
               >
                 2
               </span>
-              <span>{bundleType === 1 ? '2. Pilih Gelang Kedua' : '2. Pilih Frame Bagcharm 2'}</span>
+              <span>{bundleType === 1 ? 'Gelang 2' : 'Bagcharm 2'}</span>
             </button>
           </div>
         )}
@@ -349,7 +350,7 @@ export default function BundlingSelectionModal({
                 <div>
                   <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 4px', color: '#111827' }}>
-                      Pilih Gelang Pertama (Gelang 1)
+                      Pilih Gelang 1
                     </h4>
                     <p style={{ fontSize: '0.84rem', color: '#6B7280', margin: 0 }}>
                       Pilih model gelang favorit pertama untuk paket couple / bestie kalian:
@@ -431,7 +432,7 @@ export default function BundlingSelectionModal({
                       onClick={() => setCurrentStep(2)}
                       style={{ padding: '10px 22px' }}
                     >
-                      <span>Lanjut Pilih Gelang Kedua</span>
+                      <span>Lanjut ke Gelang 2</span>
                       <ArrowRight size={16} />
                     </button>
                   </div>
@@ -440,7 +441,7 @@ export default function BundlingSelectionModal({
                 <div>
                   <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 4px', color: '#111827' }}>
-                      Pilih Gelang Kedua (Gelang 2)
+                      Pilih Gelang 2
                     </h4>
                     <p style={{ fontSize: '0.84rem', color: '#6B7280', margin: 0 }}>
                       Bisa pilih model yang sama (kembaran) atau pilih varian gelang lainnya:
@@ -987,71 +988,83 @@ export default function BundlingSelectionModal({
 
         {/* Modal Footer */}
         <div
+          className="bundling-modal-footer"
           style={{
-            padding: '16px 24px',
+            padding: '12px 20px',
             background: '#FFFFFF',
             borderTop: '1px solid #EBE8E1',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px'
+            gap: '8px'
           }}
         >
           {/* Summary Box */}
           <div
+            className="bundling-summary-box"
             style={{
-              padding: '10px 14px',
+              padding: '8px 12px',
               borderRadius: '12px',
               background: '#F8F9FA',
               border: '1px solid #E5E7EB',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '10px'
+              gap: '8px'
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <div style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600 }}>
                 Ringkasan Pilihan Paket:
               </div>
-              <div style={{ fontSize: '0.84rem', color: '#111827', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: '0.8rem', color: '#111827', display: 'flex', flexDirection: 'column', gap: '1px' }}>
                 {bundleType === 1 && (
                   <>
-                    <span><strong>Gelang 1:</strong> {selectedGelang1?.name || '(belum dipilih)'}</span>
-                    <span><strong>Gelang 2:</strong> {selectedGelang2?.name || '(belum dipilih)'}</span>
+                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ color: '#4F46E5' }}>Gelang 1:</strong> {selectedGelang1?.name || '(belum dipilih)'}
+                    </div>
+                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ color: '#4F46E5' }}>Gelang 2:</strong> {selectedGelang2?.name || '(belum dipilih)'}
+                    </div>
                   </>
                 )}
                 {bundleType === 2 && (
                   <>
-                    <span><strong>Bagcharm 1:</strong> {selectedFrame1?.name || '(belum dipilih)'}</span>
-                    <span><strong>Bagcharm 2:</strong> {selectedFrame2?.name || '(belum dipilih)'}</span>
-                    <span style={{ color: '#4F46E5', fontWeight: 600 }}>• Lanjut ke Studio Custom</span>
+                    <div><strong>Bagcharm 1:</strong> {selectedFrame1?.name || '(belum dipilih)'}</div>
+                    <div><strong>Bagcharm 2:</strong> {selectedFrame2?.name || '(belum dipilih)'}</div>
                   </>
                 )}
                 {bundleType === 3 && (
                   <>
-                    <span><strong>Gelang:</strong> {selectedGelangB3?.name || '(belum dipilih)'}</span>
-                    <span><strong>Bagcharm:</strong> <em>Dialihkan ke Studio Custom</em></span>
+                    <div><strong>Gelang:</strong> {selectedGelangB3?.name || '(belum dipilih)'}</div>
+                    <div><strong>Bagcharm:</strong> <em>Dialihkan ke Studio</em></div>
                   </>
                 )}
               </div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.72rem', color: '#6B7280' }}>Total Paket Bundling:</div>
-              <div style={{ fontSize: '1.18rem', fontWeight: 800, color: '#4F46E5' }}>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: '0.68rem', color: '#6B7280', fontWeight: 600 }}>Total Bundling:</div>
+              <div style={{ fontSize: '1.08rem', fontWeight: 800, color: '#4F46E5', fontFamily: 'var(--font-display, inherit)' }}>
                 Rp {Number(bundlingProduct.price).toLocaleString('id-ID')}
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               type="button"
               className="btn btn-outline"
               onClick={onClose}
-              style={{ flex: 1, padding: '12px' }}
+              style={{
+                flex: '0 0 auto',
+                padding: '10px 18px',
+                borderRadius: '12px',
+                fontSize: '0.86rem',
+                fontWeight: 600,
+                color: '#6B7280',
+                borderColor: '#D1D5DB'
+              }}
             >
               Batal
             </button>
@@ -1063,20 +1076,27 @@ export default function BundlingSelectionModal({
                 onClick={handleConfirmBundle1}
                 disabled={!selectedGelang1 || !selectedGelang2}
                 style={{
-                  flex: 2,
-                  padding: '12px',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '11px 12px',
+                  borderRadius: '12px',
                   background: selectedGelang1 && selectedGelang2 ? '#21201D' : '#9CA3AF',
                   borderColor: selectedGelang1 && selectedGelang2 ? '#21201D' : '#9CA3AF',
                   cursor: selectedGelang1 && selectedGelang2 ? 'pointer' : 'not-allowed',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  fontWeight: 700
+                  gap: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  whiteSpace: 'nowrap',
+                  boxShadow: selectedGelang1 && selectedGelang2 ? '0 4px 12px rgba(33, 32, 29, 0.2)' : 'none'
                 }}
               >
-                <ShoppingBag size={18} />
-                <span>+ Masukkan ke Keranjang (Rp {Number(bundlingProduct.price).toLocaleString('id-ID')})</span>
+                <ShoppingBag size={16} style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Masukkan Keranjang (Rp {Number(bundlingProduct.price).toLocaleString('id-ID')})
+                </span>
               </button>
             )}
 

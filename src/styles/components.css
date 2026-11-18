@@ -2803,3 +2803,28 @@
     margin: 24px 0;
   }
 }
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVE HELPERS FOR BUNDLING SELECTION MODAL
+   -------------------------------------------------------------------------- */
+.bundling-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .bundling-header-meta {
+    display: none !important;
+  }
+  .bundling-modal-header {
+    padding: 14px 16px 12px !important;
+  }
+  .bundling-modal-footer {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .bundling-summary-box {
+    padding: 8px 10px !important;
+  }
+}
