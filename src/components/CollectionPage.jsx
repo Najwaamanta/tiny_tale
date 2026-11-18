@@ -122,6 +122,23 @@ export default function CollectionPage({
     return 'Custom Bagcharm';
   };
 
+  const handleTabClick = (tabKey, targetCategory, e) => {
+    setActiveTab(tabKey);
+    if (e && e.currentTarget && e.currentTarget.parentElement) {
+      const btn = e.currentTarget;
+      const parent = btn.parentElement;
+      const scrollLeft = btn.offsetLeft - (parent.clientWidth / 2) + (btn.clientWidth / 2);
+      parent.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+    if (targetCategory && activeItem?.category !== targetCategory) {
+      const match = collectionList.find((it) => it.category === targetCategory);
+      if (match) {
+        setActiveItem(match);
+        setActiveThumbIndex(0);
+      }
+    }
+  };
+
   const currentDisplayImage =
     activeItem?.thumbs && activeItem?.thumbs[activeThumbIndex]
       ? activeItem.thumbs[activeThumbIndex]
@@ -337,57 +354,34 @@ export default function CollectionPage({
               <button
                 type="button"
                 className={`collection-tab-pill ${activeTab === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveTab('all')}
+                onClick={(e) => handleTabClick('all', null, e)}
               >
-                Semua Koleksi ({collectionList.length})
+                <span>Semua Koleksi</span>
+                <span className="tab-pill-count">({collectionList.length})</span>
               </button>
               <button
                 type="button"
                 className={`collection-tab-pill ${activeTab === 'bundling' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('bundling');
-                  if (activeItem?.category !== 'bundling') {
-                    const firstBundle = collectionList.find((it) => it.category === 'bundling');
-                    if (firstBundle) {
-                      setActiveItem(firstBundle);
-                      setActiveThumbIndex(0);
-                    }
-                  }
-                }}
+                onClick={(e) => handleTabClick('bundling', 'bundling', e)}
               >
-                Paket Bundling Couple / Bestie ({collectionList.filter((it) => it.category === 'bundling').length})
+                <span>Paket Bundling Couple / Bestie</span>
+                <span className="tab-pill-count">({collectionList.filter((it) => it.category === 'bundling').length})</span>
               </button>
               <button
                 type="button"
                 className={`collection-tab-pill ${activeTab === 'bagcharms' || activeTab === 'keychains' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('bagcharms');
-                  if (activeItem?.category !== 'keychains') {
-                    const firstItem = collectionList.find((it) => it.category === 'keychains');
-                    if (firstItem) {
-                      setActiveItem(firstItem);
-                      setActiveThumbIndex(0);
-                    }
-                  }
-                }}
+                onClick={(e) => handleTabClick('bagcharms', 'keychains', e)}
               >
-                Custom Bagcharm ({collectionList.filter((it) => it.category === 'keychains').length})
+                <span>Custom Bagcharm</span>
+                <span className="tab-pill-count">({collectionList.filter((it) => it.category === 'keychains').length})</span>
               </button>
               <button
                 type="button"
                 className={`collection-tab-pill ${activeTab === 'bracelets' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('bracelets');
-                  if (activeItem?.category !== 'bracelets') {
-                    const firstBrac = collectionList.find((it) => it.category === 'bracelets');
-                    if (firstBrac) {
-                      setActiveItem(firstBrac);
-                      setActiveThumbIndex(0);
-                    }
-                  }
-                }}
+                onClick={(e) => handleTabClick('bracelets', 'bracelets', e)}
               >
-                Koleksi Gelang ({collectionList.filter((it) => it.category === 'bracelets').length})
+                <span>Koleksi Gelang</span>
+                <span className="tab-pill-count">({collectionList.filter((it) => it.category === 'bracelets').length})</span>
               </button>
             </div>
           </div>
