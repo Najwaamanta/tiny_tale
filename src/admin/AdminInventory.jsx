@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, AlertTriangle, Check, RefreshCw, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertTriangle, Check, RefreshCw, Layers, Upload, Image as ImageIcon, X } from 'lucide-react';
 
 export default function AdminInventory({
   charms = [],
@@ -17,10 +17,73 @@ export default function AdminInventory({
   const [price, setPrice] = useState(12000);
   const [stock, setStock] = useState(25);
   const [icon, setIcon] = useState('★');
+  const [image, setImage] = useState('');
   const [desc, setDesc] = useState('');
 
   // Edit Charm inline or modal state
   const [editingCharm, setEditingCharm] = useState(null);
+
+  // Compress image helper to ensure fast saving & responsive storage
+  const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.85) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(event.target.result);
+      };
+      reader.onerror = () => resolve('');
+    });
+  };
+
+  const handleEditImageUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 600, 600, 0.85);
+      setEditingCharm((prev) => ({ ...prev, image: compressed }));
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setEditingCharm((prev) => ({ ...prev, image: ev.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddImageUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 600, 600, 0.85);
+      setImage(compressed);
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImage(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const filteredCharms = charms.filter((c) => {
     if (filterCategory === 'low_stock') return (c.stock || 0) <= 20;
@@ -38,10 +101,13 @@ export default function AdminInventory({
       price: Number(price),
       stock: Number(stock),
       icon: icon.trim() || '★',
+      image: image.trim() || '',
       desc: desc.trim() || 'Aksesoris kustom Atelier'
     });
 
     setName('');
+    setImage('');
+    setIcon('★');
     setDesc('');
     setShowAddModal(false);
     alert('Komponen baru berhasil ditambahkan ke Studio Kustom!');
@@ -55,8 +121,9 @@ export default function AdminInventory({
       category: editingCharm.category,
       price: Number(editingCharm.price),
       stock: Number(editingCharm.stock),
-      icon: editingCharm.icon,
-      desc: editingCharm.desc
+      icon: editingCharm.icon || '★',
+      image: editingCharm.image || '',
+      desc: editingCharm.desc || ''
     });
     setEditingCharm(null);
   };
@@ -106,7 +173,15 @@ export default function AdminInventory({
 
                 return (
                   <tr key={ch.id}>
-                    <td style={{ fontSize: '1.4rem' }}>{ch.icon || '★'}</td>
+                    <td>
+                      {ch.image ? (
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#FAF8F4' }}>
+                          <img src={ch.image} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '1.4rem' }}>{ch.icon || '★'}</span>
+                      )}
+                    </td>
                     <td>
                       <strong>{ch.name}</strong>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ch.desc}</div>
@@ -199,8 +274,12 @@ export default function AdminInventory({
               return (
                 <div key={ch.id} className="admin-mobile-card-item">
                   <div className="admin-mobile-card-top">
-                    <div style={{ fontSize: '2rem', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F4', borderRadius: '10px', flexShrink: 0 }}>
-                      {ch.icon || '★'}
+                    <div style={{ width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F4', borderRadius: '10px', flexShrink: 0, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                      {ch.image ? (
+                        <img src={ch.image} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '2rem' }}>{ch.icon || '★'}</span>
+                      )}
                     </div>
                     <div className="admin-mobile-card-info">
                       <div className="admin-mobile-card-title">{ch.name}</div>
@@ -305,6 +384,107 @@ export default function AdminInventory({
                 />
               </div>
 
+              {/* Gambar / Foto Ikon Komponen */}
+              <div
+                style={{
+                  background: '#F9FAFB',
+                  border: '1px solid var(--border-medium)',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  marginBottom: '14px'
+                }}
+              >
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                  GAMBAR / FOTO IKON KOMPONEN
+                </label>
+
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  {/* Thumbnail Preview Box */}
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '10px',
+                      background: '#FFFFFF',
+                      border: '1.5px dashed var(--border-medium)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    {image ? (
+                      <img
+                        src={image}
+                        alt="Preview"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : icon ? (
+                      <span style={{ fontSize: '2rem' }}>{icon}</span>
+                    ) : (
+                      <ImageIcon size={26} color="var(--text-muted)" />
+                    )}
+                  </div>
+
+                  {/* Upload Controls & URL Input */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <label
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        <Upload size={13} />
+                        <span>Pilih Gambar dari Perangkat</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleAddImageUpload}
+                        />
+                      </label>
+
+                      {image && (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{
+                            padding: '6px 10px',
+                            fontSize: '0.78rem',
+                            color: '#E11D48',
+                            borderColor: 'rgba(225, 29, 72, 0.3)',
+                            background: 'rgba(225, 29, 72, 0.04)'
+                          }}
+                          onClick={() => setImage('')}
+                          title="Hapus gambar"
+                        >
+                          <Trash2 size={13} />
+                          <span>Hapus Gambar</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Atau URL / Path: /images/charm_... atau https://..."
+                      style={{ fontSize: '0.78rem', padding: '6px 10px' }}
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="admin-modal-form-grid">
                 <div className="form-group">
                   <label className="form-label">Kategori</label>
@@ -314,6 +494,7 @@ export default function AdminInventory({
                     onChange={(e) => setCategory(e.target.value)}
                   >
                     <option value="metal">Metal & Stainless</option>
+                    <option value="cute">Cute & Aesthetic</option>
                     <option value="cyber">Cyberpunk</option>
                     <option value="streetwear">Streetwear</option>
                     <option value="y2k">Y2K Acid</option>
@@ -406,6 +587,137 @@ export default function AdminInventory({
                 />
               </div>
 
+              {/* Gambar / Foto Ikon Komponen */}
+              <div
+                style={{
+                  background: '#F9FAFB',
+                  border: '1px solid var(--border-medium)',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  marginBottom: '14px'
+                }}
+              >
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                  GAMBAR / FOTO IKON KOMPONEN
+                </label>
+
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  {/* Thumbnail Preview Box */}
+                  <div
+                    style={{
+                      width: '68px',
+                      height: '68px',
+                      borderRadius: '10px',
+                      background: '#FFFFFF',
+                      border: '1.5px dashed var(--border-medium)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    {editingCharm.image ? (
+                      <img
+                        src={editingCharm.image}
+                        alt="Preview"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : editingCharm.icon ? (
+                      <span style={{ fontSize: '2rem' }}>{editingCharm.icon}</span>
+                    ) : (
+                      <ImageIcon size={26} color="var(--text-muted)" />
+                    )}
+                  </div>
+
+                  {/* Upload Controls & URL Input */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <label
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        <Upload size={13} />
+                        <span>Pilih Gambar dari Perangkat</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleEditImageUpload}
+                        />
+                      </label>
+
+                      {editingCharm.image && (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{
+                            padding: '6px 10px',
+                            fontSize: '0.78rem',
+                            color: '#E11D48',
+                            borderColor: 'rgba(225, 29, 72, 0.3)',
+                            background: 'rgba(225, 29, 72, 0.04)'
+                          }}
+                          onClick={() => setEditingCharm({ ...editingCharm, image: '' })}
+                          title="Hapus gambar kustom"
+                        >
+                          <Trash2 size={13} />
+                          <span>Hapus Gambar</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Atau URL / Path: /images/... atau data:image..."
+                      style={{ fontSize: '0.78rem', padding: '6px 10px' }}
+                      value={editingCharm.image || ''}
+                      onChange={(e) => setEditingCharm({ ...editingCharm, image: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-modal-form-grid">
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <select
+                    className="form-select"
+                    value={editingCharm.category || 'metal'}
+                    onChange={(e) => setEditingCharm({ ...editingCharm, category: e.target.value })}
+                  >
+                    <option value="metal">Metal & Stainless</option>
+                    <option value="cute">Cute & Aesthetic</option>
+                    <option value="cyber">Cyberpunk</option>
+                    <option value="streetwear">Streetwear</option>
+                    <option value="y2k">Y2K Acid</option>
+                    <option value="stone">Batu Alam</option>
+                    <option value="beads">Beads & Spacers</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Emoji / Simbol Alternatif</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editingCharm.icon || ''}
+                    onChange={(e) => setEditingCharm({ ...editingCharm, icon: e.target.value })}
+                    placeholder="Contoh: 🐶 / 🎸 / ★"
+                  />
+                </div>
+              </div>
+
               <div className="admin-modal-form-grid">
                 <div className="form-group">
                   <label className="form-label">Harga (Rp)</label>
@@ -428,6 +740,17 @@ export default function AdminInventory({
                     required
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Deskripsi Singkat</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editingCharm.desc || ''}
+                  onChange={(e) => setEditingCharm({ ...editingCharm, desc: e.target.value })}
+                  placeholder="Deskripsi material atau karakteristik"
+                />
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px', height: '42px', fontWeight: 700 }}>
