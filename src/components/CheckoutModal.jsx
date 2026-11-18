@@ -460,7 +460,7 @@ export default function CheckoutModal({
                   />
 
                   {paymentProofUrl ? (
-                    /* UPLOADED PREVIEW */
+                    /* UPLOADED PREVIEW - RESPONSIVE 2-TIER CARD */
                     <div
                       style={{
                         background: 'rgba(163, 230, 53, 0.08)',
@@ -468,66 +468,98 @@ export default function CheckoutModal({
                         borderRadius: 'var(--radius-md)',
                         padding: '12px 14px',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
+                        flexDirection: 'column',
+                        gap: '10px'
                       }}
                     >
-                      <div
-                        style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '6px',
-                          overflow: 'hidden',
-                          background: '#000000',
-                          flexShrink: 0,
-                          border: '1px solid var(--border-medium)'
-                        }}
-                      >
-                        <img
-                          src={paymentProofUrl}
-                          alt="Bukti Transfer"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-lime)', fontWeight: 700, fontSize: '0.85rem' }}>
-                          <Check size={14} />
-                          <span>Bukti Pembayaran Terpasang</span>
-                        </div>
+                      {/* Top Info Row: Thumbnail + Status Text */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div
                           style={{
-                            fontSize: '0.76rem',
-                            color: 'var(--text-secondary)',
-                            marginTop: '2px',
-                            whiteSpace: 'nowrap',
+                            width: '50px',
+                            height: '50px',
+                            borderRadius: '8px',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis'
+                            background: '#000000',
+                            flexShrink: 0,
+                            border: '1px solid rgba(163, 230, 53, 0.35)',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                           }}
                         >
-                          {uploadFileName || 'bukti-transfer-qris.jpg'}
+                          <img
+                            src={paymentProofUrl}
+                            alt="Bukti Transfer"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-lime)', fontWeight: 700, fontSize: '0.86rem' }}>
+                            <Check size={15} style={{ flexShrink: 0 }} />
+                            <span style={{ lineHeight: 1.25 }}>Bukti Pembayaran Terpasang</span>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '0.75rem',
+                              color: 'var(--text-secondary)',
+                              marginTop: '3px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                          >
+                            {uploadFileName || 'bukti-transfer-qris.jpg'}
+                          </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      {/* Bottom Action Row: Wide Responsive Buttons */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          paddingTop: '8px',
+                          borderTop: '1px dashed rgba(163, 230, 53, 0.25)'
+                        }}
+                      >
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+                          style={{
+                            flex: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            padding: '7px 12px',
+                            fontSize: '0.8rem'
+                          }}
                           onClick={() => fileInputRef.current?.click()}
-                          title="Ganti Foto Bukti"
+                          title="Ganti Foto Bukti Pembayaran"
                         >
-                          <RefreshCw size={12} />
-                          <span>Ganti</span>
+                          <RefreshCw size={13} />
+                          <span>Ganti Foto Bukti</span>
                         </button>
                         <button
                           type="button"
                           className="btn btn-outline btn-sm"
-                          style={{ padding: '6px 8px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            padding: '7px 12px',
+                            fontSize: '0.8rem',
+                            color: '#EF4444',
+                            borderColor: 'rgba(239, 68, 68, 0.35)',
+                            background: 'rgba(239, 68, 68, 0.04)'
+                          }}
                           onClick={handleRemoveProof}
-                          title="Hapus Bukti"
+                          title="Hapus Bukti Pembayaran"
                         >
                           <Trash2 size={13} />
+                          <span>Hapus</span>
                         </button>
                       </div>
                     </div>

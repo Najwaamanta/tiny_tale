@@ -425,9 +425,35 @@ class Store {
     this.orders = [newOrder, ...this.orders];
     setStorage(STORAGE_KEYS.ORDERS, this.orders);
 
-    // Remove only purchased items from the cart, leaving unselected items for future checkout
-    const purchasedKeys = new Set((items || []).map((it) => it.cartItemId || it.id));
-    this.cart = this.cart.filter((item) => !purchasedKeys.has(item.cartItemId || item.id));
+    // Remove purchased items from the cart reliably, leaving unselected items for future checkout
+    const purchasedIdSet = new Set();
+    (items || []).forEach((it) => {
+      if (it.cartItemId) purchasedIdSet.add(String(it.cartItemId));
+      if (it.id) purchasedIdSet.add(String(it.id));
+      if (it._id) purchasedIdSet.add(String(it._id));
+      if (it.baseId) purchasedIdSet.add(String(it.baseId));
+    });
+
+    this.cart = (this.cart || []).filter((cartItem) => {
+      const cId = cartItem.cartItemId ? String(cartItem.cartItemId) : null;
+      const iId = cartItem.id ? String(cartItem.id) : null;
+
+      // 1. Direct match by cartItemId
+      if (cId && purchasedIdSet.has(cId)) return false;
+
+      // 2. Direct match by item id
+      if (iId && purchasedIdSet.has(iId)) return false;
+
+      // 3. Match by identical specifications (covers bundles, custom bagcharms, etc.)
+      const matchedBySpec = (items || []).some((it) => this.areItemsIdentical(cartItem, it));
+      if (matchedBySpec) return false;
+
+      return true;
+    });
+
+    if (!Array.isArray(this.cart) || this.cart.length === 0) {
+      this.cart = [];
+    }
     setStorage(STORAGE_KEYS.CART, this.cart);
     this.notify();
 
