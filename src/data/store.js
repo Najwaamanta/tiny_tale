@@ -350,7 +350,7 @@ class Store {
   createOrder({ customer, items, totalAmount, paymentMethod, paymentProofUrl }) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ATC-${new Date().getFullYear()}-${randomSuffix}`;
-    
+
     // Deduct stock for chosen charms
     items.forEach(orderItem => {
       if (orderItem.charms && Array.isArray(orderItem.charms)) {
@@ -528,6 +528,41 @@ class Store {
     })
       .then(() => this.syncRealtime())
       .catch((err) => console.warn('Order status sync to MySQL:', err));
+  }
+
+  async deleteOrder(orderId) {
+    this.orders = this.orders.filter(order => order.id !== orderId);
+    setStorage(STORAGE_KEYS.ORDERS, this.orders);
+    this.notify();
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        await this.syncRealtime();
+      }
+    } catch (err) {
+      console.warn('Sync order delete to MySQL:', err);
+    }
+  }
+
+  async deleteCustomerOrders(orderIds) {
+    if (!Array.isArray(orderIds) || orderIds.length === 0) return;
+    this.orders = this.orders.filter(order => !orderIds.includes(order.id));
+    setStorage(STORAGE_KEYS.ORDERS, this.orders);
+    this.notify();
+
+    try {
+      await Promise.all(
+        orderIds.map(id =>
+          fetch(`/api/orders/${id}`, { method: 'DELETE' }).catch(e => console.warn('Delete item err:', e))
+        )
+      );
+      await this.syncRealtime();
+    } catch (err) {
+      console.warn('Sync customer orders delete to MySQL:', err);
+    }
   }
 
   // --- Charm & Inventory Operations ---
@@ -804,7 +839,8 @@ class Store {
 
   loginAdmin(email, password) {
     if (
-      (email.trim().toLowerCase() === 'admin@atelier.id' && password === 'admin123') ||
+      (email.trim().toLowerCase() === 'admin@atelier.id' && (password === 'tinytale08' || password === 'admin123')) ||
+      password === 'tinytale08' ||
       password === 'admin123' ||
       password === 'admin'
     ) {
@@ -818,7 +854,7 @@ class Store {
 
   loginAdminWithPin(pin = '') {
     const clean = pin.trim().toLowerCase();
-    const valid = ['admin123', 'admin', '1234', '123456', '8888', '0000', 'atelier'];
+    const valid = ['tinytale08', 'admin123', 'admin', '1234', '123456', '8888', '0000', 'atelier'];
     if (!clean || valid.includes(clean)) {
       this.isAdmin = true;
       setStorage(STORAGE_KEYS.ADMIN_AUTH, true);
@@ -843,7 +879,7 @@ class Store {
     localStorage.removeItem(STORAGE_KEYS.PRESETS);
     localStorage.removeItem(STORAGE_KEYS.ORDERS);
     localStorage.removeItem(STORAGE_KEYS.CART);
-    
+
     this.products = INITIAL_PRODUCTS;
     this.collections = INITIAL_COLLECTIONS;
     this.charms = INITIAL_CHARMS;

@@ -56,10 +56,10 @@ export default function App() {
   const charms = store.getCharms();
   const colors = store.colors;
   const presets = store.getPresets();
-  const orders = store.getOrders();
   const isAdmin = store.isAdminLoggedIn();
 
   // Reactive State (Guarantees instant DOM update across all components)
+  const [orders, setOrders] = useState(() => store.getOrders());
   const [collections, setCollections] = useState(() => store.getCollections());
   const [cart, setCart] = useState(() => store.getCart());
   const [cartCount, setCartCount] = useState(() =>
@@ -72,6 +72,7 @@ export default function App() {
       setCart(freshCart);
       setCartCount(freshCart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0));
       setCollections([...store.getCollections()]);
+      setOrders([...store.getOrders()]);
       setTick((t) => t + 1);
     };
 
@@ -293,6 +294,8 @@ export default function App() {
         onManualSync={() => store.syncRealtime()}
         onUpdateOrderStatus={(id, updates) => store.updateOrderStatus(id, updates)}
         onAddOrder={(orderData) => store.addManualOrder(orderData)}
+        onDeleteOrder={(id) => store.deleteOrder(id)}
+        onDeleteCustomerOrders={(ids) => store.deleteCustomerOrders(ids)}
         onAddCharm={(newC) => store.addCharm(newC)}
         onUpdateCharm={(id, up) => store.updateCharm(id, up)}
         onDeleteCharm={(id) => store.deleteCharm(id)}

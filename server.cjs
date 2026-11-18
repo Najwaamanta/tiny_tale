@@ -9,23 +9,27 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// MySQL connection pool (Laragon / phpMyAdmin default localhost:3306)
+// MySQL connection pool (Supports Localhost / Laragon & Cloud Databases like Aiven)
+const isCloudOrSSL = process.env.DB_SSL === 'true' || 
+  (process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST));
+
 const pool = mysql.createPool({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '',
-  database: 'tiny_tale',
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'defaultdb',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
 // 1. Health & Database Check
 app.get('/api/health', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT 1 + 1 AS solution');
-    res.json({ status: 'ok', database: 'tiny_tale', connected: true });
+    res.json({ status: 'ok', database: process.env.DB_NAME || 'defaultdb', host: process.env.DB_HOST || 'localhost', connected: true });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
@@ -274,7 +278,7 @@ app.get('/api/orders', async (req, res) => {
   try {
     const [orders] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
     const [items] = await pool.query('SELECT * FROM order_items');
-    
+
     // Attach items to orders
     const ordersWithItems = orders.map((order) => {
       const orderItems = items
@@ -458,6 +462,18 @@ app.put('/api/orders/:id/status', async (req, res) => {
   }
 });
 
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM order_items WHERE order_id = ?', [id]);
+    await pool.query('DELETE FROM orders WHERE id = ?', [id]);
+    res.json({ success: true, id });
+  } catch (err) {
+    console.error('Error deleting order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 5. Admin Authorization (PIN / Email)
 app.post('/api/admin/login', async (req, res) => {
   try {
@@ -490,7 +506,12 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`[Tiny Tale Backend] API server running on http://localhost:${PORT}`);
-  console.log(`[Tiny Tale Backend] Connected to MySQL database "tiny_tale" on localhost:3306`);
+  try {
+    const [rows] = await pool.query('SELECT 1 + 1 AS solution');
+    console.log(`[Tiny Tale Backend] Berhasil terhubung ke database MySQL "${process.env.DB_NAME || 'tiny_tale'}" di ${process.env.DB_HOST || '127.0.0.1'}:${process.env.DB_PORT || 3306}`);
+  } catch (err) {
+    console.error(`[Tiny Tale Backend] Gagal terhubung ke database:`, err.message);
+  }
 });

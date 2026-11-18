@@ -16,6 +16,8 @@ export default function AdminDashboard({
   onManualSync,
   onUpdateOrderStatus,
   onAddOrder,
+  onDeleteOrder,
+  onDeleteCustomerOrders,
   onAddCharm,
   onUpdateCharm,
   onDeleteCharm,
@@ -257,6 +259,7 @@ export default function AdminDashboard({
               collections={collections}
               onUpdateOrderStatus={onUpdateOrderStatus}
               onAddOrder={onAddOrder}
+              onDeleteOrder={onDeleteOrder}
             />
           )}
 
@@ -265,6 +268,8 @@ export default function AdminDashboard({
               orders={orders}
               collections={collections}
               onAddOrder={onAddOrder}
+              onDeleteOrder={onDeleteOrder}
+              onDeleteCustomerOrders={onDeleteCustomerOrders}
             />
           )}
 

@@ -1,17 +1,37 @@
 import React, { useState } from 'react';
-import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus } from 'lucide-react';
+import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus, Trash2 } from 'lucide-react';
 import { exportOrdersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
 import AdminAddOrderModal from './AdminAddOrderModal';
 
-export default function AdminOrders({ orders = [], collections = [], onUpdateOrderStatus, onAddOrder }) {
+export default function AdminOrders({ orders = [], collections = [], onUpdateOrderStatus, onAddOrder, onDeleteOrder }) {
+  const [localOrders, setLocalOrders] = useState(orders);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
 
+  React.useEffect(() => {
+    setLocalOrders(orders);
+  }, [orders]);
+
+  const handleDeleteOrder = async (order) => {
+    if (!order) return;
+    const customerName = order.customer?.name || 'Pelanggan';
+    const confirmMsg = `Hapus pesanan ${order.id} atas nama "${customerName}"?\n\nData pesanan akan dihapus permanen dari database.`;
+    if (window.confirm(confirmMsg)) {
+      setLocalOrders((prev) => prev.filter((o) => o.id !== order.id));
+      if (selectedOrder && selectedOrder.id === order.id) {
+        setSelectedOrder(null);
+      }
+      if (onDeleteOrder) {
+        await onDeleteOrder(order.id);
+      }
+    }
+  };
+
   // Filter orders by search keyword
-  const filteredOrders = orders.filter((o) => {
+  const filteredOrders = localOrders.filter((o) => {
     if (!searchTerm.trim()) return true;
     const q = searchTerm.toLowerCase();
     const idMatch = (o.id || '').toLowerCase().includes(q);
@@ -119,7 +139,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
               <span>Daftar Antrean Pesanan Custom</span>
             </h3>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Menampilkan {filteredOrders.length} dari total {orders.length} pesanan
+              Menampilkan {filteredOrders.length} dari total {localOrders.length} pesanan
             </span>
           </div>
 
@@ -214,15 +234,35 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                         )}
                       </td>
                       <td>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleOpenDetail(ord)}
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          <Eye size={14} />
-                          <span>Detail</span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => handleOpenDetail(ord)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 10px' }}
+                            title="Lihat detail pesanan & frame"
+                          >
+                            <Eye size={14} />
+                            <span>Detail</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleDeleteOrder(ord)}
+                            title="Hapus pesanan ini"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '6px 10px',
+                              color: '#E11D48',
+                              borderColor: 'rgba(225, 29, 72, 0.3)'
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            <span>Hapus</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -274,15 +314,36 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => handleOpenDetail(ord)}
-                    style={{ width: '100%', justifyContent: 'center', height: '38px', fontWeight: 700 }}
-                  >
-                    <Eye size={14} />
-                    <span>Lihat Panduan Perakitan & Frame</span>
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => handleOpenDetail(ord)}
+                      style={{ flex: 1, justifyContent: 'center', height: '38px', fontWeight: 700 }}
+                    >
+                      <Eye size={14} />
+                      <span>Lihat Panduan & Frame</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => handleDeleteOrder(ord)}
+                      title="Hapus pesanan"
+                      style={{
+                        height: '38px',
+                        padding: '0 14px',
+                        color: '#E11D48',
+                        borderColor: 'rgba(225, 29, 72, 0.3)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontWeight: 700
+                      }}
+                    >
+                      <Trash2 size={14} />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
                 </div>
               );
             })
@@ -300,14 +361,35 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                 <span className="badge badge-purple" style={{ marginBottom: '4px' }}>Meja Artisan Lab</span>
                 <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Detail Pesanan: {selectedOrder.id}</h3>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline btn-icon"
-                style={{ width: '34px', height: '34px' }}
-                onClick={() => setSelectedOrder(null)}
-              >
-                ✕
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => handleDeleteOrder(selectedOrder)}
+                  title="Hapus pesanan ini dari database"
+                  style={{
+                    color: '#E11D48',
+                    borderColor: 'rgba(225, 29, 72, 0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600
+                  }}
+                >
+                  <Trash2 size={14} />
+                  <span>Hapus Pesanan</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-icon"
+                  style={{ width: '34px', height: '34px' }}
+                  onClick={() => setSelectedOrder(null)}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Body */}

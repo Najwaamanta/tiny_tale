@@ -1,18 +1,64 @@
 import React, { useState } from 'react';
-import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus } from 'lucide-react';
+import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus, Trash2 } from 'lucide-react';
 import { aggregateCustomersFromOrders, exportCustomersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
 import AdminAddCustomerHistoryModal from './AdminAddCustomerHistoryModal';
 
-export default function AdminCustomers({ orders = [], collections = [], onAddOrder }) {
+export default function AdminCustomers({ orders = [], collections = [], onAddOrder, onDeleteOrder, onDeleteCustomerOrders }) {
+  const [localOrders, setLocalOrders] = useState(orders);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'spent', 'count'
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isAddHistoryOpen, setIsAddHistoryOpen] = useState(false);
 
-  // Aggregate customers from all orders
-  const customers = aggregateCustomersFromOrders(orders);
+  React.useEffect(() => {
+    setLocalOrders(orders);
+  }, [orders]);
+
+  const handleDeleteCustomer = async (cust) => {
+    if (!cust) return;
+    const orderIds = (cust.orders || []).map((o) => o.id);
+    if (orderIds.length === 0) return;
+    const confirmMsg = `Hapus seluruh riwayat pembelian untuk pelanggan "${cust.name}" (${orderIds.length} pesanan)?\n\nSemua transaksi pembeli ini akan dihapus permanen dari database.`;
+    if (window.confirm(confirmMsg)) {
+      setLocalOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
+      if (selectedCustomer && selectedCustomer.name === cust.name) {
+        setSelectedCustomer(null);
+      }
+      if (onDeleteCustomerOrders) {
+        await onDeleteCustomerOrders(orderIds);
+      } else if (onDeleteOrder) {
+        await Promise.all(orderIds.map((id) => onDeleteOrder(id)));
+      }
+    }
+  };
+
+  const handleDeleteSingleOrder = async (ord) => {
+    if (!ord) return;
+    if (window.confirm(`Hapus pesanan ${ord.id} dari riwayat pelanggan ini?`)) {
+      setLocalOrders((prev) => prev.filter((o) => o.id !== ord.id));
+      if (selectedCustomer) {
+        const remaining = (selectedCustomer.orders || []).filter((o) => o.id !== ord.id);
+        if (remaining.length === 0) {
+          setSelectedCustomer(null);
+        } else {
+          setSelectedCustomer({
+            ...selectedCustomer,
+            orders: remaining,
+            ordersCount: remaining.length,
+            totalSpent: remaining.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0)
+          });
+        }
+      }
+      if (onDeleteOrder) {
+        await onDeleteOrder(ord.id);
+      }
+    }
+  };
+
+  // Aggregate customers from localOrders
+  const customers = aggregateCustomersFromOrders(localOrders);
 
   // Filter by search
   const filteredCustomers = customers.filter((c) => {
@@ -335,15 +381,35 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
 
                       {/* Actions */}
                       <td>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => setSelectedCustomer(cust)}
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          <Eye size={14} />
-                          <span>Riwayat ({cust.ordersCount})</span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setSelectedCustomer(cust)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 10px' }}
+                            title="Lihat riwayat pembelian"
+                          >
+                            <Eye size={14} />
+                            <span>Riwayat ({cust.ordersCount})</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleDeleteCustomer(cust)}
+                            title="Hapus riwayat pembeli ini"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '6px 10px',
+                              color: '#E11D48',
+                              borderColor: 'rgba(225, 29, 72, 0.3)'
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            <span>Hapus</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -380,15 +446,36 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                   <div style={{ marginTop: '2px' }}><strong>Alamat:</strong> {cust.address}</div>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setSelectedCustomer(cust)}
-                  style={{ width: '100%', justifyContent: 'center', height: '38px', fontWeight: 700 }}
-                >
-                  <Eye size={14} />
-                  <span>Lihat Riwayat Belanja ({cust.ordersCount})</span>
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setSelectedCustomer(cust)}
+                    style={{ flex: 1, justifyContent: 'center', height: '38px', fontWeight: 700 }}
+                  >
+                    <Eye size={14} />
+                    <span>Lihat Riwayat Belanja ({cust.ordersCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => handleDeleteCustomer(cust)}
+                    title="Hapus riwayat pembeli"
+                    style={{
+                      height: '38px',
+                      padding: '0 14px',
+                      color: '#E11D48',
+                      borderColor: 'rgba(225, 29, 72, 0.3)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: 700
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    <span>Hapus</span>
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -424,14 +511,35 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-outline btn-icon"
-                style={{ width: '34px', height: '34px' }}
-                onClick={() => setSelectedCustomer(null)}
-              >
-                ✕
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => handleDeleteCustomer(selectedCustomer)}
+                  title="Hapus seluruh riwayat pembeli ini dari database"
+                  style={{
+                    color: '#E11D48',
+                    borderColor: 'rgba(225, 29, 72, 0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600
+                  }}
+                >
+                  <Trash2 size={14} />
+                  <span>Hapus Riwayat Pembeli</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-icon"
+                  style={{ width: '34px', height: '34px' }}
+                  onClick={() => setSelectedCustomer(null)}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -487,13 +595,33 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                         </div>
                       </div>
 
-                      <div style={{ textAlign: 'right' }}>
+                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                         <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                           Rp {(ord.totalAmount ?? ord.total ?? 0).toLocaleString('id-ID')}
                         </div>
-                        <span className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}>
-                          {ord.paymentStatus === 'paid' ? 'Lunas' : 'Menunggu Bayar'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}>
+                            {ord.paymentStatus === 'paid' ? 'Lunas' : 'Menunggu Bayar'}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleDeleteSingleOrder(ord)}
+                            title="Hapus pesanan ini dari riwayat"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '3px 8px',
+                              fontSize: '0.72rem',
+                              color: '#E11D48',
+                              borderColor: 'rgba(225, 29, 72, 0.3)'
+                            }}
+                          >
+                            <Trash2 size={12} />
+                            <span>Hapus Pesanan</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
