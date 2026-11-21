@@ -14,12 +14,16 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// MySQL connection pool (Supports Localhost / Laragon & Cloud Databases like Aiven)
+// MySQL connection pool (Supports Localhost / Laragon & Cloud Databases like Filess.io / Aiven)
 const isCloudOrSSL = process.env.DB_SSL === 'true' || 
   (process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST));
 
+const rawHost = process.env.DB_HOST || '127.0.0.1';
+// Direct IPv4 mapping for Filess.io to eliminate Windows IPv6 latency & ETIMEDOUT
+const dbHost = (rawHost === 'w0aeps.h.filess.io') ? '188.245.153.167' : rawHost;
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
+  host: dbHost,
   port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
@@ -27,9 +31,9 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 2,
   maxIdle: 1,
-  idleTimeout: 10000,
-  enableKeepAlive: true,
-  connectTimeout: 7000,
+  idleTimeout: 3000,
+  enableKeepAlive: false,
+  connectTimeout: 8000,
   ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
@@ -351,13 +355,13 @@ function formatOrders(orders, items) {
 
 // Optimized single-roundtrip sync endpoint (fetches products, charms, and orders in one shot)
 app.get('/api/sync', async (req, res) => {
+  let connection;
   try {
-    const [[products], [charms], [orders], [items]] = await Promise.all([
-      pool.query('SELECT * FROM products ORDER BY created_at DESC'),
-      pool.query('SELECT * FROM charms ORDER BY category, name ASC'),
-      pool.query('SELECT * FROM orders ORDER BY created_at DESC'),
-      pool.query('SELECT * FROM order_items')
-    ]);
+    connection = await pool.getConnection();
+    const [products] = await connection.query('SELECT * FROM products ORDER BY created_at DESC');
+    const [charms] = await connection.query('SELECT * FROM charms ORDER BY category, name ASC');
+    const [orders] = await connection.query('SELECT * FROM orders ORDER BY created_at DESC');
+    const [items] = await connection.query('SELECT * FROM order_items');
 
     res.json({
       success: true,
@@ -366,19 +370,27 @@ app.get('/api/sync', async (req, res) => {
       orders: formatOrders(orders, items)
     });
   } catch (err) {
+    console.error('Error in /api/sync:', err.message);
     res.status(500).json({ success: false, error: err.message });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
 // 4. Orders & Order Items
 app.get('/api/orders', async (req, res) => {
+  let connection;
   try {
-    const [orders] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
-    const [items] = await pool.query('SELECT * FROM order_items');
+    connection = await pool.getConnection();
+    const [orders] = await connection.query('SELECT * FROM orders ORDER BY created_at DESC');
+    const [items] = await connection.query('SELECT * FROM order_items');
 
     res.json(formatOrders(orders, items));
   } catch (err) {
+    console.error('Error in /api/orders:', err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
