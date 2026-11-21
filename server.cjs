@@ -29,19 +29,47 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'defaultdb',
   waitForConnections: true,
-  connectionLimit: 2,
-  maxIdle: 1,
-  idleTimeout: 3000,
+  connectionLimit: 1,
+  maxIdle: 0,
+  idleTimeout: 1000,
   enableKeepAlive: false,
   connectTimeout: 8000,
   ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
+// Helper to execute DB operations safely with auto-retry if connection limit is momentarily hit
+async function withConnection(fn, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    let conn = null;
+    try {
+      conn = await pool.getConnection();
+      return await fn(conn);
+    } catch (err) {
+      if (
+        attempt < retries &&
+        (err.code === 'ER_USER_LIMIT_REACHED' || err.code === 'ETIMEDOUT' || (err.message && err.message.includes('max_user_connections')))
+      ) {
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+        continue;
+      }
+      throw err;
+    } finally {
+      if (conn) {
+        try {
+          conn.release();
+        } catch (e) {}
+      }
+    }
+  }
+}
+
 // 1. Health & Database Check
 app.get('/api/health', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT 1 + 1 AS solution');
-    res.json({ status: 'ok', database: process.env.DB_NAME || 'defaultdb', host: process.env.DB_HOST || 'localhost', connected: true });
+    await withConnection(async (conn) => {
+      await conn.query('SELECT 1 + 1 AS solution');
+    });
+    res.json({ status: 'ok', database: process.env.DB_NAME || 'defaultdb', host: dbHost, connected: true });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
@@ -50,7 +78,10 @@ app.get('/api/health', async (req, res) => {
 // 2. Products Catalog
 app.get('/api/products', async (req, res) => {
   try {
-    const [products] = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    const products = await withConnection(async (conn) => {
+      const [rows] = await conn.query('SELECT * FROM products ORDER BY created_at DESC');
+      return rows;
+    });
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -184,7 +215,10 @@ app.delete('/api/products/:id', async (req, res) => {
 // 3. Charms & Inventory
 app.get('/api/charms', async (req, res) => {
   try {
-    const [charms] = await pool.query('SELECT * FROM charms ORDER BY id ASC');
+    const charms = await withConnection(async (conn) => {
+      const [rows] = await conn.query('SELECT * FROM charms ORDER BY id ASC');
+      return rows;
+    });
     res.json(charms);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -355,42 +389,42 @@ function formatOrders(orders, items) {
 
 // Optimized single-roundtrip sync endpoint (fetches products, charms, and orders in one shot)
 app.get('/api/sync', async (req, res) => {
-  let connection;
   try {
-    connection = await pool.getConnection();
-    const [products] = await connection.query('SELECT * FROM products ORDER BY created_at DESC');
-    const [charms] = await connection.query('SELECT * FROM charms ORDER BY category, name ASC');
-    const [orders] = await connection.query('SELECT * FROM orders ORDER BY created_at DESC');
-    const [items] = await connection.query('SELECT * FROM order_items');
+    const data = await withConnection(async (conn) => {
+      const [products] = await conn.query('SELECT * FROM products ORDER BY created_at DESC');
+      const [charms] = await conn.query('SELECT * FROM charms ORDER BY category, name ASC');
+      const [orders] = await conn.query('SELECT * FROM orders ORDER BY created_at DESC');
+      const [items] = await conn.query('SELECT * FROM order_items');
+      return {
+        products,
+        charms,
+        orders: formatOrders(orders, items)
+      };
+    });
 
     res.json({
       success: true,
-      products,
-      charms,
-      orders: formatOrders(orders, items)
+      ...data
     });
   } catch (err) {
     console.error('Error in /api/sync:', err.message);
     res.status(500).json({ success: false, error: err.message });
-  } finally {
-    if (connection) connection.release();
   }
 });
 
 // 4. Orders & Order Items
 app.get('/api/orders', async (req, res) => {
-  let connection;
   try {
-    connection = await pool.getConnection();
-    const [orders] = await connection.query('SELECT * FROM orders ORDER BY created_at DESC');
-    const [items] = await connection.query('SELECT * FROM order_items');
+    const formatted = await withConnection(async (conn) => {
+      const [orders] = await conn.query('SELECT * FROM orders ORDER BY created_at DESC');
+      const [items] = await conn.query('SELECT * FROM order_items');
+      return formatOrders(orders, items);
+    });
 
-    res.json(formatOrders(orders, items));
+    res.json(formatted);
   } catch (err) {
     console.error('Error in /api/orders:', err.message);
     res.status(500).json({ error: err.message });
-  } finally {
-    if (connection) connection.release();
   }
 });
 
