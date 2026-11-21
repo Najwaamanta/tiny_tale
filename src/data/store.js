@@ -36,6 +36,25 @@ function setStorage(key, data) {
   }
 }
 
+// Resilient API client: tries local /api first; if local server is down or returns 502/504, falls back to live Vercel
+async function apiFetch(path, options = {}) {
+  try {
+    const res = await fetch(path, options);
+    if (res && res.status < 500) {
+      return res;
+    }
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      return await fetch(`https://tiny-tale-ten.vercel.app${path}`, options);
+    }
+    return res;
+  } catch (err) {
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      return await fetch(`https://tiny-tale-ten.vercel.app${path}`, options).catch(() => null);
+    }
+    return null;
+  }
+}
+
 function mapDbProductsToCollections(dbProducts) {
   if (!Array.isArray(dbProducts)) return [];
   return dbProducts.map((p) => {
@@ -95,7 +114,7 @@ class Store {
 
     // 1. Fast path: try single-roundtrip bulk sync endpoint (/api/sync)
     try {
-      const syncRes = await fetch('/api/sync').catch(() => null);
+      const syncRes = await apiFetch('/api/sync');
       if (syncRes && syncRes.ok) {
         const data = await syncRes.json();
         if (data && data.success) {
@@ -126,14 +145,9 @@ class Store {
       // Fall through to individual endpoints fallback
     }
 
-    // 2. Fallback: individual endpoints
+    // 2. Fallback: individual endpoints called sequentially to avoid connection bursts
     try {
-      const [ordRes, charmRes, prodRes] = await Promise.all([
-        fetch('/api/orders').catch(() => null),
-        fetch('/api/charms').catch(() => null),
-        fetch('/api/products').catch(() => null)
-      ]);
-
+      const ordRes = await apiFetch('/api/orders');
       if (ordRes && ordRes.ok) {
         const dbOrders = await ordRes.json();
         if (Array.isArray(dbOrders)) {
@@ -143,6 +157,7 @@ class Store {
         }
       }
 
+      const charmRes = await apiFetch('/api/charms');
       if (charmRes && charmRes.ok) {
         const dbCharms = await charmRes.json();
         if (Array.isArray(dbCharms)) {
@@ -152,6 +167,7 @@ class Store {
         }
       }
 
+      const prodRes = await apiFetch('/api/products');
       if (prodRes && prodRes.ok) {
         const dbProducts = await prodRes.json();
         if (Array.isArray(dbProducts)) {
@@ -469,7 +485,7 @@ class Store {
       }
     }));
 
-    fetch('/api/orders', {
+    apiFetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -559,7 +575,7 @@ class Store {
     this.notify();
 
     // Async sync to MySQL database
-    fetch('/api/orders', {
+    apiFetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -610,7 +626,7 @@ class Store {
     this.notify();
 
     // Async sync to MySQL database
-    fetch(`/api/orders/${orderId}/status`, {
+    apiFetch(`/api/orders/${orderId}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -625,10 +641,10 @@ class Store {
     this.notify();
 
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await apiFetch(`/api/orders/${orderId}`, {
         method: 'DELETE'
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
@@ -643,11 +659,9 @@ class Store {
     this.notify();
 
     try {
-      await Promise.all(
-        orderIds.map(id =>
-          fetch(`/api/orders/${id}`, { method: 'DELETE' }).catch(e => console.warn('Delete item err:', e))
-        )
-      );
+      for (const id of orderIds) {
+        await apiFetch(`/api/orders/${id}`, { method: 'DELETE' }).catch(e => console.warn('Delete item err:', e));
+      }
       await this.syncRealtime();
     } catch (err) {
       console.warn('Sync customer orders delete to MySQL:', err);
@@ -681,12 +695,12 @@ class Store {
     this.notify();
 
     try {
-      const res = await fetch(`/api/charms/${charmId}`, {
+      const res = await apiFetch(`/api/charms/${charmId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
@@ -704,12 +718,12 @@ class Store {
     this.notify();
 
     try {
-      const res = await fetch('/api/charms', {
+      const res = await apiFetch('/api/charms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item)
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
@@ -725,10 +739,10 @@ class Store {
     this.notify();
 
     try {
-      const res = await fetch(`/api/charms/${charmId}`, {
+      const res = await apiFetch(`/api/charms/${charmId}`, {
         method: 'DELETE'
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
@@ -747,12 +761,12 @@ class Store {
     this.notify();
 
     try {
-      const res = await fetch(`/api/charms/${charmId}/stock`, {
+      const res = await apiFetch(`/api/charms/${charmId}/stock`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ delta: Number(amount) })
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
@@ -792,7 +806,7 @@ class Store {
 
     // Async sync to MySQL database
     try {
-      const res = await fetch('/api/products', {
+      const res = await apiFetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -810,9 +824,9 @@ class Store {
           is_customizable: item.isCustomizable ? 1 : 0
         })
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
-      } else {
+      } else if (res) {
         console.error('MySQL insert product error:', await res.text());
       }
     } catch (err) {
@@ -852,7 +866,7 @@ class Store {
     // Async sync to MySQL database
     if (updatedItem) {
       try {
-        const res = await fetch(`/api/products/${id}`, {
+        const res = await apiFetch(`/api/products/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -869,9 +883,9 @@ class Store {
             is_customizable: updatedItem.isCustomizable ? 1 : 0
           })
         });
-        if (res.ok) {
+        if (res && res.ok) {
           await this.syncRealtime();
-        } else {
+        } else if (res) {
           console.error('MySQL update product error:', await res.text());
         }
       } catch (err) {
@@ -889,10 +903,10 @@ class Store {
 
     // Async sync to MySQL database
     try {
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await apiFetch(`/api/products/${id}`, {
         method: 'DELETE'
       });
-      if (res.ok) {
+      if (res && res.ok) {
         await this.syncRealtime();
       }
     } catch (err) {
