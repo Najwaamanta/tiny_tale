@@ -411,7 +411,7 @@ class Store {
     return this.orders;
   }
 
-  createOrder({ customer, items, totalAmount, paymentMethod, paymentProofUrl }) {
+  createOrder({ customer, items, totalAmount, paymentMethod, paymentProofUrl, paymentStatus }) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ATC-${new Date().getFullYear()}-${randomSuffix}`;
 
@@ -424,18 +424,21 @@ class Store {
       }
     });
 
+    const isCash = paymentMethod?.toLowerCase().includes('cash') || paymentMethod?.toLowerCase().includes('tunai');
+    const computedStatus = paymentStatus || (isCash ? 'pending' : (paymentMethod === 'Transfer Bank' ? 'pending_verification' : 'paid'));
+
     const newOrder = {
       id: orderId,
       createdAt: new Date().toISOString(),
       customer,
       items,
       totalAmount,
-      paymentMethod,
-      paymentStatus: paymentMethod === 'Transfer Bank' ? 'pending_verification' : 'paid',
+      paymentMethod: paymentMethod || 'QRIS',
+      paymentStatus: computedStatus,
       paymentProofUrl: paymentProofUrl || null,
       craftingStatus: 'in_crafting', // Default to crafting once submitted
       shippingTrackingNumber: '',
-      craftingNotes: 'Pesanan baru masuk dari website, siap dirakit di studio.'
+      craftingNotes: isCash ? 'Pesanan dengan metode bayar Cash / Bayar di Tempat.' : 'Pesanan baru masuk dari website, siap dirakit di studio.'
     };
 
     this.orders = [newOrder, ...this.orders];

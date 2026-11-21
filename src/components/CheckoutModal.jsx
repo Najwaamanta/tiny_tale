@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download } from 'lucide-react';
+import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download, Banknote } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useBodyScrollLock } from '../utils/scrollLock';
 
@@ -11,9 +11,10 @@ export default function CheckoutModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  // Form states - Only Name and WhatsApp as requested
+  // Form states - Name, WhatsApp & Payment Method
   const [customerName, setCustomerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('QRIS'); // 'QRIS' | 'Cash'
   const [paymentProofUrl, setPaymentProofUrl] = useState('');
   const [uploadFileName, setUploadFileName] = useState('');
   const [isCompressing, setIsCompressing] = useState(false);
@@ -101,13 +102,14 @@ export default function CheckoutModal({
       alert('Mohon masukkan nomor WhatsApp yang aktif dan valid (minimal 9 digit).');
       return;
     }
-    if (!paymentProofUrl) {
+    if (paymentMethod === 'QRIS' && !paymentProofUrl) {
       alert('Mohon upload bukti pembayaran QRIS (foto/screenshot transfer) terlebih dahulu.');
       return;
     }
 
     setIsSubmitting(true);
 
+    const isCash = paymentMethod === 'Cash';
     const orderData = {
       customer: {
         name: customerName.trim(),
@@ -116,12 +118,13 @@ export default function CheckoutModal({
         city: '-',
         courier: '-',
         courierCost: 0,
-        notes: ''
+        notes: isCash ? 'Bayar Tunai di Tempat (Cash)' : ''
       },
       items: cartItems,
       totalAmount: grandTotal,
-      paymentMethod: 'QRIS',
-      paymentProofUrl: paymentProofUrl
+      paymentMethod: isCash ? 'Tunai / Cash' : 'QRIS',
+      paymentStatus: isCash ? 'pending' : 'paid',
+      paymentProofUrl: isCash ? null : paymentProofUrl
     };
 
     const order = onCreateOrder(orderData);
@@ -142,6 +145,7 @@ export default function CheckoutModal({
   // WhatsApp Order payload message
   const generateWhatsAppMessage = (order = createdOrder) => {
     if (!order) return '';
+    const isCash = order.paymentMethod?.toLowerCase().includes('cash') || order.paymentMethod?.toLowerCase().includes('tunai');
     const itemLines = (order.items || []).map((it, idx) => {
       const header = `${idx + 1}. *${it.title}* (Qty: ${it.quantity || 1}) - Rp ${(it.subtotal || it.unitPrice || 0).toLocaleString('id-ID')}`;
       if (it.bundleChoices) {
@@ -155,14 +159,23 @@ export default function CheckoutModal({
         `\n   • Charms: ${it.charms?.map((c) => c.name || c).join(', ') || 'Tanpa charm tambahan'}`;
     }).join('\n\n');
 
-    const msg = `Halo Tiny Tale! Saya telah melakukan pembayaran QRIS untuk pesanan:\n\n` +
-      `*NOMOR ORDER:* ${order.id}\n` +
-      `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
-      `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
-      `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
-      `*Detail Item Kustom:*\n${itemLines}\n\n` +
-      `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
-      `Bukti pembayaran sudah saya upload di sistem. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`;
+    const msg = isCash
+      ? `Halo Tiny Tale! Saya ingin konfirmasi pesanan dengan metode pembayaran *Cash / Tunai di Tempat*:\n\n` +
+        `*NOMOR ORDER:* ${order.id}\n` +
+        `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
+        `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+        `*Metode Bayar:* Tunai / Cash (Bayar Langsung di Studio)\n\n` +
+        `*Detail Item Kustom:*\n${itemLines}\n\n` +
+        `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
+        `Saya akan melakukan pembayaran tunai saat serah terima pesanan. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`
+      : `Halo Tiny Tale! Saya telah melakukan pembayaran QRIS untuk pesanan:\n\n` +
+        `*NOMOR ORDER:* ${order.id}\n` +
+        `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
+        `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+        `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
+        `*Detail Item Kustom:*\n${itemLines}\n\n` +
+        `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
+        `Bukti pembayaran sudah saya upload di sistem. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`;
 
     return encodeURIComponent(msg);
   };
@@ -222,7 +235,9 @@ export default function CheckoutModal({
                 </div>
                 <h4 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>Terima Kasih, {createdOrder.customer.name}!</h4>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto' }}>
-                  Pesananmu telah terkonfirmasi ke WhatsApp dan bukti pembayaran QRIS telah kami terima. Tim studio kami akan segera merakit pesanan kustommu!
+                  {createdOrder.paymentMethod?.toLowerCase().includes('cash') || createdOrder.paymentMethod?.toLowerCase().includes('tunai')
+                    ? 'Pesananmu telah terkonfirmasi ke WhatsApp dan metode pembayaran Cash di Tempat telah dicatat. Tim studio kami akan segera merakit pesanan kustommu!'
+                    : 'Pesananmu telah terkonfirmasi ke WhatsApp dan bukti pembayaran QRIS telah kami terima. Tim studio kami akan segera merakit pesanan kustommu!'}
                 </p>
               </div>
 
@@ -322,7 +337,7 @@ export default function CheckoutModal({
                 </div>
               </div>
 
-              {/* 2. METODE PEMBAYARAN: HANYA QRIS */}
+              {/* 2. METODE PEMBAYARAN: PILIHAN QRIS ATAU CASH */}
               <div style={{ marginBottom: '22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                   <span
@@ -342,253 +357,459 @@ export default function CheckoutModal({
                     2
                   </span>
                   <h4 style={{ fontSize: '1rem', color: 'var(--accent-cyan)', margin: 0 }}>
-                    Pembayaran QRIS
+                    Pilih Metode Pembayaran
                   </h4>
                 </div>
 
-                {/* QRIS CARD */}
+                {/* PILIHAN METODE: QRIS vs CASH */}
                 <div
                   style={{
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '20px',
-                    textAlign: 'center'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '16px'
                   }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '12px', textAlign: 'center' }}>
-                    <span className="badge badge-purple" style={{ fontSize: '0.74rem', fontWeight: 700, padding: '4px 12px' }}>
-                      QRIS STANDAR NASIONAL
-                    </span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                      Tiny Tale • NMID: <strong style={{ color: 'var(--text-primary)' }}>ID1026641495415</strong>
-                    </span>
-                  </div>
-
-                  {/* QRIS Official Image Display */}
+                  {/* Card 1: QRIS */}
                   <div
+                    onClick={() => setPaymentMethod('QRIS')}
                     style={{
-                      maxWidth: '260px',
-                      width: '100%',
-                      margin: '14px auto',
-                      background: '#FFFFFF',
-                      borderRadius: '14px',
-                      overflow: 'hidden',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-                      border: '2px solid rgba(255, 255, 255, 0.2)'
+                      border: paymentMethod === 'QRIS' ? '2px solid var(--accent-cyan)' : '1.5px solid var(--border-subtle)',
+                      background: paymentMethod === 'QRIS' ? 'rgba(0, 242, 254, 0.08)' : 'var(--bg-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '14px 12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease',
+                      position: 'relative'
                     }}
                   >
-                    <img
-                      src="/images/qris.jpg"
-                      alt="QRIS Tiny Tale"
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        display: 'block'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ marginTop: '8px', marginBottom: '14px' }}>
-                    <a
-                      href="/images/qris.jpg"
-                      download="QRIS-TinyTale.jpg"
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.78rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '999px', fontWeight: 600 }}
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = '/images/qris.jpg';
-                        link.download = 'QRIS-TinyTale.jpg';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      }}
-                    >
-                      <Download size={14} />
-                      <span>Unduh QRIS</span>
-                    </a>
-                  </div>
-
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                    Total Pembayaran:
-                  </div>
-                  <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)', marginBottom: '8px' }}>
-                    Rp {grandTotal.toLocaleString('id-ID')}
-                  </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Scan QRIS menggunakan <strong>GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BRI, BNI</strong> atau semua Mobile Banking.
-                  </p>
-                </div>
-
-                {/* 3. UPLOAD BUKTI PEMBAYARAN */}
-                <div style={{ marginTop: '18px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px 8px', marginBottom: '8px' }}>
-                    <label className="form-label" style={{ margin: 0, fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-                      Upload Bukti Pembayaran <span style={{ color: '#EF4444' }}>*</span>
-                    </label>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      (Screenshot / Foto Struk)
-                    </span>
-                  </div>
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                  />
-
-                  {paymentProofUrl ? (
-                    /* UPLOADED PREVIEW - RESPONSIVE 2-TIER CARD */
                     <div
                       style={{
-                        background: 'rgba(163, 230, 53, 0.08)',
-                        border: '1.5px solid var(--accent-lime)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '12px 14px',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: paymentMethod === 'QRIS' ? 'rgba(0, 242, 254, 0.2)' : 'var(--bg-tertiary)',
+                        color: paymentMethod === 'QRIS' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px'
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
-                      {/* Top Info Row: Thumbnail + Status Text */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <QrCode size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.94rem', color: paymentMethod === 'QRIS' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+                        QRIS
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.25 }}>
+                        E-Wallet & M-Banking
+                      </div>
+                    </div>
+                    {paymentMethod === 'QRIS' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: 'var(--accent-cyan)',
+                          color: '#000000',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card 2: Cash */}
+                  <div
+                    onClick={() => setPaymentMethod('Cash')}
+                    style={{
+                      border: paymentMethod === 'Cash' ? '2px solid var(--accent-cyan)' : '1.5px solid var(--border-subtle)',
+                      background: paymentMethod === 'Cash' ? 'rgba(0, 242, 254, 0.08)' : 'var(--bg-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '14px 12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease',
+                      position: 'relative'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: paymentMethod === 'Cash' ? 'rgba(0, 242, 254, 0.2)' : 'var(--bg-tertiary)',
+                        color: paymentMethod === 'Cash' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Banknote size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.94rem', color: paymentMethod === 'Cash' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+                        Tunai / Cash
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.25 }}>
+                        Bayar di Tempat / Studio
+                      </div>
+                    </div>
+                    {paymentMethod === 'Cash' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: 'var(--accent-cyan)',
+                          color: '#000000',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* TAMPILAN BERDASARKAN METODE YANG DIPILIH */}
+                {paymentMethod === 'QRIS' ? (
+                  <>
+                    {/* QRIS CARD */}
+                    <div
+                      style={{
+                        background: 'var(--bg-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '20px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '12px', textAlign: 'center' }}>
+                        <span className="badge badge-purple" style={{ fontSize: '0.74rem', fontWeight: 700, padding: '4px 12px' }}>
+                          QRIS STANDAR NASIONAL
+                        </span>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          Tiny Tale • NMID: <strong style={{ color: 'var(--text-primary)' }}>ID1026641495415</strong>
+                        </span>
+                      </div>
+
+                      {/* QRIS Official Image Display */}
+                      <div
+                        style={{
+                          maxWidth: '260px',
+                          width: '100%',
+                          margin: '14px auto',
+                          background: '#FFFFFF',
+                          borderRadius: '14px',
+                          overflow: 'hidden',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                          border: '2px solid rgba(255, 255, 255, 0.2)'
+                        }}
+                      >
+                        <img
+                          src="/images/qris.jpg"
+                          alt="QRIS Tiny Tale"
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            display: 'block'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginTop: '8px', marginBottom: '14px' }}>
+                        <a
+                          href="/images/qris.jpg"
+                          download="QRIS-TinyTale.jpg"
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.78rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '999px', fontWeight: 600 }}
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = '/images/qris.jpg';
+                            link.download = 'QRIS-TinyTale.jpg';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                        >
+                          <Download size={14} />
+                          <span>Unduh QRIS</span>
+                        </a>
+                      </div>
+
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                        Total Pembayaran:
+                      </div>
+                      <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)', marginBottom: '8px' }}>
+                        Rp {grandTotal.toLocaleString('id-ID')}
+                      </div>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                        Scan QRIS menggunakan <strong>GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BRI, BNI</strong> atau semua Mobile Banking.
+                      </p>
+                    </div>
+
+                    {/* 3. UPLOAD BUKTI PEMBAYARAN */}
+                    <div style={{ marginTop: '18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px 8px', marginBottom: '8px' }}>
+                        <label className="form-label" style={{ margin: 0, fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                          Upload Bukti Pembayaran <span style={{ color: '#EF4444' }}>*</span>
+                        </label>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                          (Screenshot / Foto Struk)
+                        </span>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                      />
+
+                      {paymentProofUrl ? (
+                        /* UPLOADED PREVIEW - RESPONSIVE 2-TIER CARD */
                         <div
                           style={{
-                            width: '50px',
-                            height: '50px',
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                            background: '#000000',
-                            flexShrink: 0,
-                            border: '1px solid rgba(163, 230, 53, 0.35)',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                            background: 'rgba(163, 230, 53, 0.08)',
+                            border: '1.5px solid var(--accent-lime)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '12px 14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px'
                           }}
                         >
-                          <img
-                            src={paymentProofUrl}
-                            alt="Bukti Transfer"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </div>
+                          {/* Top Info Row: Thumbnail + Status Text */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div
+                              style={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                background: '#000000',
+                                flexShrink: 0,
+                                border: '1px solid rgba(163, 230, 53, 0.35)',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                              }}
+                            >
+                              <img
+                                src={paymentProofUrl}
+                                alt="Bukti Transfer"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-lime)', fontWeight: 700, fontSize: '0.86rem' }}>
-                            <Check size={15} style={{ flexShrink: 0 }} />
-                            <span style={{ lineHeight: 1.25 }}>Bukti Pembayaran Terpasang</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-lime)', fontWeight: 700, fontSize: '0.86rem' }}>
+                                <Check size={15} style={{ flexShrink: 0 }} />
+                                <span style={{ lineHeight: 1.25 }}>Bukti Pembayaran Terpasang</span>
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: '0.75rem',
+                                  color: 'var(--text-secondary)',
+                                  marginTop: '3px',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}
+                              >
+                                {uploadFileName || 'bukti-transfer-qris.jpg'}
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Bottom Action Row: Wide Responsive Buttons */}
                           <div
                             style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-secondary)',
-                              marginTop: '3px',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              paddingTop: '8px',
+                              borderTop: '1px dashed rgba(163, 230, 53, 0.25)'
                             }}
                           >
-                            {uploadFileName || 'bukti-transfer-qris.jpg'}
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              style={{
+                                flex: 1,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '7px 12px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => fileInputRef.current?.click()}
+                              title="Ganti Foto Bukti Pembayaran"
+                            >
+                              <RefreshCw size={13} />
+                              <span>Ganti Foto Bukti</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                padding: '7px 12px',
+                                fontSize: '0.8rem',
+                                color: '#EF4444',
+                                borderColor: 'rgba(239, 68, 68, 0.35)',
+                                background: 'rgba(239, 68, 68, 0.04)'
+                              }}
+                              onClick={handleRemoveProof}
+                              title="Hapus Bukti Pembayaran"
+                            >
+                              <Trash2 size={13} />
+                              <span>Hapus</span>
+                            </button>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Bottom Action Row: Wide Responsive Buttons */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          paddingTop: '8px',
-                          borderTop: '1px dashed rgba(163, 230, 53, 0.25)'
-                        }}
-                      >
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
+                      ) : (
+                        /* UPLOAD DROPZONE / BUTTON */
+                        <div
+                          onClick={() => !isCompressing && fileInputRef.current?.click()}
                           style={{
-                            flex: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px',
-                            padding: '7px 12px',
-                            fontSize: '0.8rem'
+                            background: 'var(--bg-tertiary)',
+                            border: '1.5px dashed var(--border-medium)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.2s, background 0.2s'
                           }}
-                          onClick={() => fileInputRef.current?.click()}
-                          title="Ganti Foto Bukti Pembayaran"
-                        >
-                          <RefreshCw size={13} />
-                          <span>Ganti Foto Bukti</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-sm"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px',
-                            padding: '7px 12px',
-                            fontSize: '0.8rem',
-                            color: '#EF4444',
-                            borderColor: 'rgba(239, 68, 68, 0.35)',
-                            background: 'rgba(239, 68, 68, 0.04)'
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                            e.currentTarget.style.background = 'rgba(0, 242, 254, 0.05)';
                           }}
-                          onClick={handleRemoveProof}
-                          title="Hapus Bukti Pembayaran"
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border-medium)';
+                            e.currentTarget.style.background = 'var(--bg-tertiary)';
+                          }}
                         >
-                          <Trash2 size={13} />
-                          <span>Hapus</span>
-                        </button>
-                      </div>
+                          <div
+                            style={{
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '50%',
+                              background: 'rgba(0, 242, 254, 0.1)',
+                              color: 'var(--accent-cyan)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto 8px'
+                            }}
+                          >
+                            {isCompressing ? <RefreshCw size={18} className="spin" /> : <Upload size={18} />}
+                          </div>
+                          <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                            {isCompressing ? 'Sedang Memproses Foto...' : 'Klik untuk Upload Bukti Pembayaran'}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            Pilih foto atau screenshot bukti transfer (JPG, PNG)
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    /* UPLOAD DROPZONE / BUTTON */
+                  </>
+                ) : (
+                  /* TAMPILAN TUNAI / CASH */
+                  <div
+                    style={{
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '24px 20px',
+                      textAlign: 'center'
+                    }}
+                  >
                     <div
-                      onClick={() => !isCompressing && fileInputRef.current?.click()}
                       style={{
-                        background: 'var(--bg-tertiary)',
-                        border: '1.5px dashed var(--border-medium)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '18px 16px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s, background 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-cyan)';
-                        e.currentTarget.style.background = 'rgba(0, 242, 254, 0.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-medium)';
-                        e.currentTarget.style.background = 'var(--bg-tertiary)';
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '50%',
+                        background: 'rgba(16, 185, 129, 0.12)',
+                        color: '#10B981',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 12px',
+                        border: '1.5px solid rgba(16, 185, 129, 0.3)'
                       }}
                     >
-                      <div
-                        style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '50%',
-                          background: 'rgba(0, 242, 254, 0.1)',
-                          color: 'var(--accent-cyan)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 8px'
-                        }}
-                      >
-                        {isCompressing ? <RefreshCw size={18} className="spin" /> : <Upload size={18} />}
-                      </div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>
-                        {isCompressing ? 'Sedang Memproses Foto...' : 'Klik untuk Upload Bukti Pembayaran'}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Pilih foto atau screenshot bukti transfer (JPG, PNG)
-                      </div>
+                      <Banknote size={28} />
                     </div>
-                  )}
-                </div>
+
+                    <h5 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      Pembayaran Tunai di Studio (Cash)
+                    </h5>
+                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px', maxWidth: '380px', margin: '0 auto 16px', lineHeight: 1.5 }}>
+                      Silakan siapkan uang pas saat pembayaran langsung di kasir Atelier Studio atau saat serah terima pesanan.
+                    </p>
+
+                    <div
+                      style={{
+                        background: 'var(--bg-secondary)',
+                        border: '1px dashed var(--border-medium)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '12px 20px',
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginBottom: '16px'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Total yang Harus Disiapkan:</span>
+                      <span style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)' }}>
+                        Rp {grandTotal.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: '0.78rem',
+                        color: 'var(--text-muted)',
+                        lineHeight: 1.45,
+                        background: 'rgba(0, 242, 254, 0.04)',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        border: '1px solid rgba(0, 242, 254, 0.15)',
+                        textAlign: 'left'
+                      }}
+                    >
+                      💡 <strong>Informasi:</strong> Tidak perlu upload bukti transfer. Pesanan Anda akan langsung tercatat dan masuk ke antrean perakitan pengrajin setelah menekan tombol <strong>Konfirmasi Pesanan</strong>.
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* TOTAL & SUBMIT BUTTON */}
