@@ -301,6 +301,10 @@ function formatOrders(orders, items) {
           quantity: it.quantity,
           subtotal: it.subtotal,
           image: it.image,
+          bundleChoices: cDetails.bundleChoices || it.bundleChoices || null,
+          bundleDescription: cDetails.bundleDescription || it.bundleDescription || '',
+          variant: cDetails.variant || it.variant || '',
+          color: cDetails.color || it.color || '',
           customDetails: cDetails,
           framePhotos: cDetails.framePhotos || it.framePhotos || [],
           frameId: cDetails.frameId || it.frameId || null,
@@ -423,6 +427,11 @@ app.post('/api/orders', async (req, res) => {
       const rawDetails = typeof it.customDetails === 'object' && it.customDetails !== null ? it.customDetails : {};
       const detailsToSave = {
         ...rawDetails,
+        bundleChoices: it.bundleChoices || rawDetails.bundleChoices || null,
+        bundleDescription: it.bundleDescription || rawDetails.bundleDescription || '',
+        variant: it.variant || rawDetails.variant || '',
+        color: it.color || rawDetails.color || '',
+        customization: it.customization || rawDetails.customization || null,
         framePhotos: it.framePhotos || rawDetails.framePhotos || [],
         frameId: it.frameId || rawDetails.frameId || null,
         frameName: it.frameName || rawDetails.frameName || '',

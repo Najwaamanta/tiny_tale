@@ -458,13 +458,24 @@ class Store {
     this.notify();
 
     // Async sync to MySQL database
+    const serializedItems = (items || []).map((it) => ({
+      ...it,
+      bundleChoices: it.bundleChoices || it.customDetails?.bundleChoices || null,
+      bundleDescription: it.bundleDescription || it.customDetails?.bundleDescription || '',
+      customDetails: {
+        ...(it.customDetails || {}),
+        bundleChoices: it.bundleChoices || it.customDetails?.bundleChoices || null,
+        bundleDescription: it.bundleDescription || it.customDetails?.bundleDescription || ''
+      }
+    }));
+
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: orderId,
         customer,
-        items,
+        items: serializedItems,
         total: totalAmount,
         totalAmount,
         paymentMethod,

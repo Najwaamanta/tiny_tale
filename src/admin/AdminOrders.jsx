@@ -10,6 +10,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
+  const [frameOverrides, setFrameOverrides] = useState({});
 
   React.useEffect(() => {
     setLocalOrders(orders);
@@ -50,14 +51,17 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
     exportOrdersToExcel(filteredOrders);
   };
 
-  const handleDownloadFrame = async (item, order) => {
-    const key = `${order.id}-${item.id || item.title}`;
+  const handleDownloadFrame = async (item, order, subLabel = '', overrideConfig = null, overridePhotos = null) => {
+    const key = `${order.id}-${item.id || item.title || 'item'}-${subLabel}`;
     setDownloadingItemId(key);
     try {
       await downloadPhotostripFrame({
         item,
         orderId: order.id,
-        customerName: order.customer?.name || 'Customer'
+        customerName: order.customer?.name || 'Customer',
+        subLabel,
+        overrideFrameConfig: overrideConfig,
+        overridePhotos
       });
     } catch (err) {
       console.error('Download frame error:', err);
@@ -65,6 +69,13 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
     } finally {
       setDownloadingItemId(null);
     }
+  };
+
+  const handleFrameChange = (key, num) => {
+    setFrameOverrides((prev) => ({
+      ...prev,
+      [key]: num
+    }));
   };
 
   return (
@@ -500,6 +511,26 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                     <Phone size={13} color="#059669" />
                     <span>WhatsApp: {selectedOrder.customer?.whatsapp || '-'}</span>
                   </div>
+                  {selectedOrder.customer?.whatsapp && selectedOrder.customer?.whatsapp !== '-' && (
+                    <div style={{ marginTop: '4px' }}>
+                      <a
+                        href={`https://wa.me/${selectedOrder.customer.whatsapp.replace(/\D/g, '').replace(/^0/, '62')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.74rem',
+                          color: '#059669',
+                          fontWeight: 600,
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Buka Chat WhatsApp Pemesan ↗
+                      </a>
+                    </div>
+                  )}
                   <div style={{ marginTop: '6px' }}>
                     <span className="badge badge-purple" style={{ fontSize: '0.72rem' }}>
                       Metode: {selectedOrder.paymentMethod || 'QRIS'}
@@ -560,10 +591,367 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                 <span>Daftar Komponen & Frame Foto untuk Pengerajin:</span>
               </h4>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
                 {(selectedOrder.items || []).map((it, idx) => {
-                  const isBagCharm = it.productType === 'bag_charm' || it.title?.toLowerCase().includes('bag charm') || it.title?.toLowerCase().includes('bagcharm');
-                  const frameConf = resolveFrameConfig(it);
+                  const titleLower = (it.title || '').toLowerCase();
+                  const isBundle = it.productType === 'bundling' ||
+                    titleLower.includes('bundle') ||
+                    titleLower.includes('couple') ||
+                    titleLower.includes('bestie') ||
+                    Boolean(it.bundleChoices) ||
+                    Boolean(it.customDetails?.bundleChoices);
+
+                  if (isBundle) {
+                    const bChoices = it.bundleChoices || it.customDetails?.bundleChoices || {};
+                    const isB2 = titleLower.includes('couple 2') || titleLower.includes('bestie 2') || titleLower.includes('2 bagcharm');
+                    const isB3 = titleLower.includes('couple 3') || titleLower.includes('bestie 3') || (titleLower.includes('gelang') && titleLower.includes('bagcharm'));
+
+                    // Sub-item 1
+                    let sub1 = bChoices.item1 ? { ...bChoices.item1 } : null;
+                    if (!sub1) {
+                      if (isB2) {
+                        sub1 = {
+                          label: 'Bagcharm 1',
+                          name: 'Bagcharm 1',
+                          isBagCharm: true,
+                          cordColorName: it.cordColorName || it.cordColor || '',
+                          hardwareName: it.hardwareName || 'Standard Clasp',
+                          customLetters: it.customLetters || '',
+                          charms: it.charms || []
+                        };
+                      } else if (isB3) {
+                        sub1 = {
+                          label: 'Gelang',
+                          name: 'Gelang Pilihan',
+                          isBagCharm: false,
+                          image: '/images/bracelet_pearl_star.jpg'
+                        };
+                      } else {
+                        sub1 = {
+                          label: 'Gelang 1',
+                          name: 'Gelang 1',
+                          isBagCharm: false,
+                          image: it.image || '/images/cat_bracelets.png'
+                        };
+                      }
+                    } else if (isB2) {
+                      sub1.isBagCharm = true;
+                    }
+
+                    // Sub-item 2
+                    let sub2 = bChoices.item2 ? { ...bChoices.item2 } : null;
+                    if (!sub2) {
+                      if (isB2) {
+                        sub2 = {
+                          label: 'Bagcharm 2',
+                          name: 'Bagcharm 2',
+                          isBagCharm: true,
+                          cordColorName: it.cordColorName || it.cordColor || '',
+                          hardwareName: it.hardwareName || 'Standard Clasp',
+                          customLetters: it.customLetters || '',
+                          charms: it.charms || []
+                        };
+                      } else if (isB3) {
+                        sub2 = {
+                          label: 'Custom Bagcharm',
+                          name: 'Custom Bagcharm',
+                          isBagCharm: true,
+                          cordColorName: it.cordColorName || it.cordColor || '',
+                          hardwareName: it.hardwareName || 'Standard Clasp',
+                          customLetters: it.customLetters || '',
+                          charms: it.charms || []
+                        };
+                      } else {
+                        sub2 = {
+                          label: 'Gelang 2',
+                          name: 'Gelang 2',
+                          isBagCharm: false,
+                          image: it.image || '/images/cat_bracelets.png'
+                        };
+                      }
+                    } else if (isB2 || isB3) {
+                      sub2.isBagCharm = true;
+                    }
+
+                    const subItems = [sub1, sub2].filter(Boolean);
+
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '2px solid rgba(79, 70, 229, 0.25)',
+                          borderRadius: 'var(--radius-md)',
+                          padding: '18px'
+                        }}
+                      >
+                        {/* Bundle Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <strong style={{ fontSize: '1.05rem', color: '#1E1B4B' }}>{it.title || 'Paket Bundling'}</strong>
+                            <span className="badge badge-purple" style={{ background: '#4F46E5', color: '#FFFFFF' }}>PAKET BUNDLING</span>
+                          </div>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#4F46E5' }}>
+                            Rp {Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+
+                        {it.bundleDescription && (
+                          <div style={{ fontSize: '0.82rem', color: '#4338CA', background: 'rgba(79, 70, 229, 0.08)', padding: '6px 10px', borderRadius: '4px', marginBottom: '14px', fontWeight: 600 }}>
+                            {it.bundleDescription}
+                          </div>
+                        )}
+
+                        {/* List of Sub-Items in Bundle */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
+                          {subItems.map((sub, sIdx) => {
+                            const subIsBagCharm = sub.isBagCharm ?? (
+                              (sub.label || '').toLowerCase().includes('bagcharm') ||
+                              (sub.name || '').toLowerCase().includes('bagcharm') ||
+                              Boolean(sub.frameId) ||
+                              Boolean(sub.framePhotos && sub.framePhotos.length > 0)
+                            );
+
+                            const overrideKey = `${selectedOrder.id}-${it.id || idx}-sub${sIdx + 1}`;
+                            const chosenOverride = frameOverrides[overrideKey];
+                            const subFrameConf = resolveFrameConfig(
+                              chosenOverride ? { frameId: `frame-${chosenOverride}` } : sub
+                            );
+                            const subPhotos = getFramePhotosForItem(sub);
+                            const dlSubKey = `${selectedOrder.id}-${it.id || idx}-sub${sIdx + 1}`;
+                            const isSubDownloading = downloadingItemId === dlSubKey;
+
+                            return (
+                              <div
+                                key={sIdx}
+                                style={{
+                                  background: '#FFFFFF',
+                                  border: '1px solid var(--border-medium)',
+                                  borderRadius: '8px',
+                                  padding: '14px',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                  <strong style={{ fontSize: '0.96rem', color: '#4F46E5' }}>
+                                    ✨ {sub.label || `Item ${sIdx + 1}`}: {sub.name || sub.title || 'Pilihan'}
+                                  </strong>
+                                  <span className="badge badge-lime" style={{ fontSize: '0.72rem' }}>
+                                    {subIsBagCharm ? 'BAGCHARM' : 'GELANG'}
+                                  </span>
+                                </div>
+
+                                {subIsBagCharm ? (
+                                  <>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                      • Warna Tali: <strong>{sub.cordColorName || sub.cordColor || '-'}</strong> | Clasp: <strong>{sub.hardwareName || 'Standard Clasp'}</strong>
+                                    </div>
+
+                                    {/* Custom Letters */}
+                                    {sub.customLetters && (
+                                      <div style={{ margin: '6px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Manik Huruf:</span>
+                                        <div style={{ display: 'flex', gap: '3px' }}>
+                                          {sub.customLetters.split('').map((char, cI) => (
+                                            <span
+                                              key={cI}
+                                              style={{
+                                                padding: '2px 7px',
+                                                background: '#21201D',
+                                                color: '#FFFFFF',
+                                                fontWeight: 800,
+                                                borderRadius: '3px',
+                                                fontSize: '0.78rem'
+                                              }}
+                                            >
+                                              {char}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Charms */}
+                                    {sub.charms && sub.charms.length > 0 && (
+                                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '6px 0' }}>
+                                        {sub.charms.map((ch, cI) => (
+                                          <span key={cI} className="crafter-component-tag" style={{ fontSize: '0.74rem' }}>
+                                            {ch.icon || '★'} {ch.name || ch}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Photostrip Box for this sub-bagcharm */}
+                                    <div className="admin-photostrip-box" style={{ marginTop: '10px' }}>
+                                      {/* Left: Thumbnail preview rendered WITH EXACT SLOTS and OVERLAY */}
+                                      <div
+                                        style={{
+                                          width: '92px',
+                                          height: '216px',
+                                          position: 'relative',
+                                          borderRadius: '4px',
+                                          overflow: 'hidden',
+                                          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                                          background: '#FFFFFF',
+                                          flexShrink: 0
+                                        }}
+                                      >
+                                        <img
+                                          src={subFrameConf.baseImage}
+                                          alt={subFrameConf.name}
+                                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+
+                                        {subFrameConf.slots.map((s, slotIdx) => {
+                                          const pSrc = subPhotos[slotIdx];
+                                          return (
+                                            <div
+                                              key={slotIdx}
+                                              style={{
+                                                position: 'absolute',
+                                                top: s.top,
+                                                left: s.left,
+                                                width: s.width,
+                                                height: s.height,
+                                                borderRadius: s.borderRadius || '0px',
+                                                overflow: 'hidden',
+                                                background: pSrc ? '#000000' : 'rgba(226, 232, 240, 0.75)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                              }}
+                                            >
+                                              {pSrc ? (
+                                                <img
+                                                  src={pSrc}
+                                                  alt={`Slot ${slotIdx + 1}`}
+                                                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                                />
+                                              ) : (
+                                                <span style={{ fontSize: '9px', color: '#64748B', fontWeight: 600 }}>Foto {slotIdx + 1}</span>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+
+                                        {subFrameConf.overlayImage && (
+                                          <img
+                                            src={subFrameConf.overlayImage}
+                                            alt=""
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              objectFit: 'cover',
+                                              pointerEvents: 'none'
+                                            }}
+                                          />
+                                        )}
+                                      </div>
+
+                                      {/* Right: Info and Download Button */}
+                                      <div style={{ flex: 1, minWidth: '220px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <ImageIcon size={16} color="var(--accent-purple)" />
+                                            <strong style={{ fontSize: '0.98rem' }}>{subFrameConf.name}</strong>
+                                          </div>
+
+                                          {/* Frame Switcher Dropdown */}
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Ganti Frame:</span>
+                                            <select
+                                              value={subFrameConf.num}
+                                              onChange={(e) => handleFrameChange(overrideKey, e.target.value)}
+                                              className="form-input"
+                                              style={{ padding: '2px 6px', fontSize: '0.76rem', height: '26px', width: 'auto', borderRadius: '4px' }}
+                                            >
+                                              {Array.from({ length: 30 }, (_, i) => i + 1).map((fNum) => (
+                                                <option key={fNum} value={String(fNum)}>
+                                                  Frame {fNum}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        </div>
+
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                          Terdiri dari {subFrameConf.slots.length} foto photostrip sesuai template.
+                                        </div>
+
+                                        {/* Photos status notice */}
+                                        <div style={{ marginTop: '6px' }}>
+                                          {subPhotos.length > 0 ? (
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: '#059669', background: '#ECFDF5', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                                              <Check size={12} />
+                                              {subPhotos.length} Foto customer terpasang
+                                            </span>
+                                          ) : (
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: '#B45309', background: '#FEF3C7', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                                              <AlertCircle size={12} />
+                                              Foto dikirim via WhatsApp ({selectedOrder.customer?.whatsapp || '-'})
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        <div style={{ marginTop: '10px' }}>
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm"
+                                            disabled={isSubDownloading}
+                                            onClick={() => handleDownloadFrame(sub, selectedOrder, sub.label || `Bagcharm-${sIdx + 1}`, subFrameConf, subPhotos)}
+                                            style={{
+                                              background: '#4F46E5',
+                                              color: '#FFFFFF',
+                                              borderColor: '#4338CA',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '6px',
+                                              fontWeight: 700,
+                                              padding: '6px 14px',
+                                              fontSize: '0.8rem'
+                                            }}
+                                          >
+                                            <Download size={13} />
+                                            <span>{isSubDownloading ? 'Memproses PNG...' : `Download Frame ${sub.label || `Bagcharm ${sIdx + 1}`} (PNG)`}</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  /* Gelang sub-item */
+                                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '6px' }}>
+                                    {sub.image && (
+                                      <div style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+                                        <img src={sub.image} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      </div>
+                                    )}
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                      <div>Varian / Warna: <strong>{sub.color || sub.variant || 'Standar Sesuai Foto'}</strong></div>
+                                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginTop: '2px' }}>
+                                        ✓ Dirakit langsung sesuai manik & elastis gelang (tanpa cetak frame foto).
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Non-Bundle (Single Item)
+                  const isBagCharm = it.productType === 'bag_charm' || titleLower.includes('bag charm') || titleLower.includes('bagcharm') || Boolean(it.frameId);
+                  const singleKey = `${selectedOrder.id}-${it.id || idx}-single`;
+                  const singleOverride = frameOverrides[singleKey];
+                  const frameConf = resolveFrameConfig(
+                    singleOverride ? { ...it, frameId: `frame-${singleOverride}` } : it
+                  );
                   const photos = getFramePhotosForItem(it);
                   const dlKey = `${selectedOrder.id}-${it.id || idx}`;
                   const isDownloading = downloadingItemId === dlKey;
@@ -630,7 +1018,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                         )}
                       </div>
 
-                      {/* Photostrip Frame Download Box (Specific User Request) */}
+                      {/* Photostrip Frame Download Box */}
                       {isBagCharm && (
                         <div className="admin-photostrip-box">
                           {/* Left: Thumbnail preview rendered WITH EXACT SLOTS and OVERLAY */}
@@ -646,14 +1034,12 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                               flexShrink: 0
                             }}
                           >
-                            {/* 1. Base frame image */}
                             <img
                               src={frameConf.baseImage}
                               alt={frameConf.name}
                               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                             />
 
-                            {/* 2. Photos in exact percentage slot coordinates */}
                             {frameConf.slots.map((s, sIdx) => {
                               const pSrc = photos[sIdx];
                               return (
@@ -667,21 +1053,25 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                     height: s.height,
                                     borderRadius: s.borderRadius || '0px',
                                     overflow: 'hidden',
-                                    background: '#E2E8F0'
+                                    background: pSrc ? '#000000' : 'rgba(226, 232, 240, 0.75)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                   }}
                                 >
-                                  {pSrc && (
+                                  {pSrc ? (
                                     <img
                                       src={pSrc}
                                       alt={`Slot ${sIdx + 1}`}
                                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                     />
+                                  ) : (
+                                    <span style={{ fontSize: '9px', color: '#64748B', fontWeight: 600 }}>Foto {sIdx + 1}</span>
                                   )}
                                 </div>
                               );
                             })}
 
-                            {/* 3. Overlay image on top */}
                             {frameConf.overlayImage && (
                               <img
                                 src={frameConf.overlayImage}
@@ -698,14 +1088,49 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                             )}
                           </div>
 
-                          {/* Right: Info and Download Button */}
+                          {/* Right: Info, Switcher, and Download Button */}
                           <div style={{ flex: 1, minWidth: '240px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <ImageIcon size={16} color="var(--accent-purple)" />
-                              <strong style={{ fontSize: '0.98rem' }}>{frameConf.name}</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <ImageIcon size={16} color="var(--accent-purple)" />
+                                <strong style={{ fontSize: '0.98rem' }}>{frameConf.name}</strong>
+                              </div>
+
+                              {/* Frame Switcher Dropdown */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Ganti Frame:</span>
+                                <select
+                                  value={frameConf.num}
+                                  onChange={(e) => handleFrameChange(singleKey, e.target.value)}
+                                  className="form-input"
+                                  style={{ padding: '2px 6px', fontSize: '0.76rem', height: '26px', width: 'auto', borderRadius: '4px' }}
+                                >
+                                  {Array.from({ length: 30 }, (_, i) => i + 1).map((fNum) => (
+                                    <option key={fNum} value={String(fNum)}>
+                                      Frame {fNum}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
+
                             <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                              Terdiri dari {frameConf.slots.length} foto photostrip yang telah rapi terpasang pada frame.
+                              Terdiri dari {frameConf.slots.length} foto photostrip sesuai template.
+                            </div>
+
+                            {/* Photos status notice */}
+                            <div style={{ marginTop: '8px' }}>
+                              {photos.length > 0 ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: '#059669', background: '#ECFDF5', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                                  <Check size={12} />
+                                  {photos.length} Foto customer terpasang
+                                </span>
+                              ) : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: '#B45309', background: '#FEF3C7', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                                  <AlertCircle size={12} />
+                                  Foto belum diunggah di web / dikirim via WhatsApp ({selectedOrder.customer?.whatsapp || '-'})
+                                </span>
+                              )}
                             </div>
 
                             {/* Download Action */}
@@ -714,7 +1139,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                 type="button"
                                 className="btn btn-sm"
                                 disabled={isDownloading}
-                                onClick={() => handleDownloadFrame(it, selectedOrder)}
+                                onClick={() => handleDownloadFrame(it, selectedOrder, frameConf.name, frameConf, photos)}
                                 style={{
                                   background: '#4F46E5',
                                   color: '#FFFFFF',

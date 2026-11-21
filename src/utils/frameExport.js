@@ -1,4 +1,4 @@
-import { BAG_CHARM_FRAMES, getFrameSlots, SAMPLE_FRAME_PHOTOS } from '../data/initialData.js';
+import { BAG_CHARM_FRAMES, getFrameSlots } from '../data/initialData.js';
 
 function loadImage(src) {
   return new Promise((resolve) => {
@@ -54,57 +54,85 @@ function drawImageCover(ctx, img, rx, ry, rw, rh, borderRadius = 0) {
 }
 
 /**
- * Resolve exact frame configuration based on what the customer actually ordered
+ * Resolve exact frame configuration (1-30) based on what the customer actually ordered
  */
 export function resolveFrameConfig(item = {}) {
-  let frameId = item.frameId || item.baseId || item.layoutId;
-  if (!frameId && item.customDetails) {
-    frameId = item.customDetails.frameId || item.customDetails.templateId || item.customDetails.layoutId;
+  const customDetails = item.customDetails || item.custom_details || {};
+  const frameIdRaw = String(item.frameId || customDetails.frameId || item.baseId || '').trim();
+  const frameNameRaw = String(item.frameName || customDetails.frameName || '').trim();
+  const titleRaw = String(item.title || item.name || '').trim();
+  const baseNameRaw = String(item.baseName || customDetails.baseName || '').trim();
+  const imageRaw = String(item.frameImage || item.image || item.imageSrc || '').trim();
+
+  let num = null;
+
+  // 1. Check known aliases
+  const combined = `${frameIdRaw} ${frameNameRaw} ${titleRaw} ${baseNameRaw} ${imageRaw}`.toLowerCase();
+  if (frameIdRaw === 'frame-borcelle' || combined.includes('borcelle')) {
+    num = '2';
+  } else if (frameIdRaw === 'frame-the-moment' || combined.includes('the moment') || combined.includes('tactical')) {
+    num = '5';
+  } else if (combined.includes('baby blue') || combined.includes('stamp') || frameIdRaw === 'frame-1') {
+    num = '1';
+  } else if (combined.includes('sweet pink') || combined.includes('pastel pink') || frameIdRaw === 'frame-4') {
+    num = '4';
   }
 
-  const titleLower = (item.title || item.name || '').toLowerCase();
-
-  // Match ordered product to exact frame model
-  if (
-    titleLower.includes('baby blue') ||
-    titleLower.includes('stamp') ||
-    frameId === 'layout-a' ||
-    frameId === 'frame-1' ||
-    (item.image && item.image.includes('baby_blue'))
-  ) {
-    frameId = 'frame-1';
-  } else if (titleLower.includes('sweet pink') || titleLower.includes('pastel pink') || frameId === 'frame-4') {
-    frameId = 'frame-4';
-  } else if (titleLower.includes('tactical') || titleLower.includes('moment') || frameId === 'frame-5' || frameId === 'frame-the-moment') {
-    frameId = 'frame-the-moment';
-  } else if (titleLower.includes('borcelle') || frameId === 'frame-borcelle' || frameId === 'frame-2') {
-    frameId = 'frame-borcelle';
-  } else if (!frameId) {
-    frameId = 'frame-1';
+  // 2. Parse from frameIdRaw (e.g. "frame-7", "7")
+  if (!num && frameIdRaw) {
+    const matchId = frameIdRaw.match(/^(?:frame-)?(\d{1,2})$/i);
+    if (matchId) {
+      num = String(parseInt(matchId[1], 10));
+    }
   }
 
-  let frame = BAG_CHARM_FRAMES.find((f) => f.id === frameId);
-
-  let num = '1';
-  if (frameId === 'frame-1' || frameId === '1') num = '1';
-  else if (frameId === 'frame-borcelle' || frameId === 'frame-2') num = '2';
-  else if (frameId === 'frame-the-moment' || frameId === 'frame-5') num = '5';
-  else if (typeof frameId === 'string' && frameId.startsWith('frame-')) {
-    num = frameId.replace('frame-', '');
-  } else if (!isNaN(Number(frameId))) {
-    num = String(frameId);
+  // 3. Parse from image URL (e.g. "/frames/18.png" or "/frames/18_overlay.png")
+  if (!num && imageRaw) {
+    const matchImg = imageRaw.match(/\/frames\/(\d{1,2})(?:_overlay)?\.png/i);
+    if (matchImg) {
+      num = String(parseInt(matchImg[1], 10));
+    }
   }
 
-  const baseImage = frame?.image || `/frames/${num}.png`;
-  const overlayImage = frame?.overlayImage || `/frames/${num}_overlay.png`;
-  const slots = frame?.slots || getFrameSlots(frameId) || getFrameSlots(`frame-${num}`) || [
+  // 4. Parse from frameNameRaw (e.g. "Frame 7", "06: Brown Polka Dot", "Frame 12")
+  if (!num && frameNameRaw) {
+    const matchName = frameNameRaw.match(/frame\s*(\d{1,2})/i) || frameNameRaw.match(/^0?(\d{1,2}):/);
+    if (matchName) {
+      num = String(parseInt(matchName[1], 10));
+    }
+  }
+
+  // 5. Parse from titleRaw or baseNameRaw (e.g. "Custom Photostrip Bag Charm — 06: Brown Polka Dot Fabric", "Custom Photostrip Bag Charm — Frame 7")
+  if (!num && (titleRaw || baseNameRaw)) {
+    const textToSearch = `${titleRaw} ${baseNameRaw}`;
+    const matchTitle = textToSearch.match(/frame\s*(\d{1,2})/i) ||
+                       textToSearch.match(/—\s*0?(\d{1,2}):/i) ||
+                       textToSearch.match(/\b0?(\d{1,2}):/i) ||
+                       textToSearch.match(/bagcharm\s*(\d{1,2})\b/i);
+    if (matchTitle) {
+      num = String(parseInt(matchTitle[1], 10));
+    }
+  }
+
+  // Ensure num is within 1..30 if found, else default to '1'
+  const parsedNum = parseInt(num, 10);
+  if (isNaN(parsedNum) || parsedNum < 1 || parsedNum > 30) {
+    num = '1';
+  } else {
+    num = String(parsedNum);
+  }
+
+  const frameId = `frame-${num}`;
+  const baseImage = `/frames/${num}.png`;
+  const overlayImage = `/frames/${num}_overlay.png`;
+  const slots = getFrameSlots(frameId) || [
     { id: 1, label: 'Foto 1 (Atas)', top: '17.2%', left: '14.0%', width: '71.9%', height: '22.5%', borderRadius: '0px' },
     { id: 2, label: 'Foto 2 (Bawah)', top: '72.4%', left: '14.0%', width: '71.9%', height: '22.6%', borderRadius: '0px' }
   ];
 
-  let frameDisplayName = item.frameName || frame?.name;
-  if (!frameDisplayName || frameDisplayName.includes('#') || frameDisplayName.includes(':')) {
-    frameDisplayName = `Frame ${num || '1'}`;
+  let frameDisplayName = frameNameRaw;
+  if (!frameDisplayName || frameDisplayName.toLowerCase() === 'custom' || frameDisplayName.includes('#') || frameDisplayName.includes(':')) {
+    frameDisplayName = `Frame ${num}`;
   }
 
   return {
@@ -117,18 +145,27 @@ export function resolveFrameConfig(item = {}) {
   };
 }
 
+/**
+ * Return only genuine customer uploaded photos for this item
+ */
 export function getFramePhotosForItem(item = {}) {
-  if (Array.isArray(item.framePhotos) && item.framePhotos.some(Boolean)) {
-    return item.framePhotos;
+  const customDetails = item.customDetails || item.custom_details || {};
+  const candidates = [
+    item.framePhotos,
+    item.photos,
+    customDetails.framePhotos,
+    customDetails.photos,
+    item.customPhotos
+  ];
+
+  for (const list of candidates) {
+    if (Array.isArray(list) && list.some(Boolean)) {
+      return list.filter((p) => typeof p === 'string' && p.trim().length > 0);
+    }
   }
-  if (item.customDetails && Array.isArray(item.customDetails.framePhotos) && item.customDetails.framePhotos.some(Boolean)) {
-    return item.customDetails.framePhotos;
-  }
-  if (item.customPhotos && Array.isArray(item.customPhotos) && item.customPhotos.some(Boolean)) {
-    return item.customPhotos;
-  }
-  // High quality sample photos
-  return SAMPLE_FRAME_PHOTOS;
+
+  // Return empty array if customer has not uploaded photos, so crafter knows actual status
+  return [];
 }
 
 export async function renderPhotostripCanvas({ frameConfig, photos = [], targetW = 849, targetH = 1993 }) {
@@ -147,12 +184,12 @@ export async function renderPhotostripCanvas({ frameConfig, photos = [], targetW
     ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
   }
 
-  // 2. Draw photos in exact slots
+  // 2. Draw photos in exact slots ONLY if photo is provided by customer
   const slots = frameConfig.slots || [];
   for (let idx = 0; idx < slots.length; idx++) {
     const slot = slots[idx];
-    const photoSrc = photos[idx] || SAMPLE_FRAME_PHOTOS[idx % SAMPLE_FRAME_PHOTOS.length];
-    if (!photoSrc) continue;
+    const photoSrc = photos[idx];
+    if (!photoSrc) continue; // Don't burn dummy stock photos onto customer print!
 
     const leftPct = parseFloat(slot.left || '10') / 100;
     const topPct = parseFloat(slot.top || '10') / 100;
@@ -180,9 +217,16 @@ export async function renderPhotostripCanvas({ frameConfig, photos = [], targetW
   return canvas;
 }
 
-export async function downloadPhotostripFrame({ item, orderId = 'ATC', customerName = 'Customer' }) {
-  const frameConfig = resolveFrameConfig(item);
-  const photos = getFramePhotosForItem(item);
+export async function downloadPhotostripFrame({
+  item,
+  overrideFrameConfig = null,
+  overridePhotos = null,
+  subLabel = '',
+  orderId = 'ATC',
+  customerName = 'Customer'
+}) {
+  const frameConfig = overrideFrameConfig || resolveFrameConfig(item);
+  const photos = overridePhotos !== null ? overridePhotos : getFramePhotosForItem(item);
   const canvas = await renderPhotostripCanvas({ frameConfig, photos, targetW: 849, targetH: 1993 });
 
   return new Promise((resolve) => {
@@ -192,8 +236,9 @@ export async function downloadPhotostripFrame({ item, orderId = 'ATC', customerN
       const a = document.createElement('a');
       const cleanName = (customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
       const cleanOrder = (orderId || 'ATC').replace(/[^a-zA-Z0-9-]/g, '_');
+      const cleanLabel = (subLabel || frameConfig.name || 'Frame').replace(/[^a-zA-Z0-9]/g, '_');
       a.href = url;
-      a.download = `Frame-Photostrip_${cleanOrder}_${cleanName}.png`;
+      a.download = `Frame-Photostrip_${cleanOrder}_${cleanName}_${cleanLabel}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
