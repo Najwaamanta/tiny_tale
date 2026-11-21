@@ -22,6 +22,7 @@ export default function AdminInventory({
 
   // Edit Charm inline or modal state
   const [editingCharm, setEditingCharm] = useState(null);
+  const [charmToDelete, setCharmToDelete] = useState(null);
 
   // Compress image helper to ensure fast saving & responsive storage
   const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.85) => {
@@ -243,11 +244,7 @@ export default function AdminInventory({
                           type="button"
                           className="btn btn-outline btn-icon"
                           style={{ width: '32px', height: '32px', color: 'var(--accent-rose)' }}
-                          onClick={() => {
-                            if (confirm(`Yakin ingin menghapus ${ch.name}?`)) {
-                              onDeleteCharm(ch.id);
-                            }
-                          }}
+                          onClick={() => setCharmToDelete(ch)}
                           title="Hapus Komponen"
                         >
                           <Trash2 size={13} />
@@ -338,11 +335,7 @@ export default function AdminInventory({
                       type="button"
                       className="btn btn-outline"
                       style={{ color: 'var(--accent-rose)', borderColor: 'rgba(225, 29, 72, 0.3)' }}
-                      onClick={() => {
-                        if (confirm(`Hapus charm "${ch.name}"?`)) {
-                          onDeleteCharm(ch.id);
-                        }
-                      }}
+                      onClick={() => setCharmToDelete(ch)}
                     >
                       <Trash2 size={13} />
                       <span>Hapus</span>
@@ -757,6 +750,151 @@ export default function AdminInventory({
                 <span>Update Komponen</span>
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modern Aesthetic Delete Charm Confirmation Modal */}
+      {charmToDelete && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setCharmToDelete(null)}
+          style={{
+            zIndex: 1200,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '430px',
+              width: '100%',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '20px',
+              padding: '28px 24px',
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.35)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setCharmToDelete(null)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Tutup"
+            >
+              <X size={18} />
+            </button>
+
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.12)',
+                color: '#EF4444',
+                border: '2px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                boxShadow: '0 0 20px rgba(239, 68, 68, 0.15)'
+              }}
+            >
+              <Trash2 size={26} strokeWidth={2.2} />
+            </div>
+
+            <h4 style={{ margin: '0 0 6px', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              Hapus Komponen Charm?
+            </h4>
+
+            <div
+              style={{
+                background: 'var(--bg-primary)',
+                border: '1px dashed var(--border-medium)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                margin: '14px 0 16px',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-purple)' }}>
+                {charmToDelete.icon || '★'} {charmToDelete.name}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Kategori: <strong>{charmToDelete.category}</strong> • Rp {(charmToDelete.price || 0).toLocaleString('id-ID')}
+              </span>
+            </div>
+
+            <p style={{ margin: '0 0 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Komponen charm ini akan dihapus dari pilihan studio kustom dan database. Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setCharmToDelete(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px'
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  onDeleteCharm(charmToDelete.id);
+                  setCharmToDelete(null);
+                }}
+                style={{
+                  flex: 1,
+                  background: '#EF4444',
+                  borderColor: '#DC2626',
+                  color: '#FFFFFF',
+                  padding: '10px 16px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Trash2 size={15} />
+                <span>Ya, Hapus</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

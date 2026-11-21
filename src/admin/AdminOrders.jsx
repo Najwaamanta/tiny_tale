@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus, Trash2 } from 'lucide-react';
+import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus, Trash2, X } from 'lucide-react';
 import { exportOrdersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
 import AdminAddOrderModal from './AdminAddOrderModal';
@@ -11,23 +11,35 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   const [frameOverrides, setFrameOverrides] = useState({});
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   React.useEffect(() => {
     setLocalOrders(orders);
   }, [orders]);
 
-  const handleDeleteOrder = async (order) => {
+  const handleDeleteOrder = (order) => {
     if (!order) return;
-    const customerName = order.customer?.name || 'Pelanggan';
-    const confirmMsg = `Hapus pesanan ${order.id} atas nama "${customerName}"?\n\nData pesanan akan dihapus permanen dari database.`;
-    if (window.confirm(confirmMsg)) {
-      setLocalOrders((prev) => prev.filter((o) => o.id !== order.id));
-      if (selectedOrder && selectedOrder.id === order.id) {
+    setOrderToDelete(order);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    const targetOrder = orderToDelete;
+    try {
+      setLocalOrders((prev) => prev.filter((o) => o.id !== targetOrder.id));
+      if (selectedOrder && selectedOrder.id === targetOrder.id) {
         setSelectedOrder(null);
       }
       if (onDeleteOrder) {
-        await onDeleteOrder(order.id);
+        await onDeleteOrder(targetOrder.id);
       }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    } finally {
+      setIsDeleting(false);
+      setOrderToDelete(null);
     }
   };
 
@@ -1182,6 +1194,157 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
           }}
           collections={collections}
         />
+      )}
+
+      {/* Modern Aesthetic Delete Order Confirmation Modal */}
+      {orderToDelete && (
+        <div
+          className="modal-backdrop"
+          onClick={() => !isDeleting && setOrderToDelete(null)}
+          style={{
+            zIndex: 1200,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '430px',
+              width: '100%',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '20px',
+              padding: '28px 24px',
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.35)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => !isDeleting && setOrderToDelete(null)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Tutup"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Glowing Danger Icon */}
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.12)',
+                color: '#EF4444',
+                border: '2px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                boxShadow: '0 0 20px rgba(239, 68, 68, 0.15)'
+              }}
+            >
+              <Trash2 size={26} strokeWidth={2.2} />
+            </div>
+
+            <h4 style={{ margin: '0 0 6px', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              Hapus Pesanan?
+            </h4>
+
+            {/* Order Target Info Highlight */}
+            <div
+              style={{
+                background: 'var(--bg-primary)',
+                border: '1px dashed var(--border-medium)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                margin: '14px 0 16px',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-purple)', fontFamily: 'var(--font-display)' }}>
+                {orderToDelete.id}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Pemesan: <strong style={{ color: 'var(--text-primary)' }}>{orderToDelete.customer?.name || 'Pelanggan'}</strong>
+                {orderToDelete.customer?.whatsapp ? ` (${orderToDelete.customer.whatsapp})` : ''}
+              </span>
+            </div>
+
+            <p style={{ margin: '0 0 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Data pesanan ini akan dihapus secara permanen dari database dan antrean perakitan. Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setOrderToDelete(null)}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px'
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={confirmDeleteOrder}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  background: '#EF4444',
+                  borderColor: '#DC2626',
+                  color: '#FFFFFF',
+                  padding: '10px 16px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <Trash2 size={15} />
+                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

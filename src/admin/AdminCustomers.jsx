@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus, Trash2 } from 'lucide-react';
+import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus, Trash2, X } from 'lucide-react';
 import { aggregateCustomersFromOrders, exportCustomersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
 import AdminAddCustomerHistoryModal from './AdminAddCustomerHistoryModal';
@@ -11,49 +11,64 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isAddHistoryOpen, setIsAddHistoryOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   React.useEffect(() => {
     setLocalOrders(orders);
   }, [orders]);
 
-  const handleDeleteCustomer = async (cust) => {
+  const handleDeleteCustomer = (cust) => {
     if (!cust) return;
-    const orderIds = (cust.orders || []).map((o) => o.id);
-    if (orderIds.length === 0) return;
-    const confirmMsg = `Hapus seluruh riwayat pembelian untuk pelanggan "${cust.name}" (${orderIds.length} pesanan)?\n\nSemua transaksi pembeli ini akan dihapus permanen dari database.`;
-    if (window.confirm(confirmMsg)) {
-      setLocalOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
-      if (selectedCustomer && selectedCustomer.name === cust.name) {
-        setSelectedCustomer(null);
-      }
-      if (onDeleteCustomerOrders) {
-        await onDeleteCustomerOrders(orderIds);
-      } else if (onDeleteOrder) {
-        await Promise.all(orderIds.map((id) => onDeleteOrder(id)));
-      }
-    }
+    setDeleteTarget({ type: 'customer', data: cust });
   };
 
-  const handleDeleteSingleOrder = async (ord) => {
+  const handleDeleteSingleOrder = (ord) => {
     if (!ord) return;
-    if (window.confirm(`Hapus pesanan ${ord.id} dari riwayat pelanggan ini?`)) {
-      setLocalOrders((prev) => prev.filter((o) => o.id !== ord.id));
-      if (selectedCustomer) {
-        const remaining = (selectedCustomer.orders || []).filter((o) => o.id !== ord.id);
-        if (remaining.length === 0) {
+    setDeleteTarget({ type: 'order', data: ord });
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      if (deleteTarget.type === 'customer') {
+        const cust = deleteTarget.data;
+        const orderIds = (cust.orders || []).map((o) => o.id);
+        setLocalOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
+        if (selectedCustomer && selectedCustomer.name === cust.name) {
           setSelectedCustomer(null);
-        } else {
-          setSelectedCustomer({
-            ...selectedCustomer,
-            orders: remaining,
-            ordersCount: remaining.length,
-            totalSpent: remaining.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0)
-          });
+        }
+        if (onDeleteCustomerOrders) {
+          await onDeleteCustomerOrders(orderIds);
+        } else if (onDeleteOrder) {
+          await Promise.all(orderIds.map((id) => onDeleteOrder(id)));
+        }
+      } else if (deleteTarget.type === 'order') {
+        const ord = deleteTarget.data;
+        setLocalOrders((prev) => prev.filter((o) => o.id !== ord.id));
+        if (selectedCustomer) {
+          const remaining = (selectedCustomer.orders || []).filter((o) => o.id !== ord.id);
+          if (remaining.length === 0) {
+            setSelectedCustomer(null);
+          } else {
+            setSelectedCustomer({
+              ...selectedCustomer,
+              orders: remaining,
+              ordersCount: remaining.length,
+              totalSpent: remaining.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0)
+            });
+          }
+        }
+        if (onDeleteOrder) {
+          await onDeleteOrder(ord.id);
         }
       }
-      if (onDeleteOrder) {
-        await onDeleteOrder(ord.id);
-      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -729,6 +744,167 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
           orders={orders}
           collections={collections}
         />
+      )}
+
+      {/* Modern Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          className="modal-backdrop"
+          onClick={() => !isDeleting && setDeleteTarget(null)}
+          style={{
+            zIndex: 1200,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '430px',
+              width: '100%',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '20px',
+              padding: '28px 24px',
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.35)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => !isDeleting && setDeleteTarget(null)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Tutup"
+            >
+              <X size={18} />
+            </button>
+
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.12)',
+                color: '#EF4444',
+                border: '2px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                boxShadow: '0 0 20px rgba(239, 68, 68, 0.15)'
+              }}
+            >
+              <Trash2 size={26} strokeWidth={2.2} />
+            </div>
+
+            <h4 style={{ margin: '0 0 6px', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              {deleteTarget.type === 'customer' ? 'Hapus Riwayat Pelanggan?' : 'Hapus Pesanan?'}
+            </h4>
+
+            <div
+              style={{
+                background: 'var(--bg-primary)',
+                border: '1px dashed var(--border-medium)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                margin: '14px 0 16px',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              {deleteTarget.type === 'customer' ? (
+                <>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-purple)' }}>
+                    {deleteTarget.data.name}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Total: {deleteTarget.data.ordersCount || deleteTarget.data.orders?.length || 0} transaksi pesanan
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-purple)', fontFamily: 'var(--font-display)' }}>
+                    {deleteTarget.data.id}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Rp {(deleteTarget.data.totalAmount || deleteTarget.data.total || 0).toLocaleString('id-ID')}
+                  </span>
+                </>
+              )}
+            </div>
+
+            <p style={{ margin: '0 0 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              {deleteTarget.type === 'customer'
+                ? 'Semua data riwayat pembelian untuk pelanggan ini akan dihapus permanen dari database.'
+                : 'Data pesanan ini akan dihapus dari riwayat transaksi pelanggan secara permanen.'}
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px'
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={confirmDeleteAction}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  background: '#EF4444',
+                  borderColor: '#DC2626',
+                  color: '#FFFFFF',
+                  padding: '10px 16px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <Trash2 size={15} />
+                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
