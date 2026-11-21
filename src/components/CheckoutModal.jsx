@@ -468,7 +468,7 @@ export default function CheckoutModal({
                         Tunai / Cash
                       </div>
                       <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.25 }}>
-                        Bayar di Tempat / Studio
+                        Bayar di Tempat
                       </div>
                     </div>
                     {paymentMethod === 'Cash' && (
@@ -769,7 +769,7 @@ export default function CheckoutModal({
                     </div>
 
                     <h5 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                      Pembayaran Tunai di Studio (Cash)
+                      Pembayaran Tunai/Cash
                     </h5>
                     <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px', maxWidth: '380px', margin: '0 auto 16px', lineHeight: 1.5 }}>
                       Silakan siapkan uang pas saat pembayaran langsung di kasir Atelier Studio atau saat serah terima pesanan.
