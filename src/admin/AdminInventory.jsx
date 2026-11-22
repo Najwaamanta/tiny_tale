@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, AlertTriangle, Check, RefreshCw, Layers, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { getCharmIcon } from '../utils/accentHelper';
 
 export default function AdminInventory({
   charms = [],
@@ -180,7 +181,7 @@ export default function AdminInventory({
                           <img src={ch.image} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                       ) : (
-                        <span style={{ fontSize: '1.4rem' }}>{ch.icon || '★'}</span>
+                        <span style={{ fontSize: '1.4rem' }}>{getCharmIcon(ch)}</span>
                       )}
                     </td>
                     <td>
@@ -275,7 +276,7 @@ export default function AdminInventory({
                       {ch.image ? (
                         <img src={ch.image} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ fontSize: '2rem' }}>{ch.icon || '★'}</span>
+                        <span style={{ fontSize: '2rem' }}>{getCharmIcon(ch)}</span>
                       )}
                     </div>
                     <div className="admin-mobile-card-info">

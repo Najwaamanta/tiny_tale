@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus, Trash2, X } from 'lucide-react';
 import { exportOrdersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
+import { getAccentDisplay, isGelangItem, isBagCharmItem, getGelangImage, getCharmIcon } from '../utils/accentHelper';
 import AdminAddOrderModal from './AdminAddOrderModal';
 
 export default function AdminOrders({ orders = [], collections = [], onUpdateOrderStatus, onAddOrder, onDeleteOrder }) {
@@ -40,6 +41,27 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
     } finally {
       setIsDeleting(false);
       setOrderToDelete(null);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (orderId, newStatus) => {
+    // 1. Optimistic update in local state
+    setLocalOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, paymentStatus: newStatus } : o))
+    );
+
+    // 2. Update selectedOrder if it's currently open in modal
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder((prev) => ({ ...prev, paymentStatus: newStatus }));
+    }
+
+    // 3. Persist to store & MySQL database
+    if (onUpdateOrderStatus) {
+      try {
+        await onUpdateOrderStatus(orderId, { paymentStatus: newStatus });
+      } catch (err) {
+        console.error('Failed to update payment status:', err);
+      }
     }
   };
 
@@ -228,11 +250,22 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                         </div>
                       </td>
                       <td>
-                        {(ord.items || []).map((it, i) => (
-                          <div key={i} style={{ fontSize: '0.85rem', marginBottom: '4px' }}>
-                            • <strong>{it.title}</strong> {it.customLetters && <span style={{ color: 'var(--accent-purple)' }}>[{it.customLetters}]</span>}
-                          </div>
-                        ))}
+                        {(ord.items || []).map((it, i) => {
+                          const isGelang = isGelangItem(it);
+                          const itAcc = getAccentDisplay(it);
+                          return (
+                            <div key={i} style={{ fontSize: '0.85rem', marginBottom: '4px' }}>
+                              • <strong>{it.title}</strong> {it.customLetters && <span style={{ color: 'var(--accent-purple)' }}>[{it.customLetters}]</span>}
+                              {!isGelang && (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
+                                  <span>Aksen:</span>
+                                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: itAcc.hex, border: `1px solid ${itAcc.border}`, display: 'inline-block' }} />
+                                  <strong>{itAcc.name}</strong>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                         {hasBagCharm && (
                           <span className="badge badge-purple" style={{ fontSize: '0.72rem', marginTop: '4px' }}>
                             🖼️ Frame Foto Tersedia
@@ -245,16 +278,70 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                         </strong>
                       </td>
                       <td>
-                        <span className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}>
-                          {ord.paymentStatus === 'paid' ? 'Lunas' : 'Verifikasi'}
-                        </span>
-                        {(ord.paymentProof || ord.paymentProofUrl) && (
-                          <div style={{ marginTop: '4px' }}>
-                            <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
-                              🧾 Bukti Ada
-                            </span>
-                          </div>
-                        )}
+                        {(() => {
+                          const isCash = (ord.paymentMethod || '').toLowerCase().includes('cash') || (ord.paymentMethod || '').toLowerCase().includes('tunai');
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                              {isCash ? (
+                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                  <select
+                                    value={ord.paymentStatus === 'paid' ? 'paid' : 'pending'}
+                                    onChange={(e) => handleUpdatePaymentStatus(ord.id, e.target.value)}
+                                    style={{
+                                      appearance: 'none',
+                                      WebkitAppearance: 'none',
+                                      MozAppearance: 'none',
+                                      background: ord.paymentStatus === 'paid' ? '#ECFDF5' : '#FEF3C7',
+                                      color: ord.paymentStatus === 'paid' ? '#065F46' : '#92400E',
+                                      border: ord.paymentStatus === 'paid' ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+                                      borderRadius: '9999px',
+                                      padding: '4px 22px 4px 10px',
+                                      fontSize: '0.76rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      outline: 'none',
+                                      transition: 'all 0.2s',
+                                      display: 'inline-flex',
+                                      alignItems: 'center'
+                                    }}
+                                    title="Klik untuk mengubah status pembayaran cash"
+                                  >
+                                    <option value="paid" style={{ background: '#FFFFFF', color: '#065F46' }}>✓ Lunas</option>
+                                    <option value="pending" style={{ background: '#FFFFFF', color: '#92400E' }}>⏳ Verifikasi</option>
+                                  </select>
+                                  <span
+                                    style={{
+                                      position: 'absolute',
+                                      right: '7px',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      pointerEvents: 'none',
+                                      fontSize: '8px',
+                                      color: ord.paymentStatus === 'paid' ? '#065F46' : '#92400E'
+                                    }}
+                                  >
+                                    ▼
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="badge badge-lime" style={{ fontSize: '0.76rem', padding: '4px 10px', borderRadius: '9999px' }}>
+                                  ✓ Lunas
+                                </span>
+                              )}
+
+                              {ord.paymentMethod && (
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                  {isCash ? '💵 Tunai/Cash' : '📱 QRIS'}
+                                </span>
+                              )}
+                              {(ord.paymentProof || ord.paymentProofUrl) && (
+                                <span className="badge badge-purple" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                                  🧾 Bukti Ada
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -321,12 +408,58 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                         {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
                       </div>
                     </div>
-                    <span
-                      className={`badge ${ord.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}
-                      style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '12px' }}
-                    >
-                      {ord.paymentStatus === 'paid' ? 'Lunas' : 'Menunggu'}
-                    </span>
+                    {(() => {
+                      const isCash = (ord.paymentMethod || '').toLowerCase().includes('cash') || (ord.paymentMethod || '').toLowerCase().includes('tunai');
+                      if (!isCash) {
+                        return (
+                          <span
+                            className="badge badge-lime"
+                            style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '12px' }}
+                          >
+                            ✓ Lunas
+                          </span>
+                        );
+                      }
+                      return (
+                        <div style={{ position: 'relative' }}>
+                          <select
+                            value={ord.paymentStatus === 'paid' ? 'paid' : 'pending'}
+                            onChange={(e) => handleUpdatePaymentStatus(ord.id, e.target.value)}
+                            style={{
+                              appearance: 'none',
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'none',
+                              background: ord.paymentStatus === 'paid' ? '#ECFDF5' : '#FEF3C7',
+                              color: ord.paymentStatus === 'paid' ? '#065F46' : '#92400E',
+                              border: ord.paymentStatus === 'paid' ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+                              borderRadius: '9999px',
+                              padding: '3px 20px 3px 8px',
+                              fontSize: '0.74rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                            title="Klik untuk mengubah status bayar"
+                          >
+                            <option value="paid">✓ Lunas</option>
+                            <option value="pending">⏳ Verifikasi</option>
+                          </select>
+                          <span
+                            style={{
+                              position: 'absolute',
+                              right: '6px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              pointerEvents: 'none',
+                              fontSize: '8px',
+                              color: ord.paymentStatus === 'paid' ? '#065F46' : '#92400E'
+                            }}
+                          >
+                            ▼
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div
@@ -554,11 +687,70 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                   <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
                     Rp {(selectedOrder.totalAmount ?? selectedOrder.total ?? 0).toLocaleString('id-ID')}
                   </div>
-                  <div style={{ marginTop: '4px' }}>
-                    <span className={`badge ${selectedOrder.paymentStatus === 'paid' ? 'badge-lime' : 'badge-amber'}`}>
-                      Status: {selectedOrder.paymentStatus === 'paid' ? 'Lunas' : 'Verifikasi'}
-                    </span>
-                  </div>
+                  {(() => {
+                    const isCash = (selectedOrder.paymentMethod || '').toLowerCase().includes('cash') || (selectedOrder.paymentMethod || '').toLowerCase().includes('tunai');
+                    if (!isCash) {
+                      return (
+                        <div style={{ marginTop: '6px' }}>
+                          <span className="badge badge-lime" style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '6px' }}>
+                            Status: ✓ Lunas (QRIS)
+                          </span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <>
+                        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                            Status Bayar:
+                          </span>
+                          <select
+                            value={selectedOrder.paymentStatus === 'paid' ? 'paid' : 'pending'}
+                            onChange={(e) => handleUpdatePaymentStatus(selectedOrder.id, e.target.value)}
+                            style={{
+                              background: selectedOrder.paymentStatus === 'paid' ? '#ECFDF5' : '#FEF3C7',
+                              color: selectedOrder.paymentStatus === 'paid' ? '#065F46' : '#92400E',
+                              border: selectedOrder.paymentStatus === 'paid' ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+                              borderRadius: '6px',
+                              padding: '4px 8px',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                            title="Klik untuk mengubah status pembayaran cash"
+                          >
+                            <option value="paid">✓ Lunas</option>
+                            <option value="pending">⏳ Menunggu Verifikasi</option>
+                          </select>
+                        </div>
+                        {selectedOrder.paymentStatus !== 'paid' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdatePaymentStatus(selectedOrder.id, 'paid')}
+                            className="btn btn-sm"
+                            style={{
+                              marginTop: '8px',
+                              background: '#10B981',
+                              color: '#FFFFFF',
+                              border: '1px solid #059669',
+                              borderRadius: '6px',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              padding: '5px 12px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              cursor: 'pointer'
+                            }}
+                            title="Ubah status pesanan ini menjadi Lunas"
+                          >
+                            <Check size={13} /> Tandai Lunas (Uang Tunai/Cash Diterima)
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -758,6 +950,26 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                                       • Warna Tali: <strong>{sub.cordColorName || sub.cordColor || '-'}</strong> | Clasp: <strong>{sub.hardwareName || 'Standard Clasp'}</strong>
                                     </div>
+                                    {(() => {
+                                      const subAcc = getAccentDisplay(sub);
+                                      return (
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span>• Warna Aksen (Bintang & Lonceng):</span>
+                                          <span
+                                            style={{
+                                              width: '11px',
+                                              height: '11px',
+                                              borderRadius: '50%',
+                                              background: subAcc.hex,
+                                              border: `1.5px solid ${subAcc.border}`,
+                                              display: 'inline-block',
+                                              flexShrink: 0
+                                            }}
+                                          />
+                                          <strong style={{ color: 'var(--text-primary)' }}>{subAcc.name}</strong>
+                                        </div>
+                                      );
+                                    })()}
 
                                     {/* Custom Letters */}
                                     {sub.customLetters && (
@@ -788,7 +1000,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '6px 0' }}>
                                         {sub.charms.map((ch, cI) => (
                                           <span key={cI} className="crafter-component-tag" style={{ fontSize: '0.74rem' }}>
-                                            {ch.icon || '★'} {ch.name || ch}
+                                            {getCharmIcon(ch)} {ch.name || ch}
                                           </span>
                                         ))}
                                       </div>
@@ -936,13 +1148,16 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                 ) : (
                                   /* Gelang sub-item */
                                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '6px' }}>
-                                    {sub.image && (
-                                      <div style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-                                        <img src={sub.image} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      </div>
-                                    )}
+                                    <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', flexShrink: 0, background: '#FFFFFF' }}>
+                                      <img
+                                        src={getGelangImage(sub, collections)}
+                                        alt={sub.name || 'Gelang'}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => { e.target.src = '/images/cat_bracelets.png'; }}
+                                      />
+                                    </div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                                      <div>Varian / Warna: <strong>{sub.color || sub.variant || 'Standar Sesuai Foto'}</strong></div>
+                                      <div>Varian / Model: <strong>{sub.color || sub.variant || sub.name || 'Standar Sesuai Foto'}</strong></div>
                                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginTop: '2px' }}>
                                         ✓ Dirakit langsung sesuai manik & elastis gelang (tanpa cetak frame foto).
                                       </div>
@@ -958,7 +1173,8 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                   }
 
                   // Non-Bundle (Single Item)
-                  const isBagCharm = it.productType === 'bag_charm' || titleLower.includes('bag charm') || titleLower.includes('bagcharm') || Boolean(it.frameId);
+                  const itemIsGelang = isGelangItem(it);
+                  const isBagCharm = !itemIsGelang && (it.productType === 'bag_charm' || titleLower.includes('bag charm') || titleLower.includes('bagcharm') || Boolean(it.frameId));
                   const singleKey = `${selectedOrder.id}-${it.id || idx}-single`;
                   const singleOverride = frameOverrides[singleKey];
                   const frameConf = resolveFrameConfig(
@@ -967,6 +1183,101 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                   const photos = getFramePhotosForItem(it);
                   const dlKey = `${selectedOrder.id}-${it.id || idx}`;
                   const isDownloading = downloadingItemId === dlKey;
+
+                  if (itemIsGelang) {
+                    const gelangImg = getGelangImage(it, collections);
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-medium)',
+                          borderRadius: 'var(--radius-md)',
+                          padding: '18px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <strong style={{ fontSize: '1rem', color: '#1E1B4B' }}>{it.title || 'Gelang Kustom'}</strong>
+                          <span className="badge badge-purple" style={{ background: '#059669', color: '#FFFFFF' }}>GELANG / BRACELET</span>
+                        </div>
+
+                        {/* Gelang Image & Info */}
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                          <div
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              border: '1.5px solid var(--border-medium)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                              flexShrink: 0,
+                              background: '#FFFFFF'
+                            }}
+                          >
+                            <img
+                              src={gelangImg}
+                              alt={it.title || 'Gelang'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              onError={(e) => {
+                                e.target.src = '/images/cat_bracelets.png';
+                              }}
+                            />
+                          </div>
+
+                          <div style={{ flex: 1, minWidth: '220px' }}>
+                            <div style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                              • Model / Varian: <strong style={{ color: 'var(--text-primary)' }}>{it.variant || it.color || it.baseName || it.title}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                              • Tipe: Gelang Manik / Adjustable Bracelet
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#059669', background: 'rgba(5, 150, 105, 0.08)', padding: '6px 10px', borderRadius: '6px', fontWeight: 600 }}>
+                              ✓ Dirakit langsung sesuai manik & elastis gelang (tanpa cetak frame foto).
+                            </div>
+
+                            {/* Custom Letters if any */}
+                            {it.customLetters && (
+                              <div style={{ margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Manik Huruf:</span>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  {it.customLetters.split('').map((char, cI) => (
+                                    <span
+                                      key={cI}
+                                      style={{
+                                        padding: '2px 8px',
+                                        background: '#21201D',
+                                        color: '#FFFFFF',
+                                        fontWeight: 800,
+                                        borderRadius: '4px',
+                                        fontSize: '0.82rem'
+                                      }}
+                                    >
+                                      {char}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Charms if any */}
+                            {it.charms && it.charms.length > 0 && (
+                              <div style={{ marginTop: '8px' }}>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Charms / Pendants:</div>
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                  {it.charms.map((ch, cI) => (
+                                    <span key={cI} className="crafter-component-tag">
+                                      {getCharmIcon(ch)} {ch.name || ch}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div
@@ -989,6 +1300,26 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         • Hardware Clasp: <strong>{it.hardwareName || 'Standard Clasp'}</strong>
                       </div>
+                      {(() => {
+                        const itAcc = getAccentDisplay(it);
+                        return (
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>• Warna Aksen (Bintang Akrilik & Lonceng):</span>
+                            <span
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: itAcc.hex,
+                                border: `1.5px solid ${itAcc.border}`,
+                                display: 'inline-block',
+                                flexShrink: 0
+                              }}
+                            />
+                            <strong style={{ color: 'var(--text-primary)' }}>{itAcc.name}</strong>
+                          </div>
+                        );
+                      })()}
 
                       {/* Custom Letters */}
                       {it.customLetters && (
@@ -1021,7 +1352,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
                             {it.charms.map((ch, cI) => (
                               <span key={cI} className="crafter-component-tag">
-                                {ch.icon || '★'} {ch.name || ch}
+                                {getCharmIcon(ch)} {ch.name || ch}
                               </span>
                             ))}
                           </div>

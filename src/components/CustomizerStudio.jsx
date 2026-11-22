@@ -7,6 +7,7 @@ import PhotoAdjustModal from './PhotoAdjustModal';
 import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS, SAMPLE_FRAME_PHOTOS, getFrameSlots, PARACORD_MODELS, PARACORD_LENGTHS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector';
 import { useBodyScrollLock } from '../utils/scrollLock';
+import { getCharmIcon } from '../utils/accentHelper';
 
 export default function CustomizerStudio({
   products = [],
@@ -576,7 +577,15 @@ export default function CustomizerStudio({
           frameName: activeFrame?.name || layoutName,
           frameImage: activeFrame?.image || '/frames/2.png',
           framePhotos: framePhotos.slice(0, slotCount),
+          cordColor: selectedColor,
           cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || 'Hitam Polos',
+          accentColor: accentColor,
+          accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+          starColor: accentColor,
+          starColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+          bellColor: accentColor,
+          bellColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+          hardwareName: activeHardware?.name || 'Standard Clasp',
           customLetters: customLetters.toUpperCase().trim()
         };
 
@@ -585,7 +594,11 @@ export default function CustomizerStudio({
           frameName: bundlingSession.selectedFrame1?.name || 'Bagcharm 1',
           frameImage: bundlingSession.selectedFrame1?.imageSrc || '/frames/1.png',
           framePhotos: [],
+          cordColor: '#18181B',
           cordColorName: 'Hitam Polos',
+          accentColor: 'hitam',
+          accentColorName: 'Hitam',
+          hardwareName: 'Standard Clasp',
           customLetters: ''
         });
 
@@ -594,7 +607,11 @@ export default function CustomizerStudio({
           frameName: bundlingSession.selectedFrame2?.name || 'Bagcharm 2',
           frameImage: bundlingSession.selectedFrame2?.imageSrc || '/frames/2.png',
           framePhotos: [],
+          cordColor: '#18181B',
           cordColorName: 'Hitam Polos',
+          accentColor: 'hitam',
+          accentColorName: 'Hitam',
+          hardwareName: 'Standard Clasp',
           customLetters: ''
         });
 
@@ -614,7 +631,11 @@ export default function CustomizerStudio({
               frameName: b1.frameName,
               image: b1.image || b1.frameImage || '/frames/1.png',
               framePhotos: b1.framePhotos || [],
+              cordColor: b1.cordColor || b1.selectedColor || '#18181B',
               cordColorName: b1.cordColorName || 'Hitam Polos',
+              accentColor: b1.accentColor || 'hitam',
+              accentColorName: b1.accentColorName || ACCENT_COLORS.find((c) => c.id === b1.accentColor)?.name || 'Hitam',
+              hardwareName: b1.hardwareName || 'Standard Clasp',
               customLetters: b1.customLetters || ''
             },
             item2: {
@@ -624,7 +645,11 @@ export default function CustomizerStudio({
               frameName: b2.frameName,
               image: b2.image || b2.frameImage || '/frames/2.png',
               framePhotos: b2.framePhotos || [],
+              cordColor: b2.cordColor || b2.selectedColor || '#18181B',
               cordColorName: b2.cordColorName || 'Hitam Polos',
+              accentColor: b2.accentColor || 'hitam',
+              accentColorName: b2.accentColorName || ACCENT_COLORS.find((c) => c.id === b2.accentColor)?.name || 'Hitam',
+              hardwareName: b2.hardwareName || 'Standard Clasp',
               customLetters: b2.customLetters || ''
             }
           },
@@ -669,7 +694,15 @@ export default function CustomizerStudio({
             frameName: layoutName,
             image: activeFrame?.image || '/frames/2.png',
             framePhotos: framePhotos.slice(0, slotCount),
+            cordColor: selectedColor,
             cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || 'Hitam Polos',
+            accentColor: accentColor,
+            accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+            starColor: accentColor,
+            starColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+            bellColor: accentColor,
+            bellColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
+            hardwareName: activeHardware?.name || 'Standard Clasp',
             customLetters: customLetters.toUpperCase().trim()
           }
         },
@@ -1362,7 +1395,7 @@ export default function CustomizerStudio({
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             ) : (
-                              <span style={{ fontSize: '1.5rem' }}>{ch.icon || '⭐'}</span>
+                              <span style={{ fontSize: '1.5rem' }}>{getCharmIcon(ch)}</span>
                             )}
                           </div>
                           <div style={{ flexGrow: 1 }}>

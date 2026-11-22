@@ -479,10 +479,22 @@ class Store {
     // Async sync to MySQL database
     const serializedItems = (items || []).map((it) => ({
       ...it,
+      accentColor: it.accentColor || it.customDetails?.accentColor || '',
+      accentColorName: it.accentColorName || it.customDetails?.accentColorName || '',
+      starColor: it.starColor || it.customDetails?.starColor || '',
+      starColorName: it.starColorName || it.customDetails?.starColorName || '',
+      bellColor: it.bellColor || it.customDetails?.bellColor || '',
+      bellColorName: it.bellColorName || it.customDetails?.bellColorName || '',
       bundleChoices: it.bundleChoices || it.customDetails?.bundleChoices || null,
       bundleDescription: it.bundleDescription || it.customDetails?.bundleDescription || '',
       customDetails: {
         ...(it.customDetails || {}),
+        accentColor: it.accentColor || it.customDetails?.accentColor || '',
+        accentColorName: it.accentColorName || it.customDetails?.accentColorName || '',
+        starColor: it.starColor || it.customDetails?.starColor || '',
+        starColorName: it.starColorName || it.customDetails?.starColorName || '',
+        bellColor: it.bellColor || it.customDetails?.bellColor || '',
+        bellColorName: it.bellColorName || it.customDetails?.bellColorName || '',
         bundleChoices: it.bundleChoices || it.customDetails?.bundleChoices || null,
         bundleDescription: it.bundleDescription || it.customDetails?.bundleDescription || ''
       }
@@ -629,7 +641,7 @@ class Store {
     this.notify();
 
     // Async sync to MySQL database
-    apiFetch(`/api/orders/${orderId}/status`, {
+    return apiFetch(`/api/orders/${orderId}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)

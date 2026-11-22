@@ -1,3 +1,4 @@
+import { isGelangItem, isBagCharmItem } from '../utils/accentHelper';
 import React, { useState, useRef } from 'react';
 import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download, Banknote } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -149,33 +150,50 @@ export default function CheckoutModal({
     const itemLines = (order.items || []).map((it, idx) => {
       const header = `${idx + 1}. *${it.title}* (Qty: ${it.quantity || 1}) - Rp ${(it.subtotal || it.unitPrice || 0).toLocaleString('id-ID')}`;
       if (it.bundleChoices) {
-        const item1Str = it.bundleChoices.item1 ? `\n   • ${it.bundleChoices.item1.label || 'Item 1'}: ${it.bundleChoices.item1.name}` : '';
-        const item2Str = it.bundleChoices.item2 ? `\n   • ${it.bundleChoices.item2.label || 'Item 2'}: ${it.bundleChoices.item2.name}` : '';
+        const is1Gelang = (it.bundleChoices.item1?.label || '').toLowerCase().includes('gelang') ||
+                          (it.bundleChoices.item1?.name || '').toLowerCase().includes('gelang');
+        const is2Gelang = (it.bundleChoices.item2?.label || '').toLowerCase().includes('gelang') ||
+                          (it.bundleChoices.item2?.name || '').toLowerCase().includes('gelang');
+        const item1Str = it.bundleChoices.item1 ? `\n   • ${it.bundleChoices.item1.label || 'Item 1'}: ${it.bundleChoices.item1.name}${!is1Gelang && it.bundleChoices.item1.accentColorName ? ` (Aksen: ${it.bundleChoices.item1.accentColorName})` : ''}` : '';
+        const item2Str = it.bundleChoices.item2 ? `\n   • ${it.bundleChoices.item2.label || 'Item 2'}: ${it.bundleChoices.item2.name}${!is2Gelang && it.bundleChoices.item2.accentColorName ? ` (Aksen: ${it.bundleChoices.item2.accentColorName})` : ''}` : '';
         return header + item1Str + item2Str;
       }
+
+      if (isGelangItem(it)) {
+        return header +
+          `\n   • Kategori: Gelang / Bracelet` +
+          `\n   • Varian: ${it.variant || it.color || it.baseName || 'Standar Sesuai Foto'}` +
+          (it.customLetters ? `\n   • Manik Huruf: [${it.customLetters}]` : '') +
+          `\n   • Charms: ${it.charms?.map((c) => c.name || c).join(', ') || 'Tanpa charm tambahan'}`;
+      }
+
+      const itAccent = it.accentColorName || it.accentColor || it.starColorName || it.starColor || 'Hitam';
       return header +
         `\n   • Model: ${it.baseName || it.title}` +
         `\n   • Warna Tali: ${it.cordColorName || it.cordColor || '-'}` +
+        `\n   • Warna Aksen (Bintang & Lonceng): ${itAccent}` +
+        `\n   • Clasp: ${it.hardwareName || 'Standard Clasp'}` +
+        (it.customLetters ? `\n   • Manik Huruf: [${it.customLetters}]` : '') +
         `\n   • Charms: ${it.charms?.map((c) => c.name || c).join(', ') || 'Tanpa charm tambahan'}`;
     }).join('\n\n');
 
     const msg = isCash
       ? `Halo Tiny Tale! Saya ingin konfirmasi pesanan dengan metode pembayaran *Cash / Tunai di Tempat*:\n\n` +
-        `*NOMOR ORDER:* ${order.id}\n` +
-        `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
-        `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
-        `*Metode Bayar:* Tunai / Cash (Bayar Langsung di Studio)\n\n` +
-        `*Detail Item Kustom:*\n${itemLines}\n\n` +
-        `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
-        `Saya akan melakukan pembayaran tunai saat serah terima pesanan. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`
+      `*NOMOR ORDER:* ${order.id}\n` +
+      `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
+      `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+      `*Metode Bayar:* Tunai / Cash (Bayar Langsung di Studio)\n\n` +
+      `*Detail Item Kustom:*\n${itemLines}\n\n` +
+      `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
+      `Saya akan melakukan pembayaran tunai saat serah terima pesanan. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`
       : `Halo Tiny Tale! Saya telah melakukan pembayaran QRIS untuk pesanan:\n\n` +
-        `*NOMOR ORDER:* ${order.id}\n` +
-        `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
-        `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
-        `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
-        `*Detail Item Kustom:*\n${itemLines}\n\n` +
-        `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
-        `Bukti pembayaran sudah saya upload di sistem. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`;
+      `*NOMOR ORDER:* ${order.id}\n` +
+      `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
+      `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+      `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
+      `*Detail Item Kustom:*\n${itemLines}\n\n` +
+      `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
+      `Bukti pembayaran sudah saya upload di sistem. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`;
 
     return encodeURIComponent(msg);
   };
