@@ -209,7 +209,7 @@ class Store {
     }
   }
 
-  startRealtimeSync(intervalMs = 3500) {
+  startRealtimeSync(intervalMs = 45000) {
     if (this.syncInterval) clearInterval(this.syncInterval);
     this.syncRealtime();
     this.syncInterval = setInterval(() => {

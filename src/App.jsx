@@ -91,10 +91,10 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Real-time synchronization loop when Admin Dashboard is active
+  // Real-time synchronization loop when Admin Dashboard is active (throttled to 60s to conserve bandwidth)
   useEffect(() => {
     if (isAdmin && isAdminDashboardView) {
-      store.startRealtimeSync(15000);
+      store.startRealtimeSync(60000);
       return () => {
         store.stopRealtimeSync();
       };
