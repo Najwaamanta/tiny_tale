@@ -116,6 +116,10 @@ class Store {
     try {
       const syncRes = await apiFetch('/api/sync');
       if (syncRes && syncRes.ok) {
+        const cType = syncRes.headers ? (syncRes.headers.get('content-type') || '') : '';
+        if (cType && !cType.includes('application/json')) {
+          throw new Error('Not JSON');
+        }
         const data = await syncRes.json();
         if (data && data.success) {
           if (Array.isArray(data.orders)) {
@@ -157,10 +161,16 @@ class Store {
 
     // 2. Fallback: individual endpoints called sequentially to avoid connection bursts
     try {
+      let ordersOk = false;
       const ordRes = await apiFetch('/api/orders');
       if (ordRes && ordRes.ok) {
+        const ordCType = ordRes.headers ? (ordRes.headers.get('content-type') || '') : '';
+        if (ordCType && !ordCType.includes('application/json')) {
+          throw new Error('Orders not JSON');
+        }
         const dbOrders = await ordRes.json();
         if (Array.isArray(dbOrders)) {
+          ordersOk = true;
           const serverOrderMap = new Map();
           dbOrders.forEach((o) => serverOrderMap.set(o.id, o));
 
@@ -178,25 +188,31 @@ class Store {
 
       const charmRes = await apiFetch('/api/charms');
       if (charmRes && charmRes.ok) {
-        const dbCharms = await charmRes.json();
-        if (Array.isArray(dbCharms)) {
-          this.charms = dbCharms;
-          setStorage(STORAGE_KEYS.CHARMS, this.charms);
-          changed = true;
+        const charmCType = charmRes.headers ? (charmRes.headers.get('content-type') || '') : '';
+        if (charmCType.includes('application/json')) {
+          const dbCharms = await charmRes.json();
+          if (Array.isArray(dbCharms)) {
+            this.charms = dbCharms;
+            setStorage(STORAGE_KEYS.CHARMS, this.charms);
+            changed = true;
+          }
         }
       }
 
       const prodRes = await apiFetch('/api/products');
       if (prodRes && prodRes.ok) {
-        const dbProducts = await prodRes.json();
-        if (Array.isArray(dbProducts)) {
-          this.collections = mapDbProductsToCollections(dbProducts);
-          setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
-          changed = true;
+        const prodCType = prodRes.headers ? (prodRes.headers.get('content-type') || '') : '';
+        if (prodCType.includes('application/json')) {
+          const dbProducts = await prodRes.json();
+          if (Array.isArray(dbProducts)) {
+            this.collections = mapDbProductsToCollections(dbProducts);
+            setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
+            changed = true;
+          }
         }
       }
 
-      this.isLiveDbConnected = Boolean(ordRes && ordRes.ok);
+      this.isLiveDbConnected = Boolean(ordersOk);
       this.isSyncing = false;
       this.lastSyncTime = new Date();
       this.notify();

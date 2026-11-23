@@ -365,6 +365,15 @@ function formatOrders(orders, items) {
         } catch (e) {
           cDetails = {};
         }
+
+        // Extract frame photos and avoid duplicating them inside customDetails
+        const framePhotos = cDetails.framePhotos || it.framePhotos || [];
+        const cleanDetails = { ...cDetails };
+        delete cleanDetails.framePhotos;
+
+        const isGelang = it.product_type === 'gelang' || (it.title || '').toLowerCase().includes('gelang') || (it.title || '').toLowerCase().includes('bracelet');
+        const safeImage = (isGelang && it.image && it.image.length > 5000) ? null : it.image;
+
         return {
           id: it.id,
           productType: it.product_type,
@@ -372,27 +381,27 @@ function formatOrders(orders, items) {
           unitPrice: it.unit_price,
           quantity: it.quantity,
           subtotal: it.subtotal,
-          image: it.image,
-          bundleChoices: cDetails.bundleChoices || it.bundleChoices || null,
-          bundleDescription: cDetails.bundleDescription || it.bundleDescription || '',
-          variant: cDetails.variant || it.variant || '',
-          color: cDetails.color || it.color || '',
-          customDetails: cDetails,
-          framePhotos: cDetails.framePhotos || it.framePhotos || [],
-          frameId: cDetails.frameId || it.frameId || null,
-          frameName: cDetails.frameName || it.frameName || '',
-          baseName: cDetails.baseName || it.baseName || '',
-          cordColor: cDetails.cordColor || it.cordColor || '',
-          cordColorName: cDetails.cordColorName || it.cordColorName || '',
-          accentColor: cDetails.accentColor || it.accentColor || '',
-          accentColorName: cDetails.accentColorName || it.accentColorName || '',
-          starColor: cDetails.starColor || it.starColor || '',
-          starColorName: cDetails.starColorName || it.starColorName || '',
-          bellColor: cDetails.bellColor || it.bellColor || '',
-          bellColorName: cDetails.bellColorName || it.bellColorName || '',
-          hardwareName: cDetails.hardwareName || it.hardwareName || '',
-          customLetters: cDetails.customLetters || it.customLetters || '',
-          charms: cDetails.charms || it.charms || []
+          image: safeImage,
+          bundleChoices: cleanDetails.bundleChoices || it.bundleChoices || null,
+          bundleDescription: cleanDetails.bundleDescription || it.bundleDescription || '',
+          variant: cleanDetails.variant || it.variant || '',
+          color: cleanDetails.color || it.color || '',
+          customDetails: cleanDetails,
+          framePhotos: framePhotos,
+          frameId: cleanDetails.frameId || it.frameId || null,
+          frameName: cleanDetails.frameName || it.frameName || '',
+          baseName: cleanDetails.baseName || it.baseName || '',
+          cordColor: cleanDetails.cordColor || it.cordColor || '',
+          cordColorName: cleanDetails.cordColorName || it.cordColorName || '',
+          accentColor: cleanDetails.accentColor || it.accentColor || '',
+          accentColorName: cleanDetails.accentColorName || it.accentColorName || '',
+          starColor: cleanDetails.starColor || it.starColor || '',
+          starColorName: cleanDetails.starColorName || it.starColorName || '',
+          bellColor: cleanDetails.bellColor || it.bellColor || '',
+          bellColorName: cleanDetails.bellColorName || it.bellColorName || '',
+          hardwareName: cleanDetails.hardwareName || it.hardwareName || '',
+          customLetters: cleanDetails.customLetters || it.customLetters || '',
+          charms: cleanDetails.charms || it.charms || []
         };
       });
 
@@ -422,7 +431,7 @@ function formatOrders(orders, items) {
       paymentMethod: order.payment_method || 'QRIS',
       paymentStatus: order.payment_status || 'paid',
       paymentProof: order.payment_proof || null,
-      paymentProofUrl: order.payment_proof || null,
+      paymentProofUrl: null, // Avoid duplicate proof base64 payload
       orderStatus: order.order_status || 'processing',
       craftingStatus: craftingStat,
       shippingTrackingNumber: order.tracking_number || '',
