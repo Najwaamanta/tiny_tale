@@ -7,7 +7,7 @@ import PhotoAdjustModal from './PhotoAdjustModal';
 import { BAG_CHARM_FRAMES, PHOTOSTRIP_LAYOUTS, SAMPLE_FRAME_PHOTOS, getFrameSlots, PARACORD_MODELS, PARACORD_LENGTHS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
 import { ALL_FRAME_TEMPLATES } from './FrameLayoutSelector';
 import { useBodyScrollLock } from '../utils/scrollLock';
-import { getCharmIcon } from '../utils/accentHelper';
+import { getCharmIcon, resolveCordName } from '../utils/accentHelper';
 
 export default function CustomizerStudio({
   products = [],
@@ -364,7 +364,10 @@ export default function CustomizerStudio({
         frameImage: activeFrame?.image || currentTemplate?.imageSrc || '/frames/1.png',
         framePhotos: [...framePhotos],
         selectedColor,
+        cordColor: selectedColor,
+        cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
         accentColor,
+        accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
         customLetters,
         paracordModel,
         paracordLength
@@ -381,7 +384,7 @@ export default function CustomizerStudio({
         setSelectedFrameId(b2.frameId);
         setSelectedLayoutId(b2.layoutId || 'layout-a');
         setFramePhotos([...b2.framePhotos]);
-        setSelectedColor(b2.selectedColor || '#18181B');
+        setSelectedColor(b2.selectedColor || b2.cordColor || '#18181B');
         setAccentColor(b2.accentColor || 'hitam');
         setCustomLetters(b2.customLetters || '');
         if (b2.paracordModel) setParacordModel(b2.paracordModel);
@@ -412,7 +415,10 @@ export default function CustomizerStudio({
         frameImage: activeFrame?.image || currentTemplate?.imageSrc || '/frames/2.png',
         framePhotos: [...framePhotos],
         selectedColor,
+        cordColor: selectedColor,
+        cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
         accentColor,
+        accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
         customLetters,
         paracordModel,
         paracordLength
@@ -429,7 +435,7 @@ export default function CustomizerStudio({
         setSelectedFrameId(b1.frameId);
         setSelectedLayoutId(b1.layoutId || 'layout-a');
         setFramePhotos([...b1.framePhotos]);
-        setSelectedColor(b1.selectedColor || '#18181B');
+        setSelectedColor(b1.selectedColor || b1.cordColor || '#18181B');
         setAccentColor(b1.accentColor || 'hitam');
         setCustomLetters(b1.customLetters || '');
         if (b1.paracordModel) setParacordModel(b1.paracordModel);
@@ -450,7 +456,10 @@ export default function CustomizerStudio({
       frameImage: activeFrame?.image || currentTemplate?.imageSrc || '/frames/1.png',
       framePhotos: [...framePhotos],
       selectedColor,
+      cordColor: selectedColor,
+      cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
       accentColor,
+      accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
       customLetters,
       paracordModel,
       paracordLength
@@ -578,7 +587,7 @@ export default function CustomizerStudio({
           frameImage: activeFrame?.image || '/frames/2.png',
           framePhotos: framePhotos.slice(0, slotCount),
           cordColor: selectedColor,
-          cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || 'Hitam Polos',
+          cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
           accentColor: accentColor,
           accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
           starColor: accentColor,
@@ -615,6 +624,9 @@ export default function CustomizerStudio({
           customLetters: ''
         });
 
+        const b1CordName = b1.cordColorName || resolveCordName(b1.cordColor || b1.selectedColor) || 'Hitam Polos';
+        const b2CordName = b2.cordColorName || resolveCordName(b2.cordColor || b2.selectedColor) || 'Hitam Polos';
+
         const bundlePayload = {
           id: bundlingSession.bundleId || 'col-bundle-couple-2',
           productType: 'bundling',
@@ -632,7 +644,7 @@ export default function CustomizerStudio({
               image: b1.image || b1.frameImage || '/frames/1.png',
               framePhotos: b1.framePhotos || [],
               cordColor: b1.cordColor || b1.selectedColor || '#18181B',
-              cordColorName: b1.cordColorName || 'Hitam Polos',
+              cordColorName: b1CordName,
               accentColor: b1.accentColor || 'hitam',
               accentColorName: b1.accentColorName || ACCENT_COLORS.find((c) => c.id === b1.accentColor)?.name || 'Hitam',
               hardwareName: b1.hardwareName || 'Standard Clasp',
@@ -646,14 +658,14 @@ export default function CustomizerStudio({
               image: b2.image || b2.frameImage || '/frames/2.png',
               framePhotos: b2.framePhotos || [],
               cordColor: b2.cordColor || b2.selectedColor || '#18181B',
-              cordColorName: b2.cordColorName || 'Hitam Polos',
+              cordColorName: b2CordName,
               accentColor: b2.accentColor || 'hitam',
               accentColorName: b2.accentColorName || ACCENT_COLORS.find((c) => c.id === b2.accentColor)?.name || 'Hitam',
               hardwareName: b2.hardwareName || 'Standard Clasp',
               customLetters: b2.customLetters || ''
             }
           },
-          bundleDescription: `Bagcharm 1: ${b1.frameName} | Bagcharm 2: ${b2.frameName}`
+          bundleDescription: `Bagcharm 1: ${b1.frameName} (${b1CordName}) | Bagcharm 2: ${b2.frameName} (${b2CordName})`
         };
 
         onAddToCart(bundlePayload);
@@ -695,7 +707,7 @@ export default function CustomizerStudio({
             image: activeFrame?.image || '/frames/2.png',
             framePhotos: framePhotos.slice(0, slotCount),
             cordColor: selectedColor,
-            cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || 'Hitam Polos',
+            cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
             accentColor: accentColor,
             accentColorName: ACCENT_COLORS.find((c) => c.id === accentColor)?.name || 'Hitam',
             starColor: accentColor,
@@ -738,7 +750,7 @@ export default function CustomizerStudio({
       hardwareId: activeHardware?.id || 'hw-chrome-silver',
       hardwareColor: activeHardware?.color || '#DCE2E6',
       cordColor: selectedColor,
-      cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || 'Hitam Polos',
+      cordColorName: cordColors.find((c) => c.hex === selectedColor)?.name || resolveCordName(selectedColor) || 'Hitam Polos',
       paracordModel: paracordModel,
       paracordModelName: 'Twisted Loop & Dual Tassel',
       paracordLength: paracordLength,

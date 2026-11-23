@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Users, Search, Download, ExternalLink, Calendar, ShoppingBag, MapPin, Phone, Award, Eye, Clock, CheckCircle, Package, Plus, Trash2, X } from 'lucide-react';
 import { aggregateCustomersFromOrders, exportCustomersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
-import { getAccentDisplay, isBagCharmItem, isGelangItem, getGelangImage } from '../utils/accentHelper';
+import { getAccentDisplay, isBagCharmItem, isGelangItem, getGelangImage, resolveCordName } from '../utils/accentHelper';
 import AdminAddCustomerHistoryModal from './AdminAddCustomerHistoryModal';
 
 export default function AdminCustomers({ orders = [], collections = [], onAddOrder, onDeleteOrder, onDeleteCustomerOrders }) {
@@ -685,24 +685,48 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
                               <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
                                 {it.title} {it.quantity > 1 && `(x${it.quantity})`}
                               </div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                {isGelangItem(it) ? (
-                                  <span>• Varian: <strong>{it.variant || it.color || it.baseName || 'Standar Sesuai Foto'}</strong></span>
-                                ) : (
-                                  <span>• Model: <strong>{it.baseName || 'Custom'}</strong></span>
-                                )}
-                                {it.customLetters && <span>• Huruf: <strong>[{it.customLetters}]</strong></span>}
-                                {isBagCharmItem(it) && (() => {
-                                  const itAcc = getAccentDisplay(it);
-                                  return (
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                      • Aksen:
-                                      <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: itAcc.hex, border: `1px solid ${itAcc.border}`, display: 'inline-block' }} />
-                                      <strong>{itAcc.name}</strong>
-                                    </span>
-                                  );
-                                })()}
-                              </div>
+                              {it.bundleChoices ? (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  {it.bundleChoices.item1 && (
+                                    <div>
+                                      • {it.bundleChoices.item1.name || it.bundleChoices.item1.label}
+                                      {it.bundleChoices.item1.cordColor || it.bundleChoices.item1.cordColorName ? (
+                                        <span> (Tali: <strong>{resolveCordName(it.bundleChoices.item1.cordColorName || it.bundleChoices.item1.cordColor)}</strong>, Bintang: <strong>{getAccentDisplay(it.bundleChoices.item1).name}</strong>)</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                  {it.bundleChoices.item2 && (
+                                    <div>
+                                      • {it.bundleChoices.item2.name || it.bundleChoices.item2.label}
+                                      {it.bundleChoices.item2.cordColor || it.bundleChoices.item2.cordColorName ? (
+                                        <span> (Tali: <strong>{resolveCordName(it.bundleChoices.item2.cordColorName || it.bundleChoices.item2.cordColor)}</strong>, Bintang: <strong>{getAccentDisplay(it.bundleChoices.item2).name}</strong>)</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  {isGelangItem(it) ? (
+                                    <span>• Varian: <strong>{it.variant || it.color || it.baseName || 'Standar Sesuai Foto'}</strong></span>
+                                  ) : (
+                                    <span>• Model: <strong>{it.baseName || 'Custom'}</strong></span>
+                                  )}
+                                  {it.customLetters && <span>• Huruf: <strong>[{it.customLetters}]</strong></span>}
+                                  {(it.cordColor || it.cordColorName) && (
+                                    <span>• Tali: <strong>{resolveCordName(it.cordColorName || it.cordColor)}</strong></span>
+                                  )}
+                                  {isBagCharmItem(it) && (() => {
+                                    const itAcc = getAccentDisplay(it);
+                                    return (
+                                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        • Aksen:
+                                        <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: itAcc.hex, border: `1px solid ${itAcc.border}`, display: 'inline-block' }} />
+                                        <strong>{itAcc.name}</strong>
+                                      </span>
+                                    );
+                                  })()}
+                                </div>
+                              )}
 
                               {/* Charm info */}
                               {it.charms && it.charms.length > 0 && (

@@ -65,10 +65,10 @@ export default function VisualCanvas({
     bellBorder = '#000000';
     bellSlit = '#E2E8F0';
   } else if (bellColor === 'cokelat') {
-    bellStop1 = '#8D6E63';
-    bellStop2 = '#3E2723';
-    bellBorder = '#2E1C14';
-    bellSlit = '#D7CCC8';
+    bellStop1 = '#D8BFAC';
+    bellStop2 = '#B08968';
+    bellBorder = '#6F4E2F';
+    bellSlit = '#54391F';
   }
 
   // Star accent styling: 'hitam' | 'putih' | 'cokelat'
@@ -83,9 +83,9 @@ export default function VisualCanvas({
     starGloss = 'rgba(255,255,255,0.95)';
   } else if (starColor === 'cokelat') {
     starFill = 'url(#brownStarGrad)';
-    starStroke = '#2E1C14';
+    starStroke = '#6F4E2F';
     starStrokeWidth = '1.6';
-    starGloss = 'rgba(255,255,255,0.35)';
+    starGloss = 'rgba(255,255,255,0.45)';
   }
 
   const isBorcelle = selectedFrame?.id === 'frame-borcelle' || selectedFrame?.id === 'frame-2';
@@ -364,9 +364,9 @@ export default function VisualCanvas({
             </linearGradient>
 
             <linearGradient id="brownStarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#795548" />
-              <stop offset="45%" stopColor="#4E342E" />
-              <stop offset="100%" stopColor="#2E1C14" />
+              <stop offset="0%" stopColor="#D4B996" />
+              <stop offset="45%" stopColor="#B08968" />
+              <stop offset="100%" stopColor="#8E6845" />
             </linearGradient>
 
             <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">

@@ -121,7 +121,7 @@ export const PARACORD_LENGTHS = [
 export const ACCENT_COLORS = [
   { id: 'hitam', name: 'Hitam', hex: '#181A1F', border: '#000000' },
   { id: 'putih', name: 'Putih', hex: '#FFFFFF', border: '#CBD5E1' },
-  { id: 'cokelat', name: 'Cokelat', hex: '#5D4037', border: '#3E2723' }
+  { id: 'cokelat', name: 'Coklat Muda', hex: '#B08968', border: '#6F4E2F' }
 ];
 
 export const PARACORD_ACCENTS = [

@@ -87,8 +87,8 @@ export function getAccentDisplay(item) {
   if (raw.includes('putih') || raw.includes('white')) {
     return { name: 'Putih', hex: '#FFFFFF', border: '#CBD5E1' };
   }
-  if (raw.includes('cokelat') || raw.includes('brown')) {
-    return { name: 'Cokelat', hex: '#5D4037', border: '#3E2723' };
+  if (raw.includes('cokelat') || raw.includes('brown') || raw.includes('coklat')) {
+    return { name: 'Coklat Muda', hex: '#B08968', border: '#6F4E2F' };
   }
   return { name: 'Hitam', hex: '#181A1F', border: '#000000' };
 }
@@ -117,5 +117,34 @@ export function getCharmIcon(charm) {
 
   if (icon && icon !== '?') return icon;
   return '★';
+}
+
+export function resolveCordName(rawCord) {
+  if (!rawCord) return 'Hitam Polos';
+  const trimmed = String(rawCord).trim();
+  if (!trimmed.startsWith('#')) return trimmed;
+
+  const hexMap = {
+    '#18181b': 'Hitam Polos',
+    '#ffffff': 'Putih Polos',
+    '#7f1d1d': 'Marun Polos',
+    '#f9a8d4': 'Pink Muda',
+    '#fde047': 'Kuning Muda',
+    '#93c5fd': 'Biru Muda',
+    '#b08968': 'Coklat Muda',
+    '#111317': 'Hitam Polos',
+    '#1a1d20': 'Hitam Polos',
+    '#0f172a': 'Hitam Polos',
+    '#1e293b': 'Hitam Polos',
+    '#a0aec0': 'Silver',
+    '#cbd5e1': 'Silver',
+    '#3e2723': 'Cokelat',
+    '#475569': 'Abu-abu',
+    '#94a3b8': 'Abu-abu',
+    '#00f2fe': 'Cyan'
+  };
+
+  const lower = trimmed.toLowerCase();
+  return hexMap[lower] || trimmed;
 }
 

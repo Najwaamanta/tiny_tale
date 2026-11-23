@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Truck, Check, Clock, Eye, AlertCircle, Sparkles, Send, ShieldCheck, Filter, Download, Search, Image as ImageIcon, MapPin, Phone, Package, Plus, Trash2, X } from 'lucide-react';
 import { exportOrdersToExcel } from '../utils/excelExport';
 import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } from '../utils/frameExport';
-import { getAccentDisplay, isGelangItem, isBagCharmItem, getGelangImage, getCharmIcon } from '../utils/accentHelper';
+import { getAccentDisplay, isGelangItem, isBagCharmItem, getGelangImage, getCharmIcon, resolveCordName } from '../utils/accentHelper';
 import AdminAddOrderModal from './AdminAddOrderModal';
 
 export default function AdminOrders({ orders = [], collections = [], onUpdateOrderStatus, onAddOrder, onDeleteOrder }) {
@@ -256,12 +256,38 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                           return (
                             <div key={i} style={{ fontSize: '0.85rem', marginBottom: '4px' }}>
                               • <strong>{it.title}</strong> {it.customLetters && <span style={{ color: 'var(--accent-purple)' }}>[{it.customLetters}]</span>}
-                              {!isGelang && (
-                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
-                                  <span>Aksen:</span>
-                                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: itAcc.hex, border: `1px solid ${itAcc.border}`, display: 'inline-block' }} />
-                                  <strong>{itAcc.name}</strong>
+                              {it.bundleChoices ? (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginLeft: '8px', marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  {it.bundleChoices.item1 && (
+                                    <div>
+                                      - {it.bundleChoices.item1.name || it.bundleChoices.item1.label}
+                                      {it.bundleChoices.item1.cordColor || it.bundleChoices.item1.cordColorName ? (
+                                        <span> (Tali: <strong>{resolveCordName(it.bundleChoices.item1.cordColorName || it.bundleChoices.item1.cordColor)}</strong>, Bintang: <strong>{getAccentDisplay(it.bundleChoices.item1).name}</strong>)</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                  {it.bundleChoices.item2 && (
+                                    <div>
+                                      - {it.bundleChoices.item2.name || it.bundleChoices.item2.label}
+                                      {it.bundleChoices.item2.cordColor || it.bundleChoices.item2.cordColorName ? (
+                                        <span> (Tali: <strong>{resolveCordName(it.bundleChoices.item2.cordColorName || it.bundleChoices.item2.cordColor)}</strong>, Bintang: <strong>{getAccentDisplay(it.bundleChoices.item2).name}</strong>)</span>
+                                      ) : null}
+                                    </div>
+                                  )}
                                 </div>
+                              ) : (
+                                !isGelang && (
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
+                                    <span>Aksen:</span>
+                                    <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: itAcc.hex, border: `1px solid ${itAcc.border}`, display: 'inline-block' }} />
+                                    <strong>{itAcc.name}</strong>
+                                    {(it.cordColor || it.cordColorName) && (
+                                      <span style={{ marginLeft: '4px' }}>
+                                        • Tali: <strong>{resolveCordName(it.cordColorName || it.cordColor)}</strong>
+                                      </span>
+                                    )}
+                                  </div>
+                                )
                               )}
                             </div>
                           );
@@ -818,7 +844,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                           label: 'Bagcharm 1',
                           name: 'Bagcharm 1',
                           isBagCharm: true,
-                          cordColorName: it.cordColorName || it.cordColor || '',
+                          cordColorName: resolveCordName(it.cordColorName || it.cordColor || ''),
                           hardwareName: it.hardwareName || 'Standard Clasp',
                           customLetters: it.customLetters || '',
                           charms: it.charms || []
@@ -850,7 +876,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                           label: 'Bagcharm 2',
                           name: 'Bagcharm 2',
                           isBagCharm: true,
-                          cordColorName: it.cordColorName || it.cordColor || '',
+                          cordColorName: resolveCordName(it.cordColorName || it.cordColor || ''),
                           hardwareName: it.hardwareName || 'Standard Clasp',
                           customLetters: it.customLetters || '',
                           charms: it.charms || []
@@ -860,7 +886,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                           label: 'Custom Bagcharm',
                           name: 'Custom Bagcharm',
                           isBagCharm: true,
-                          cordColorName: it.cordColorName || it.cordColor || '',
+                          cordColorName: resolveCordName(it.cordColorName || it.cordColor || ''),
                           hardwareName: it.hardwareName || 'Standard Clasp',
                           customLetters: it.customLetters || '',
                           charms: it.charms || []
@@ -948,7 +974,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                                 {subIsBagCharm ? (
                                   <>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                      • Warna Tali: <strong>{sub.cordColorName || sub.cordColor || '-'}</strong> | Clasp: <strong>{sub.hardwareName || 'Standard Clasp'}</strong>
+                                      • Warna Tali: <strong>{resolveCordName(sub.cordColorName || sub.cordColor) || '-'}</strong> | Clasp: <strong>{sub.hardwareName || 'Standard Clasp'}</strong>
                                     </div>
                                     {(() => {
                                       const subAcc = getAccentDisplay(sub);
@@ -1295,7 +1321,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
                       </div>
 
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        • Base Model: <strong>{it.baseName || 'Custom'}</strong> (Warna Tali: {it.cordColor || it.cordColorName || '-'})
+                        • Base Model: <strong>{it.baseName || 'Custom'}</strong> (Warna Tali: {resolveCordName(it.cordColorName || it.cordColor) || '-'})
                       </div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         • Hardware Clasp: <strong>{it.hardwareName || 'Standard Clasp'}</strong>

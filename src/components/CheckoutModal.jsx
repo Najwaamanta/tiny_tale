@@ -1,4 +1,4 @@
-import { isGelangItem, isBagCharmItem } from '../utils/accentHelper';
+import { isGelangItem, isBagCharmItem, resolveCordName, getAccentDisplay } from '../utils/accentHelper';
 import React, { useState, useRef } from 'react';
 import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download, Banknote } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -150,12 +150,30 @@ export default function CheckoutModal({
     const itemLines = (order.items || []).map((it, idx) => {
       const header = `${idx + 1}. *${it.title}* (Qty: ${it.quantity || 1}) - Rp ${(it.subtotal || it.unitPrice || 0).toLocaleString('id-ID')}`;
       if (it.bundleChoices) {
-        const is1Gelang = (it.bundleChoices.item1?.label || '').toLowerCase().includes('gelang') ||
-                          (it.bundleChoices.item1?.name || '').toLowerCase().includes('gelang');
-        const is2Gelang = (it.bundleChoices.item2?.label || '').toLowerCase().includes('gelang') ||
-                          (it.bundleChoices.item2?.name || '').toLowerCase().includes('gelang');
-        const item1Str = it.bundleChoices.item1 ? `\n   • ${it.bundleChoices.item1.label || 'Item 1'}: ${it.bundleChoices.item1.name}${!is1Gelang && it.bundleChoices.item1.accentColorName ? ` (Aksen: ${it.bundleChoices.item1.accentColorName})` : ''}` : '';
-        const item2Str = it.bundleChoices.item2 ? `\n   • ${it.bundleChoices.item2.label || 'Item 2'}: ${it.bundleChoices.item2.name}${!is2Gelang && it.bundleChoices.item2.accentColorName ? ` (Aksen: ${it.bundleChoices.item2.accentColorName})` : ''}` : '';
+        const formatSub = (sub, defaultLabel) => {
+          if (!sub) return '';
+          const label = sub.label || defaultLabel;
+          const isGelang = label.toLowerCase().includes('gelang') || (sub.name || '').toLowerCase().includes('gelang');
+
+          if (isGelang) {
+            const variantStr = sub.variant || sub.color ? ` (Varian: ${sub.variant || sub.color})` : '';
+            const lettersStr = sub.customLetters ? ` [${sub.customLetters}]` : '';
+            return `\n   • ${label}: ${sub.name || 'Gelang Pilihan'}${variantStr}${lettersStr}`;
+          }
+
+          // Bagcharm sub-item
+          const cord = resolveCordName(sub.cordColorName || sub.cordColor);
+          const accent = getAccentDisplay(sub).name;
+          const details = [];
+          if (cord) details.push(`Warna Tali: ${cord}`);
+          if (accent) details.push(`Bintang & Lonceng: ${accent}`);
+          const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+          const lettersStr = sub.customLetters ? ` [${sub.customLetters}]` : '';
+          return `\n   • ${label}: ${sub.name || 'Custom Bagcharm'}${detailsStr}${lettersStr}`;
+        };
+
+        const item1Str = formatSub(it.bundleChoices.item1, 'Bagcharm 1');
+        const item2Str = formatSub(it.bundleChoices.item2, 'Bagcharm 2');
         return header + item1Str + item2Str;
       }
 
@@ -170,7 +188,7 @@ export default function CheckoutModal({
       const itAccent = it.accentColorName || it.accentColor || it.starColorName || it.starColor || 'Hitam';
       return header +
         `\n   • Model: ${it.baseName || it.title}` +
-        `\n   • Warna Tali: ${it.cordColorName || it.cordColor || '-'}` +
+        `\n   • Warna Tali: ${resolveCordName(it.cordColorName || it.cordColor) || '-'}` +
         `\n   • Warna Aksen (Bintang & Lonceng): ${itAccent}` +
         `\n   • Clasp: ${it.hardwareName || 'Standard Clasp'}` +
         (it.customLetters ? `\n   • Manik Huruf: [${it.customLetters}]` : '') +
