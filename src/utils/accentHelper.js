@@ -45,12 +45,15 @@ export function getGelangImage(item, collections = []) {
   if (Array.isArray(item?.images) && item.images[0]) return item.images[0];
 
   const title = (item?.title || item?.name || '').toLowerCase();
+  const itemId = String(item?.id || '').toLowerCase();
+  const collectionId = String(item?.collectionId || '').toLowerCase();
+
   const found = collections.find((c) => {
     const cTitle = (c.name || c.title || '').toLowerCase();
-    const cId = (c.id || '').toLowerCase();
+    const cId = String(c?.id || '').toLowerCase();
     return (
-      (item?.id && cId === item.id.toLowerCase()) ||
-      (item?.collectionId && cId === item.collectionId.toLowerCase()) ||
+      (itemId && cId === itemId) ||
+      (collectionId && cId === collectionId) ||
       (title && cTitle && (cTitle.includes(title) || title.includes(cTitle)))
     );
   });
