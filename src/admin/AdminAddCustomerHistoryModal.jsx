@@ -127,7 +127,6 @@ export default function AdminAddCustomerHistoryModal({
           ...updated[idx],
           title: found.name,
           unitPrice: found.price || 15000,
-          image: found.image || '',
           productType: found.category === 'gelang' ? 'bracelet' : 'bag_charm'
         };
         return updated;

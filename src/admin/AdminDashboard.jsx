@@ -262,6 +262,7 @@ export default function AdminDashboard({
             <AdminOrders
               orders={orders}
               collections={collections}
+              charms={charms}
               onUpdateOrderStatus={onUpdateOrderStatus}
               onAddOrder={onAddOrder}
               onDeleteOrder={onDeleteOrder}

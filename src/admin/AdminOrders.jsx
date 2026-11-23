@@ -5,7 +5,7 @@ import { downloadPhotostripFrame, resolveFrameConfig, getFramePhotosForItem } fr
 import { getAccentDisplay, isGelangItem, isBagCharmItem, getGelangImage, getCharmIcon, resolveCordName } from '../utils/accentHelper';
 import AdminAddOrderModal from './AdminAddOrderModal';
 
-export default function AdminOrders({ orders = [], collections = [], onUpdateOrderStatus, onAddOrder, onDeleteOrder }) {
+export default function AdminOrders({ orders = [], collections = [], charms = [], onUpdateOrderStatus, onAddOrder, onDeleteOrder }) {
   const [localOrders, setLocalOrders] = useState(orders);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -1550,6 +1550,7 @@ export default function AdminOrders({ orders = [], collections = [], onUpdateOrd
             }
           }}
           collections={collections}
+          charms={charms}
         />
       )}
 
