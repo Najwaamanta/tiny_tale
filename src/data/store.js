@@ -44,12 +44,12 @@ async function apiFetch(path, options = {}) {
       return res;
     }
     if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      return await fetch(`https://tiny-tale-ten.vercel.app${path}`, options);
+      return await fetch(`https://tinytale-craft.netlify.app${path}`, options);
     }
     return res;
   } catch (err) {
     if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      return await fetch(`https://tiny-tale-ten.vercel.app${path}`, options).catch(() => null);
+      return await fetch(`https://tinytale-craft.netlify.app${path}`, options).catch(() => null);
     }
     return null;
   }
