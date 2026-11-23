@@ -387,6 +387,9 @@ function formatOrders(orders, items) {
 
     const totalAmt = order.total_price || 0;
     const craftingStat = order.order_status === 'processing' ? 'in_crafting' : (order.order_status || 'in_crafting');
+    const resolvedPickup = (order.courier && order.courier !== 'SiCepat Reguler' && order.courier !== '-')
+      ? order.courier
+      : (order.address && order.address !== '-' ? order.address : '-');
 
     return {
       id: order.id,
@@ -397,9 +400,11 @@ function formatOrders(orders, items) {
         address: order.address || '-',
         city: order.city || '-',
         courier: order.courier || 'SiCepat Reguler',
+        pickupLocation: resolvedPickup,
         courierCost: order.courier_cost || 0,
         notes: order.notes || ''
       },
+      pickupLocation: resolvedPickup,
       items: orderItems,
       total: totalAmt,
       totalAmount: totalAmt,
@@ -461,6 +466,7 @@ app.post('/api/orders', async (req, res) => {
   try {
     const {
       id = 'ATC-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000),
+      createdAt = null,
       customer = {},
       items = [],
       total = 0,
@@ -474,29 +480,47 @@ app.post('/api/orders', async (req, res) => {
 
     const proof = paymentProof || paymentProofUrl || null;
     const finalTotal = total || totalAmount || 0;
+    const orderDate = createdAt ? new Date(createdAt) : new Date();
 
     await withConnection(async (connection) => {
       await connection.beginTransaction();
       try {
         await connection.query(
-          `INSERT INTO orders (id, customer_name, customer_whatsapp, address, city, courier, courier_cost, notes, payment_method, payment_status, order_status, total_price, payment_proof)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO orders (id, customer_name, customer_whatsapp, address, city, courier, courier_cost, notes, payment_method, payment_status, order_status, total_price, payment_proof, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+             customer_name = VALUES(customer_name),
+             customer_whatsapp = VALUES(customer_whatsapp),
+             address = VALUES(address),
+             city = VALUES(city),
+             courier = VALUES(courier),
+             courier_cost = VALUES(courier_cost),
+             notes = VALUES(notes),
+             payment_method = VALUES(payment_method),
+             payment_status = VALUES(payment_status),
+             order_status = VALUES(order_status),
+             total_price = VALUES(total_price),
+             payment_proof = VALUES(payment_proof)`,
           [
             id,
             customer.name || 'Pelanggan',
             customer.whatsapp || '',
-            customer.address || '',
+            customer.address || customer.pickupLocation || '',
             customer.city || '',
-            customer.courier || '',
+            customer.courier || customer.pickupLocation || '',
             customer.courierCost || 0,
             customer.notes || '',
             paymentMethod,
             paymentStatus,
             orderStatus,
             finalTotal,
-            proof
+            proof,
+            orderDate
           ]
         );
+
+        // Delete any existing items for this order before re-inserting
+        await connection.query('DELETE FROM order_items WHERE order_id = ?', [id]);
 
         for (const it of items) {
           const rawDetails = typeof it.customDetails === 'object' && it.customDetails !== null ? it.customDetails : {};

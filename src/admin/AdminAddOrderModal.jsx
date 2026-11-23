@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Package, User, CreditCard, Image as ImageIcon, Calendar, Check, AlertCircle, Sparkles, Upload } from 'lucide-react';
+import { X, Plus, Trash2, Package, User, CreditCard, Image as ImageIcon, Calendar, Check, AlertCircle, Sparkles, Upload, MapPin } from 'lucide-react';
 import { useBodyScrollLock } from '../utils/scrollLock';
 import { INITIAL_CORD_COLORS, ACCENT_COLORS, INITIAL_CHARMS } from '../data/initialData';
 import { ALL_FRAME_TEMPLATES } from '../components/FrameLayoutSelector';
@@ -23,6 +23,8 @@ export default function AdminAddOrderModal({
   // Customer state
   const [customerName, setCustomerName] = useState('');
   const [customerWhatsApp, setCustomerWhatsApp] = useState('');
+  const [pickupLocation, setPickupLocation] = useState('Kampus B');
+  const [customPickupLocation, setCustomPickupLocation] = useState('');
   const [channel, setChannel] = useState('WhatsApp Direct');
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().split('T')[0]);
 
@@ -307,6 +309,7 @@ export default function AdminAddOrderModal({
       };
     });
 
+    const finalPickup = pickupLocation === 'Lainnya' ? (customPickupLocation.trim() || 'Lainnya') : pickupLocation;
     const orderPayload = {
       id: orderId,
       createdAt: new Date(`${orderDate}T${new Date().toTimeString().split(' ')[0]}`).toISOString(),
@@ -314,11 +317,13 @@ export default function AdminAddOrderModal({
         name: customerName.trim(),
         whatsapp: customerWhatsApp.trim(),
         city: '-',
-        address: '-',
-        courier: 'Offline / Direct',
+        address: finalPickup,
+        courier: finalPickup,
+        pickupLocation: finalPickup,
         courierCost: 0,
         notes: notes.trim()
       },
+      pickupLocation: finalPickup,
       items: formattedItems,
       total: finalAmount,
       totalAmount: finalAmount,
@@ -449,6 +454,34 @@ export default function AdminAddOrderModal({
                     <option value="Toko Fisik / Offline">Toko Fisik / Offline</option>
                     <option value="Pesanan Langsung / Lainnya">Pesanan Langsung / Lainnya</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '4px' }}>
+                    <MapPin size={13} color="var(--accent-purple)" />
+                    <span>Tempat Pengambilan *</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                  >
+                    <option value="Kampus B">Kampus B</option>
+                    <option value="Kampus C">Kampus C</option>
+                    <option value="Market Day">Market Day</option>
+                    <option value="Lainnya">Lainnya...</option>
+                  </select>
+                  {pickupLocation === 'Lainnya' && (
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Tuliskan tempat pengambilan..."
+                      style={{ marginTop: '6px' }}
+                      value={customPickupLocation}
+                      onChange={(e) => setCustomPickupLocation(e.target.value)}
+                      required
+                    />
+                  )}
                 </div>
               </div>
             </div>

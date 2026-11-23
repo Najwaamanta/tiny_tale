@@ -248,6 +248,12 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                           {ord.customer?.whatsapp || '-'}
                         </div>
+                        {(ord.customer?.pickupLocation || ord.pickupLocation || (ord.customer?.courier && !ord.customer.courier.includes('SiCepat') && ord.customer.courier !== '-') || (ord.customer?.address && ord.customer.address !== '-')) && (
+                          <div style={{ fontSize: '0.74rem', color: 'var(--accent-purple)', fontWeight: 600, marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <span>📍 Ambil:</span>
+                            <span style={{ color: 'var(--text-primary)' }}>{ord.customer?.pickupLocation || ord.pickupLocation || ord.customer?.courier || ord.customer?.address}</span>
+                          </div>
+                        )}
                       </td>
                       <td>
                         {(ord.items || []).map((it, i) => {
@@ -531,6 +537,13 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                       )}
                     </div>
 
+                    {(ord.customer?.pickupLocation || ord.pickupLocation || (ord.customer?.courier && !ord.customer.courier.includes('SiCepat') && ord.customer.courier !== '-') || (ord.customer?.address && ord.customer.address !== '-')) && (
+                      <div style={{ fontSize: '0.74rem', color: 'var(--accent-purple)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span>📍 Ambil:</span>
+                        <span style={{ color: 'var(--text-primary)' }}>{ord.customer?.pickupLocation || ord.pickupLocation || ord.customer?.courier || ord.customer?.address}</span>
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>Total: </span>
@@ -682,6 +695,12 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                     <Phone size={13} color="#059669" />
                     <span>WhatsApp: {selectedOrder.customer?.whatsapp || '-'}</span>
                   </div>
+                  {(selectedOrder.customer?.pickupLocation || selectedOrder.pickupLocation || (selectedOrder.customer?.courier && !selectedOrder.customer.courier.includes('SiCepat') && selectedOrder.customer.courier !== '-') || (selectedOrder.customer?.address && selectedOrder.customer.address !== '-')) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 600 }}>
+                      <MapPin size={13} />
+                      <span>Tempat Pengambilan: <strong style={{ color: 'var(--text-primary)' }}>{selectedOrder.customer?.pickupLocation || selectedOrder.pickupLocation || selectedOrder.customer?.courier || selectedOrder.customer?.address}</strong></span>
+                    </div>
+                  )}
                   {selectedOrder.customer?.whatsapp && selectedOrder.customer?.whatsapp !== '-' && (
                     <div style={{ marginTop: '4px' }}>
                       <a
@@ -1544,9 +1563,12 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
         <AdminAddOrderModal
           isOpen={isAddOrderOpen}
           onClose={() => setIsAddOrderOpen(false)}
-          onSave={(orderData) => {
+          onSave={async (orderData) => {
             if (onAddOrder) {
-              onAddOrder(orderData);
+              const res = await onAddOrder(orderData);
+              const toAdd = res || orderData;
+              setLocalOrders((prev) => [toAdd, ...prev.filter((o) => o.id !== toAdd.id)]);
+              setSearchTerm('');
             }
           }}
           collections={collections}

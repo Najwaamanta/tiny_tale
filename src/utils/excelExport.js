@@ -92,6 +92,7 @@ export function exportOrdersToExcel(orders = [], customFilename) {
       'No. Order': ord.id,
       'Tanggal': formatDate(ord.createdAt),
       'Pemesan & WhatsApp': `${ord.customer?.name || 'Pelanggan'} (${ord.customer?.whatsapp || '-'})`,
+      'Tempat Pengambilan': ord.customer?.pickupLocation || ord.pickupLocation || ord.customer?.courier || ord.customer?.address || '-',
       'Item Kustom & Frame': itemWithFrame || '-',
       'Total Belanja (Rp)': ord.totalAmount ?? ord.total ?? 0,
       'Status Bayar': ord.paymentStatus === 'paid' ? 'Lunas' : 'Verifikasi'
@@ -106,6 +107,7 @@ export function exportOrdersToExcel(orders = [], customFilename) {
     { wch: 18 }, // No. Order
     { wch: 22 }, // Tanggal
     { wch: 34 }, // Pemesan & WhatsApp
+    { wch: 24 }, // Tempat Pengambilan
     { wch: 48 }, // Item Kustom & Frame
     { wch: 20 }, // Total Belanja (Rp)
     { wch: 16 }  // Status Bayar

@@ -787,9 +787,12 @@ export default function AdminCustomers({ orders = [], collections = [], onAddOrd
         <AdminAddCustomerHistoryModal
           isOpen={isAddHistoryOpen}
           onClose={() => setIsAddHistoryOpen(false)}
-          onSave={(orderData) => {
+          onSave={async (orderData) => {
             if (onAddOrder) {
-              onAddOrder(orderData);
+              const res = await onAddOrder(orderData);
+              const toAdd = res || orderData;
+              setLocalOrders((prev) => [toAdd, ...prev.filter((o) => o.id !== toAdd.id)]);
+              setSearchTerm('');
             }
           }}
           orders={orders}

@@ -1,6 +1,6 @@
 import { isGelangItem, isBagCharmItem, resolveCordName, getAccentDisplay } from '../utils/accentHelper';
 import React, { useState, useRef } from 'react';
-import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download, Banknote } from 'lucide-react';
+import { X, Send, QrCode, CheckCircle2, Copy, ArrowRight, ExternalLink, Upload, Image as ImageIcon, Trash2, Check, RefreshCw, Download, Banknote, MapPin } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useBodyScrollLock } from '../utils/scrollLock';
 
@@ -12,9 +12,11 @@ export default function CheckoutModal({
 }) {
   useBodyScrollLock(isOpen);
 
-  // Form states - Name, WhatsApp & Payment Method
+  // Form states - Name, WhatsApp, Pickup Location & Payment Method
   const [customerName, setCustomerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [pickupLocation, setPickupLocation] = useState('Kampus B');
+  const [customPickupLocation, setCustomPickupLocation] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('QRIS'); // 'QRIS' | 'Cash'
   const [paymentProofUrl, setPaymentProofUrl] = useState('');
   const [uploadFileName, setUploadFileName] = useState('');
@@ -103,6 +105,10 @@ export default function CheckoutModal({
       alert('Mohon masukkan nomor WhatsApp yang aktif dan valid (minimal 9 digit).');
       return;
     }
+    if (pickupLocation === 'Lainnya' && !customPickupLocation.trim()) {
+      alert('Mohon tuliskan tempat pengambilan yang Anda inginkan.');
+      return;
+    }
     if (paymentMethod === 'QRIS' && !paymentProofUrl) {
       alert('Mohon upload bukti pembayaran QRIS (foto/screenshot transfer) terlebih dahulu.');
       return;
@@ -110,17 +116,20 @@ export default function CheckoutModal({
 
     setIsSubmitting(true);
 
+    const finalPickup = pickupLocation === 'Lainnya' ? (customPickupLocation.trim() || 'Lainnya') : pickupLocation;
     const isCash = paymentMethod === 'Cash';
     const orderData = {
       customer: {
         name: customerName.trim(),
         whatsapp: whatsapp.trim(),
-        address: '-',
+        address: finalPickup,
         city: '-',
-        courier: '-',
+        courier: finalPickup,
+        pickupLocation: finalPickup,
         courierCost: 0,
-        notes: isCash ? 'Bayar Tunai di Tempat (Cash)' : ''
+        notes: isCash ? `Bayar Tunai di Tempat (Cash) - Ambil di ${finalPickup}` : `Ambil di ${finalPickup}`
       },
+      pickupLocation: finalPickup,
       items: cartItems,
       totalAmount: grandTotal,
       paymentMethod: isCash ? 'Tunai / Cash' : 'QRIS',
@@ -147,6 +156,7 @@ export default function CheckoutModal({
   const generateWhatsAppMessage = (order = createdOrder) => {
     if (!order) return '';
     const isCash = order.paymentMethod?.toLowerCase().includes('cash') || order.paymentMethod?.toLowerCase().includes('tunai');
+    const pickup = order.customer?.pickupLocation || order.pickupLocation || order.customer?.courier || order.customer?.address || '-';
     const itemLines = (order.items || []).map((it, idx) => {
       const header = `${idx + 1}. *${it.title}* (Qty: ${it.quantity || 1}) - Rp ${(it.subtotal || it.unitPrice || 0).toLocaleString('id-ID')}`;
       if (it.bundleChoices) {
@@ -200,14 +210,16 @@ export default function CheckoutModal({
       `*NOMOR ORDER:* ${order.id}\n` +
       `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
       `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+      `*Tempat Pengambilan:* ${pickup}\n` +
       `*Metode Bayar:* Tunai / Cash (Bayar Langsung di Studio)\n\n` +
       `*Detail Item Kustom:*\n${itemLines}\n\n` +
       `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
-      `Saya akan melakukan pembayaran tunai saat serah terima pesanan. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`
+      `Saya akan melakukan pembayaran tunai saat serah terima pesanan di ${pickup}. Mohon konfirmasi dan segera diproses perakitannya ya kak. Terima kasih!`
       : `Halo Tiny Tale! Saya telah melakukan pembayaran QRIS untuk pesanan:\n\n` +
       `*NOMOR ORDER:* ${order.id}\n` +
       `*Nama Pemesan:* ${order.customer?.name || '-'}\n` +
       `*No. WhatsApp:* ${order.customer?.whatsapp || '-'}\n` +
+      `*Tempat Pengambilan:* ${pickup}\n` +
       `*Metode Bayar:* QRIS (Bukti Transfer Terlampir)\n\n` +
       `*Detail Item Kustom:*\n${itemLines}\n\n` +
       `*TOTAL PEMBAYARAN: Rp ${(order.totalAmount || 0).toLocaleString('id-ID')}*\n\n` +
@@ -270,6 +282,27 @@ export default function CheckoutModal({
                   <CheckCircle2 size={34} />
                 </div>
                 <h4 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>Terima Kasih, {createdOrder.customer.name}!</h4>
+
+                {/* Info Tempat Pengambilan */}
+                <div
+                  style={{
+                    background: 'rgba(0, 242, 254, 0.08)',
+                    border: '1px solid rgba(0, 242, 254, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '8px 16px',
+                    margin: '10px auto 14px',
+                    maxWidth: '420px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.88rem',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <MapPin size={16} color="var(--accent-cyan)" />
+                  <span>Tempat Pengambilan: <strong>{createdOrder.customer?.pickupLocation || createdOrder.pickupLocation || createdOrder.customer?.courier || '-'}</strong></span>
+                </div>
+
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto' }}>
                   {createdOrder.paymentMethod?.toLowerCase().includes('cash') || createdOrder.paymentMethod?.toLowerCase().includes('tunai')
                     ? 'Pesananmu telah terkonfirmasi ke WhatsApp dan metode pembayaran Cash di Tempat telah dicatat. Tim studio kami akan segera merakit pesanan kustommu!'
@@ -370,6 +403,67 @@ export default function CheckoutModal({
                       required
                     />
                   </div>
+                </div>
+
+                {/* TEMPAT PENGAMBILAN */}
+                <div style={{ marginTop: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px' }}>
+                    <MapPin size={15} color="var(--accent-cyan)" />
+                    <span>Tempat Pengambilan *</span>
+                  </label>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '8px'
+                    }}
+                  >
+                    {['Kampus B', 'Kampus C', 'Market Day', 'Lainnya'].map((loc) => {
+                      const isSelected = pickupLocation === loc;
+                      return (
+                        <button
+                          key={loc}
+                          type="button"
+                          onClick={() => setPickupLocation(loc)}
+                          style={{
+                            border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
+                            background: isSelected ? 'rgba(0, 242, 254, 0.12)' : 'var(--bg-secondary)',
+                            color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)',
+                            padding: '10px 14px',
+                            borderRadius: 'var(--radius-md)',
+                            fontWeight: isSelected ? 700 : 500,
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '0.95rem' }}>📍</span>
+                            <span>{loc}</span>
+                          </div>
+                          {isSelected && <Check size={14} strokeWidth={3} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {pickupLocation === 'Lainnya' && (
+                    <div style={{ marginTop: '10px' }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Tuliskan tempat pengambilan yang diinginkan..."
+                        value={customPickupLocation}
+                        onChange={(e) => setCustomPickupLocation(e.target.value)}
+                        required={pickupLocation === 'Lainnya'}
+                        autoFocus
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

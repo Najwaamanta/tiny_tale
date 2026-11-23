@@ -119,7 +119,17 @@ class Store {
         const data = await syncRes.json();
         if (data && data.success) {
           if (Array.isArray(data.orders)) {
-            this.orders = data.orders;
+            const serverOrderMap = new Map();
+            data.orders.forEach((o) => serverOrderMap.set(o.id, o));
+
+            // Retain recent local orders (e.g. created within last 15 mins) not yet present on server
+            const pendingOrders = (this.orders || []).filter((o) => {
+              if (serverOrderMap.has(o.id)) return false;
+              const age = Date.now() - new Date(o.createdAt || Date.now()).getTime();
+              return !isNaN(age) && age < 15 * 60 * 1000;
+            });
+
+            this.orders = [...pendingOrders, ...data.orders];
             setStorage(STORAGE_KEYS.ORDERS, this.orders);
             changed = true;
           }
@@ -151,7 +161,16 @@ class Store {
       if (ordRes && ordRes.ok) {
         const dbOrders = await ordRes.json();
         if (Array.isArray(dbOrders)) {
-          this.orders = dbOrders;
+          const serverOrderMap = new Map();
+          dbOrders.forEach((o) => serverOrderMap.set(o.id, o));
+
+          const pendingOrders = (this.orders || []).filter((o) => {
+            if (serverOrderMap.has(o.id)) return false;
+            const age = Date.now() - new Date(o.createdAt || Date.now()).getTime();
+            return !isNaN(age) && age < 15 * 60 * 1000;
+          });
+
+          this.orders = [...pendingOrders, ...dbOrders];
           setStorage(STORAGE_KEYS.ORDERS, this.orders);
           changed = true;
         }
@@ -426,11 +445,18 @@ class Store {
 
     const isCash = paymentMethod?.toLowerCase().includes('cash') || paymentMethod?.toLowerCase().includes('tunai');
     const computedStatus = paymentStatus || (isCash ? 'pending' : (paymentMethod === 'Transfer Bank' ? 'pending_verification' : 'paid'));
+    const finalPickup = customer?.pickupLocation || customer?.courier || customer?.address || '-';
 
     const newOrder = {
       id: orderId,
       createdAt: new Date().toISOString(),
-      customer,
+      customer: {
+        ...customer,
+        pickupLocation: finalPickup,
+        courier: customer?.courier || finalPickup,
+        address: customer?.address || finalPickup
+      },
+      pickupLocation: finalPickup,
       items,
       totalAmount,
       paymentMethod: paymentMethod || 'QRIS',
@@ -543,13 +569,14 @@ class Store {
     const finalTotal = Number(totalAmount ?? total ?? 0);
 
     const formattedItems = (items || []).map((it, idx) => ({
+      ...it,
       id: it.id || `manual-item-${Date.now()}-${idx}`,
       productType: it.productType || it.type || 'bag_charm',
       title: it.title || it.name || 'Produk Kustom',
       unitPrice: Number(it.unitPrice ?? it.price ?? 0),
       quantity: Number(it.quantity || 1),
       subtotal: Number(it.subtotal || (Number(it.unitPrice ?? it.price ?? 0) * Number(it.quantity || 1))),
-      image: it.image || null,
+      image: it.image || (it.framePhotos && it.framePhotos[0]) || null,
       customLetters: it.customLetters || '',
       customDetails: it.customDetails || {
         notes: it.notes || '',
@@ -559,18 +586,21 @@ class Store {
       }
     }));
 
+    const finalPickup = customer?.pickupLocation || customer?.courier || customer?.address || '-';
     const newOrder = {
       id: orderId,
       createdAt: orderDate,
       customer: {
         name: customer?.name || 'Pelanggan Offline',
         whatsapp: customer?.whatsapp || '',
-        address: customer?.address || '',
-        city: customer?.city || '',
-        courier: customer?.courier || 'Ambil di Toko / COD',
+        address: customer?.address || finalPickup,
+        city: customer?.city || '-',
+        courier: customer?.courier || finalPickup,
+        pickupLocation: finalPickup,
         courierCost: Number(customer?.courierCost || 0),
         notes: customer?.notes || notes || ''
       },
+      pickupLocation: finalPickup,
       items: formattedItems,
       total: finalTotal,
       totalAmount: finalTotal,
@@ -585,7 +615,7 @@ class Store {
       channel
     };
 
-    this.orders = [newOrder, ...this.orders];
+    this.orders = [newOrder, ...this.orders.filter((o) => o.id !== newOrder.id)];
     setStorage(STORAGE_KEYS.ORDERS, this.orders);
     this.notify();
 
@@ -595,6 +625,7 @@ class Store {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: orderId,
+        createdAt: orderDate,
         customer: newOrder.customer,
         items: formattedItems,
         total: finalTotal,
@@ -606,7 +637,11 @@ class Store {
         orderStatus
       })
     })
-      .then(() => this.syncRealtime())
+      .then(async (res) => {
+        if (res && res.ok) {
+          await this.syncRealtime();
+        }
+      })
       .catch((err) => console.warn('Order sync to MySQL:', err));
 
     return newOrder;
