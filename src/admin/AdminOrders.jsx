@@ -774,6 +774,9 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                   <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
                     Rp {(selectedOrder.totalAmount ?? selectedOrder.total ?? 0).toLocaleString('id-ID')}
                   </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    📦 Total: <strong>{(selectedOrder.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0)} pcs</strong>
+                  </div>
                   {(() => {
                     const isCash = (selectedOrder.paymentMethod || '').toLowerCase().includes('cash') || (selectedOrder.paymentMethod || '').toLowerCase().includes('tunai');
                     if (!isCash) {
@@ -985,15 +988,27 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                         }}
                       >
                         {/* Bundle Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <strong style={{ fontSize: '1.05rem', color: '#1E1B4B' }}>{it.title || 'Paket Bundling'}</strong>
                             <span className="badge badge-purple" style={{ background: '#4F46E5', color: '#FFFFFF' }}>PAKET BUNDLING</span>
+                            <span style={{ background: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE', padding: '2px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+                              Qty: {it.quantity || 1} pcs
+                            </span>
                           </div>
-                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#4F46E5' }}>
-                            Rp {Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')}
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#4F46E5' }}>
+                            {(Number(it.quantity) || 1) > 1
+                              ? `${it.quantity}x Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')} = Rp ${Number(it.subtotal || ((it.unitPrice || it.price || 0) * (it.quantity || 1))).toLocaleString('id-ID')}`
+                              : `Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')}`
+                            }
                           </span>
                         </div>
+
+                        {(Number(it.quantity) || 1) > 1 && (
+                          <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E', padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
+                            ⚠️ <strong>Perhatian Pengerajin:</strong> Pemesan membeli sebanyak <strong>{it.quantity} paket</strong>. Harap rakit sebanyak <strong>{it.quantity} set</strong>!
+                          </div>
+                        )}
 
                         {it.bundleDescription && (
                           <div style={{ fontSize: '0.82rem', color: '#4338CA', background: 'rgba(79, 70, 229, 0.08)', padding: '6px 10px', borderRadius: '4px', marginBottom: '14px', fontWeight: 600 }}>
@@ -1291,10 +1306,27 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                           padding: '18px'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <strong style={{ fontSize: '1rem', color: '#1E1B4B' }}>{it.title || 'Gelang Kustom'}</strong>
-                          <span className="badge badge-purple" style={{ background: '#059669', color: '#FFFFFF' }}>GELANG / BRACELET</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '1rem', color: '#1E1B4B' }}>{it.title || 'Gelang Kustom'}</strong>
+                            <span className="badge badge-purple" style={{ background: '#059669', color: '#FFFFFF' }}>GELANG / BRACELET</span>
+                            <span style={{ background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', padding: '2px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+                              Qty: {it.quantity || 1} pcs
+                            </span>
+                          </div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#059669' }}>
+                            {(Number(it.quantity) || 1) > 1
+                              ? `${it.quantity}x Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')} = Rp ${Number(it.subtotal || ((it.unitPrice || it.price || 0) * (it.quantity || 1))).toLocaleString('id-ID')}`
+                              : `Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')}`
+                            }
+                          </span>
                         </div>
+
+                        {(Number(it.quantity) || 1) > 1 && (
+                          <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E', padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '12px' }}>
+                            ⚠️ <strong>Perhatian Pengerajin:</strong> Pemesan membeli sebanyak <strong>{it.quantity} buah</strong> gelang ini. Harap rakit sebanyak <strong>{it.quantity} buah</strong>!
+                          </div>
+                        )}
 
                         {/* Gelang Image & Info */}
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -1384,10 +1416,27 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                         padding: '18px'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <strong style={{ fontSize: '1rem' }}>{it.title || 'Custom Item'}</strong>
-                        <span className="badge badge-purple">{(it.productType || 'custom').toUpperCase()}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '1rem' }}>{it.title || 'Custom Item'}</strong>
+                          <span className="badge badge-purple">{(it.productType || 'custom').toUpperCase()}</span>
+                          <span style={{ background: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE', padding: '2px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+                            Qty: {it.quantity || 1} pcs
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-purple)' }}>
+                          {(Number(it.quantity) || 1) > 1
+                            ? `${it.quantity}x Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')} = Rp ${Number(it.subtotal || ((it.unitPrice || it.price || 0) * (it.quantity || 1))).toLocaleString('id-ID')}`
+                            : `Rp ${Number(it.unitPrice || it.price || 0).toLocaleString('id-ID')}`
+                          }
+                        </span>
                       </div>
+
+                      {(Number(it.quantity) || 1) > 1 && (
+                        <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E', padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
+                          ⚠️ <strong>Perhatian Pengerajin:</strong> Pemesan membeli sebanyak <strong>{it.quantity} buah</strong> item ini. Harap rakit sebanyak <strong>{it.quantity} buah</strong>!
+                        </div>
+                      )}
 
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         • Base Model: <strong>{it.baseName || 'Custom'}</strong> (Warna Tali: {resolveCordName(it.cordColorName || it.cordColor) || '-'})
