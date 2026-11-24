@@ -1007,30 +1007,25 @@ class Store {
   }
 
   loginAdmin(email, password) {
-    if (
-      (email.trim().toLowerCase() === 'admin@atelier.id' && (password === 'tinytale08' || password === 'admin123')) ||
-      password === 'tinytale08' ||
-      password === 'admin123' ||
-      password === 'admin'
-    ) {
+    const clean = (password || '').trim();
+    if (clean === 'tinytale08') {
       this.isAdmin = true;
       setStorage(STORAGE_KEYS.ADMIN_AUTH, true);
       this.notify();
       return { success: true };
     }
-    return { success: false, message: 'Email atau password admin salah!' };
+    return { success: false, message: 'Password admin salah!' };
   }
 
   loginAdminWithPin(pin = '') {
-    const clean = pin.trim().toLowerCase();
-    const valid = ['tinytale08', 'admin123', 'admin', '1234', '123456', '8888', '0000', 'atelier'];
-    if (!clean || valid.includes(clean)) {
+    const clean = (pin || '').trim();
+    if (clean === 'tinytale08') {
       this.isAdmin = true;
       setStorage(STORAGE_KEYS.ADMIN_AUTH, true);
       this.notify();
       return { success: true };
     }
-    return { success: false, message: 'PIN keamanan tidak valid!' };
+    return { success: false, message: 'PIN keamanan salah!' };
   }
 
   logoutAdmin() {

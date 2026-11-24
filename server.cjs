@@ -1,7 +1,7 @@
 const dns = require('dns');
 try {
   dns.setDefaultResultOrder('ipv4first');
-} catch (e) {}
+} catch (e) { }
 
 const express = require('express');
 const cors = require('cors');
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 });
 
 // Database configuration (supports localhost/Laragon & Filess.io/Aiven)
-const isCloudOrSSL = process.env.DB_SSL === 'true' || 
+const isCloudOrSSL = process.env.DB_SSL === 'true' ||
   (process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST));
 
 const rawHost = process.env.DB_HOST || '127.0.0.1';
@@ -52,10 +52,10 @@ async function withConnection(fn, retries = 5) {
       conn = await mysql.createConnection(dbConfig);
       return await fn(conn);
     } catch (err) {
-      const isLimitErr = err.code === 'ER_USER_LIMIT_REACHED' || 
-                         err.code === 'ETIMEDOUT' || 
-                         err.code === 'PROTOCOL_CONNECTION_LOST' ||
-                         (err.message && err.message.includes('max_user_connections'));
+      const isLimitErr = err.code === 'ER_USER_LIMIT_REACHED' ||
+        err.code === 'ETIMEDOUT' ||
+        err.code === 'PROTOCOL_CONNECTION_LOST' ||
+        (err.message && err.message.includes('max_user_connections'));
       if (attempt < retries && isLimitErr) {
         const delay = Math.floor(250 * Math.pow(1.8, attempt - 1) + Math.random() * 100);
         console.warn(`[Tiny Tale DB] Connection limit or timeout hit (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`);
@@ -68,7 +68,7 @@ async function withConnection(fn, retries = 5) {
         try {
           await conn.end();
         } catch (e) {
-          try { conn.destroy(); } catch (_) {}
+          try { conn.destroy(); } catch (_) { }
         }
       }
     }
@@ -393,7 +393,7 @@ function formatOrders(orders, items, options = { fullPhotos: true }) {
                 return copy;
               });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const isGelang = it.product_type === 'gelang' || (it.title || '').toLowerCase().includes('gelang') || (it.title || '').toLowerCase().includes('bracelet');

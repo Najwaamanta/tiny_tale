@@ -37,9 +37,7 @@ export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
       return;
     }
 
-    const validPins = ['tinytale08', 'admin123', 'admin', '1234', '123456', '8888', '0000', 'atelier'];
-    
-    if (validPins.includes(clean.toLowerCase())) {
+    if (clean === 'tinytale08') {
       setError('');
       onSuccess(clean);
     } else {

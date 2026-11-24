@@ -3,7 +3,7 @@ import { Lock, Mail, ShieldAlert, ArrowLeft, KeyRound } from 'lucide-react';
 
 export default function AdminLogin({ onLogin, onBackToStore }) {
   const [email, setEmail] = useState('admin@atelier.id');
-  const [password, setPassword] = useState('tinytale08');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = (e) => {
