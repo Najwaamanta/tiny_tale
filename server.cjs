@@ -31,7 +31,8 @@ const isCloudOrSSL = process.env.DB_SSL === 'true' ||
 
 const rawHost = process.env.DB_HOST || '127.0.0.1';
 // Direct IPv4 mapping for Filess.io to eliminate Windows IPv6 latency & ETIMEDOUT
-const dbHost = (rawHost === 'w0aeps.h.filess.io') ? '188.245.153.167' : rawHost;
+const dbHost = (rawHost === 'bbqatu.h.filess.io') ? '5.154.90.219' :
+               (rawHost === 'w0aeps.h.filess.io') ? '188.245.153.167' : rawHost;
 
 const dbConfig = {
   host: dbHost,

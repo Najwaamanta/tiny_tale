@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getBraceletColorOptions, parseProductColorStocks } from '../utils/productColors';
 import {
   Sparkles,
   Plus,
@@ -34,6 +35,7 @@ export default function AdminCollections({
   const [formCategory, setFormCategory] = useState('keychains'); // 'keychains' or 'bracelets'
   const [formPrice, setFormPrice] = useState(15000);
   const [formStock, setFormStock] = useState(50);
+  const [formColorStocks, setFormColorStocks] = useState({});
   const [formImage, setFormImage] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formStrap, setFormStrap] = useState('');
@@ -77,6 +79,7 @@ export default function AdminCollections({
     setFormCategory(activeCategory === 'bundling' ? 'bundling' : (activeCategory === 'bracelets' ? 'bracelets' : 'keychains'));
     setFormPrice(15000);
     setFormStock(50);
+    setFormColorStocks({});
     setFormImage('/images/bagcharm_baby_blue.jpg');
     setFormDescription('');
     setFormStrap('');
@@ -93,7 +96,15 @@ export default function AdminCollections({
     setFormName(item.name || '');
     setFormCategory(item.category || (item.type === 'gelang' ? 'bracelets' : (item.type === 'bundling' ? 'bundling' : 'keychains')));
     setFormPrice(item.price || 15000);
-    setFormStock(item.stock !== undefined ? item.stock : 50);
+    const colorOpts = getBraceletColorOptions(item);
+    if (colorOpts) {
+      const stocks = parseProductColorStocks(item);
+      setFormColorStocks(stocks || {});
+      setFormStock(stocks ? Object.values(stocks).reduce((a, b) => a + b, 0) : (item.stock !== undefined ? item.stock : 50));
+    } else {
+      setFormColorStocks({});
+      setFormStock(item.stock !== undefined ? item.stock : 50);
+    }
     setFormImage(item.image || '');
     setFormDescription(item.description || '');
     setFormStrap(item.highlights?.strap || '');
@@ -175,17 +186,23 @@ export default function AdminCollections({
     setIsSaving(true);
     setFormError('');
 
+    const colorOpts = getBraceletColorOptions({ name: formName, category: formCategory, id: editingItem?.id });
+    const computedStock = colorOpts && Object.keys(formColorStocks).length > 0
+      ? Object.values(formColorStocks).reduce((a, b) => Number(a) + Number(b), 0)
+      : Number(formStock || 0);
+
     const payload = {
       name: formName.trim(),
       category: formCategory,
       type: formCategory === 'bracelets' ? 'gelang' : (formCategory === 'bundling' ? 'bundling' : 'bag_charm'),
       price: Number(formPrice),
-      stock: Number(formStock || 0),
+      stock: computedStock,
+      colorStocks: colorOpts ? formColorStocks : null,
       image: formImage || (formCategory === 'bracelets' ? '/images/cat_bracelets.png' : (formCategory === 'bundling' ? '/images/custom_bagcharm_blue.jpg' : '/images/cat_bagcharms.png')),
       description: formDescription.trim(),
       highlights: {
         strap: formStrap.trim(),
-        shapes: formShapes.trim(),
+        shapes: colorOpts ? JSON.stringify(formColorStocks) : formShapes.trim(),
         charms: formCharms.trim()
       },
       isCustomizable: formCategory === 'bracelets' ? false : formIsCustomizable,
@@ -439,6 +456,36 @@ export default function AdminCollections({
                         >
                           {item.stock !== undefined ? `${item.stock} unit` : '50 unit'}
                         </span>
+                        {(() => {
+                          const opts = getBraceletColorOptions(item);
+                          if (!opts) return null;
+                          const stocks = parseProductColorStocks(item);
+                          if (!stocks) return null;
+                          return (
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                              {opts.map(opt => (
+                                <span
+                                  key={opt.id}
+                                  style={{
+                                    fontSize: '0.68rem',
+                                    fontWeight: 700,
+                                    background: '#F1F5F9',
+                                    color: '#334155',
+                                    border: '1px solid #CBD5E1',
+                                    borderRadius: '4px',
+                                    padding: '1px 5px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px'
+                                  }}
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: opt.hex, display: 'inline-block' }} />
+                                  {opt.label}: {stocks[opt.id] ?? 0}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Customizability Status */}
@@ -556,6 +603,21 @@ export default function AdminCollections({
                         <span className={`badge ${item.stock <= 10 ? 'badge-rose' : 'badge-lime'}`} style={{ fontSize: '0.7rem' }}>
                           Stok: {item.stock ?? 50}
                         </span>
+                        {(() => {
+                          const opts = getBraceletColorOptions(item);
+                          if (!opts) return null;
+                          const stocks = parseProductColorStocks(item);
+                          if (!stocks) return null;
+                          return (
+                            <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px' }}>
+                              {opts.map(opt => (
+                                <span key={opt.id} style={{ fontSize: '0.65rem', background: '#F1F5F9', color: '#334155', border: '1px solid #CBD5E1', padding: '1px 4px', borderRadius: '3px', fontWeight: 700 }}>
+                                  {opt.label}: {stocks[opt.id] ?? 0}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="admin-mobile-card-tags">
                         <span className={`badge ${isBagcharm ? 'badge-purple' : 'badge-cyan'}`} style={{ fontSize: '0.68rem' }}>
@@ -752,21 +814,138 @@ export default function AdminCollections({
                   </div>
                 </div>
 
-                {/* Stock */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>
-                    STOK TERSEDIA (UNIT)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="50"
-                    value={formStock}
-                    onChange={(e) => setFormStock(Number(e.target.value))}
-                    className="form-input"
-                    style={{ width: '100%', height: '42px', fontSize: '0.9rem' }}
-                  />
-                </div>
+                {/* Stock Section (Standard or Per Varian Warna) */}
+                {(() => {
+                  const activeColorOptions = getBraceletColorOptions({ name: formName, category: formCategory, id: editingItem?.id });
+                  if (activeColorOptions && activeColorOptions.length > 0) {
+                    const totalColorStock = Object.values(formColorStocks).reduce((a, b) => Number(a) + Number(b), 0);
+                    return (
+                      <div
+                        style={{
+                          gridColumn: '1 / -1',
+                          background: '#F8FAFC',
+                          border: '1.5px solid #CBD5E1',
+                          borderRadius: '10px',
+                          padding: '16px',
+                          marginTop: '4px',
+                          marginBottom: '4px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>🎨 STOK TERSEDIA PER PILIHAN WARNA *</span>
+                            </label>
+                            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
+                              Atur jumlah stok fisik yang siap dijual untuk masing-masing warna gelang
+                            </div>
+                          </div>
+                          <span
+                            style={{
+                              fontSize: '0.82rem',
+                              fontWeight: 800,
+                              color: '#4F46E5',
+                              background: '#EEF2FF',
+                              border: '1px solid #C7D2FE',
+                              padding: '4px 12px',
+                              borderRadius: '6px'
+                            }}
+                          >
+                            Total Stok: {totalColorStock} unit
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                          {activeColorOptions.map(opt => {
+                            const val = formColorStocks[opt.id] !== undefined ? formColorStocks[opt.id] : 0;
+                            return (
+                              <div
+                                key={opt.id}
+                                style={{
+                                  background: '#FFFFFF',
+                                  border: '1.5px solid #E2E8F0',
+                                  borderRadius: '8px',
+                                  padding: '12px 14px',
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span
+                                      style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '50%',
+                                        background: opt.hex,
+                                        border: '1.5px solid #94A3B8',
+                                        display: 'inline-block'
+                                      }}
+                                    />
+                                    <strong style={{ fontSize: '0.9rem', color: '#1E293B' }}>
+                                      Warna {opt.label}
+                                    </strong>
+                                  </div>
+                                  <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>
+                                    Ready Stock
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    required
+                                    className="form-input"
+                                    value={val}
+                                    onChange={(e) => {
+                                      const nextNum = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                      setFormColorStocks(prev => {
+                                        const updated = { ...prev, [opt.id]: nextNum };
+                                        setFormStock(Object.values(updated).reduce((a, b) => a + b, 0));
+                                        return updated;
+                                      });
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      height: '42px',
+                                      fontSize: '0.95rem',
+                                      fontWeight: 800,
+                                      color: '#1E293B',
+                                      borderRadius: '6px',
+                                      border: '1px solid #94A3B8'
+                                    }}
+                                  />
+                                  <span style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 700 }}>
+                                    unit
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>💡</span>
+                          <span>Stok masing-masing warna otomatis diakumulasikan ({totalColorStock} unit) dan ditampilkan secara real-time di katalog toko.</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>
+                        STOK TERSEDIA (UNIT)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="50"
+                        value={formStock}
+                        onChange={(e) => setFormStock(Number(e.target.value))}
+                        className="form-input"
+                        style={{ width: '100%', height: '42px', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                  );
+                })()}
 
                 {/* Customizable Studio Toggle */}
                 <div>

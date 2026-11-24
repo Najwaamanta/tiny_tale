@@ -3,9 +3,53 @@ import { ShoppingBag, ChevronRight, Sparkles, Check, Heart } from 'lucide-react'
 import confetti from 'canvas-confetti';
 import { INITIAL_COLLECTIONS as ALL_COLLECTION_ITEMS } from '../data/initialData';
 import BundlingSelectionModal from './BundlingSelectionModal';
-import { getBraceletColorOptions } from '../utils/productColors';
+import { getBraceletColorOptions, parseProductColorStocks } from '../utils/productColors';
 
 export { ALL_COLLECTION_ITEMS };
+
+export function getEffectiveColorAndStock(item, selectedColors = {}) {
+  if (!item) return { colorOptions: null, currentColor: null, isOutOfStock: false, itemStocks: null };
+  const colorOptions = getBraceletColorOptions(item);
+  if (!colorOptions || colorOptions.length === 0) {
+    const isOut = item.stock !== undefined && Number(item.stock) <= 0;
+    return { colorOptions: null, currentColor: null, isOutOfStock: isOut, itemStocks: null };
+  }
+
+  const itemStocks = parseProductColorStocks(item);
+  const userColor = selectedColors[item.id];
+  const userOpt = userColor ? colorOptions.find((o) => o.label === userColor) : null;
+  const userStock = userOpt && itemStocks ? itemStocks[userOpt.id] : undefined;
+  const userIsOut = userStock !== undefined && userStock <= 0;
+
+  // Find first option that actually has stock
+  const firstAvailableOpt = colorOptions.find((opt) => {
+    const s = itemStocks ? itemStocks[opt.id] : undefined;
+    return s === undefined || s > 0;
+  });
+
+  // Effective selected color: prefer user selection if it has stock, otherwise pick the available one
+  const currentColor = (!userIsOut && userColor)
+    ? userColor
+    : (firstAvailableOpt ? firstAvailableOpt.label : colorOptions[0].label);
+
+  // Is current chosen variant out of stock?
+  const chosenOpt = colorOptions.find((o) => o.label === currentColor);
+  const chosenStock = chosenOpt && itemStocks ? itemStocks[chosenOpt.id] : undefined;
+  const isChosenOut = chosenStock !== undefined && chosenStock <= 0;
+
+  // Are ALL colors out of stock?
+  const allOut = colorOptions.every((opt) => {
+    const s = itemStocks ? itemStocks[opt.id] : undefined;
+    return s !== undefined && s <= 0;
+  });
+
+  return {
+    colorOptions,
+    itemStocks,
+    currentColor,
+    isOutOfStock: isChosenOut || allOut
+  };
+}
 
 export default function CollectionPage({
   items = ALL_COLLECTION_ITEMS,
@@ -77,9 +121,13 @@ export default function CollectionPage({
       setBundlingModalItem(activeItem);
       return;
     }
+
+    const { currentColor, isOutOfStock } = getEffectiveColorAndStock(activeItem, selectedColors);
+    if (isOutOfStock) return;
+
     if (onAddToCart) {
       const activeColorOpt = getBraceletColorOptions(activeItem);
-      const chosenColor = activeColorOpt ? (selectedColors[activeItem.id] || activeColorOpt[0].label) : null;
+      const chosenColor = activeColorOpt ? currentColor : null;
 
       onAddToCart({
         productType: activeItem.type,
@@ -234,43 +282,54 @@ export default function CollectionPage({
 
             {/* Bracelet Color Variant Selector in Showcase */}
             {(() => {
-              const showcaseColorOpt = getBraceletColorOptions(activeItem);
-              if (!showcaseColorOpt) return null;
-              const currentChosenColor = selectedColors[activeItem.id] || showcaseColorOpt[0].label;
+              const { colorOptions, itemStocks, currentColor } = getEffectiveColorAndStock(activeItem, selectedColors);
+              if (!colorOptions) return null;
               return (
                 <div style={{ margin: '14px 0 10px', background: '#FAF9F6', padding: '12px 14px', borderRadius: '14px', border: '1px solid #EBE8E1' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#374151' }}>Pilihan Warna:</span>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4F46E5' }}>{currentChosenColor}</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4F46E5' }}>{currentColor}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    {showcaseColorOpt.map((opt) => {
-                      const isSel = currentChosenColor === opt.label;
+                    {colorOptions.map((opt) => {
+                      const isSel = currentColor === opt.label;
+                      const optStock = itemStocks ? itemStocks[opt.id] : undefined;
+                      const isOut = optStock !== undefined && optStock <= 0;
                       return (
                         <button
                           key={opt.id}
                           type="button"
-                          onClick={() => setSelectedColors((prev) => ({ ...prev, [activeItem.id]: opt.label }))}
+                          disabled={isOut}
+                          onClick={() => {
+                            if (isOut) return;
+                            setSelectedColors((prev) => ({ ...prev, [activeItem.id]: opt.label }));
+                          }}
                           style={{
                             flex: 1,
                             padding: '8px 12px',
                             borderRadius: '999px',
                             border: isSel ? '2px solid #4F46E5' : '1px solid #D1D5DB',
-                            background: isSel ? '#EEF2FF' : '#FFFFFF',
-                            color: isSel ? '#4F46E5' : '#4B5563',
+                            background: isSel ? '#EEF2FF' : (isOut ? '#F3F4F6' : '#FFFFFF'),
+                            color: isSel ? '#4F46E5' : (isOut ? '#9CA3AF' : '#4B5563'),
                             fontSize: '0.84rem',
                             fontWeight: isSel ? 800 : 600,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '6px',
-                            cursor: 'pointer',
+                            cursor: isOut ? 'not-allowed' : 'pointer',
                             boxShadow: isSel ? '0 2px 8px rgba(79, 70, 229, 0.15)' : 'none',
-                            transition: 'all 0.15s ease'
+                            transition: 'all 0.15s ease',
+                            opacity: isOut ? 0.5 : 1
                           }}
                         >
-                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)' }} />
+                          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: opt.hex, border: '1px solid rgba(0,0,0,0.15)', filter: isOut ? 'grayscale(0.6)' : 'none' }} />
                           <span>{opt.label}</span>
+                          {isOut && (
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444' }}>
+                              (Habis)
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -281,47 +340,66 @@ export default function CollectionPage({
 
             {/* Main Action Button */}
             <div className="tt-showcase-action">
-              {isBundle2(activeItem) ? (
-                <button
-                  type="button"
-                  className="tt-btn-customize-now"
-                  onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: activeItem, bundleType: 2 })}
-                  style={{ background: '#4F46E5', color: '#ffffff' }}
-                >
-                  <Sparkles size={18} />
-                  <span>Mulai Custom di Studio ({activeItem.priceFormatted})</span>
-                </button>
-              ) : activeItem.category === 'bundling' || activeItem.id?.startsWith('col-bundle') ? (
-                <button
-                  type="button"
-                  className="tt-btn-customize-now"
-                  onClick={() => setBundlingModalItem(activeItem)}
-                  style={{ background: '#21201D' }}
-                >
-                  <ShoppingBag size={18} />
-                  <span>Pilih & Masukkan Keranjang</span>
-                </button>
-              ) : activeItem.isCustomizable ? (
-                <button
-                  type="button"
-                  className="tt-btn-customize-now"
-                  onClick={() => onCustomizeItem && onCustomizeItem(activeItem)}
-                  style={{ background: '#21201D', color: '#ffffff' }}
-                >
-                  <Sparkles size={18} />
-                  <span>Mulai Custom di Studio</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="tt-btn-customize-now"
-                  onClick={handleBuyShowcaseItem}
-                  style={{ background: '#21201D' }}
-                >
-                  <ShoppingBag size={18} />
-                  <span>+ Masukkan Keranjang ({activeItem.priceFormatted})</span>
-                </button>
-              )}
+              {(() => {
+                const { isOutOfStock } = getEffectiveColorAndStock(activeItem, selectedColors);
+                if (isBundle2(activeItem)) {
+                  return (
+                    <button
+                      type="button"
+                      className="tt-btn-customize-now"
+                      onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: activeItem, bundleType: 2 })}
+                      style={{ background: '#4F46E5', color: '#ffffff' }}
+                    >
+                      <Sparkles size={18} />
+                      <span>Mulai Custom di Studio ({activeItem.priceFormatted})</span>
+                    </button>
+                  );
+                }
+                if (activeItem.category === 'bundling' || activeItem.id?.startsWith('col-bundle')) {
+                  return (
+                    <button
+                      type="button"
+                      className="tt-btn-customize-now"
+                      onClick={() => setBundlingModalItem(activeItem)}
+                      style={{ background: '#21201D' }}
+                    >
+                      <ShoppingBag size={18} />
+                      <span>Pilih & Masukkan Keranjang</span>
+                    </button>
+                  );
+                }
+                if (activeItem.isCustomizable) {
+                  return (
+                    <button
+                      type="button"
+                      className="tt-btn-customize-now"
+                      onClick={() => onCustomizeItem && onCustomizeItem(activeItem)}
+                      style={{ background: '#21201D', color: '#ffffff' }}
+                    >
+                      <Sparkles size={18} />
+                      <span>Mulai Custom di Studio</span>
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    type="button"
+                    disabled={isOutOfStock}
+                    className="tt-btn-customize-now"
+                    onClick={handleBuyShowcaseItem}
+                    style={isOutOfStock ? {
+                      background: '#E5E7EB',
+                      color: '#9CA3AF',
+                      borderColor: '#D1D5DB',
+                      cursor: 'not-allowed',
+                      boxShadow: 'none'
+                    } : { background: '#21201D' }}
+                  >
+                    <ShoppingBag size={18} />
+                    <span>{isOutOfStock ? 'Stok Habis' : `+ Masukkan Keranjang (${activeItem.priceFormatted})`}</span>
+                  </button>
+                );
+              })()}
 
               {addedToast && (
                 <div className="tt-added-badge">
@@ -417,9 +495,8 @@ export default function CollectionPage({
                     <div className="col-actions">
                       {/* Color Variant Option Selector */}
                       {(() => {
-                        const colorOptions = getBraceletColorOptions(item);
+                        const { colorOptions, itemStocks, currentColor } = getEffectiveColorAndStock(item, selectedColors);
                         if (!colorOptions) return null;
-                        const currentColor = selectedColors[item.id] || colorOptions[0].label;
                         return (
                           <div style={{ marginBottom: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -429,12 +506,16 @@ export default function CollectionPage({
                             <div style={{ display: 'flex', gap: '6px' }}>
                               {colorOptions.map((opt) => {
                                 const isSel = currentColor === opt.label;
+                                const optStock = itemStocks ? itemStocks[opt.id] : undefined;
+                                const isOut = optStock !== undefined && optStock <= 0;
                                 return (
                                   <button
                                     key={opt.id}
                                     type="button"
+                                    disabled={isOut}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (isOut) return;
                                       setSelectedColors((prev) => ({ ...prev, [item.id]: opt.label }));
                                     }}
                                     style={{
@@ -442,16 +523,17 @@ export default function CollectionPage({
                                       padding: '5px 8px',
                                       borderRadius: '999px',
                                       border: isSel ? '2px solid #4F46E5' : '1px solid #E5E7EB',
-                                      background: isSel ? '#EEF2FF' : '#FFFFFF',
-                                      color: isSel ? '#4F46E5' : '#374151',
+                                      background: isSel ? '#EEF2FF' : (isOut ? '#F9FAFB' : '#FFFFFF'),
+                                      color: isSel ? '#4F46E5' : (isOut ? '#9CA3AF' : '#374151'),
                                       fontSize: '0.75rem',
                                       fontWeight: isSel ? 700 : 500,
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       gap: '5px',
-                                      cursor: 'pointer',
-                                      transition: 'all 0.15s ease'
+                                      cursor: isOut ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.15s ease',
+                                      opacity: isOut ? 0.5 : 1
                                     }}
                                   >
                                     <span
@@ -460,10 +542,16 @@ export default function CollectionPage({
                                         height: '10px',
                                         borderRadius: '50%',
                                         background: opt.hex,
-                                        border: '1px solid rgba(0,0,0,0.15)'
+                                        border: '1px solid rgba(0,0,0,0.15)',
+                                        filter: isOut ? 'grayscale(0.6)' : 'none'
                                       }}
                                     />
                                     <span>{opt.label}</span>
+                                    {isOut && (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#EF4444' }}>
+                                        (Habis)
+                                      </span>
+                                    )}
                                   </button>
                                 );
                               })}
@@ -472,61 +560,82 @@ export default function CollectionPage({
                         );
                       })()}
 
-                      {isBundle2(item) ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#4F46E5', color: '#ffffff' }}
-                          onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: item, bundleType: 2 })}
-                        >
-                          Mulai Custom di Studio →
-                        </button>
-                      ) : item.category === 'bundling' || item.id?.startsWith('col-bundle') ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
-                          onClick={() => setBundlingModalItem(item)}
-                        >
-                          + Pilih Koleksi & Pesan
-                        </button>
-                      ) : itemIsCustomizable ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
-                          onClick={() => onCustomizeItem && onCustomizeItem(item)}
-                        >
-                          + Custom
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          onClick={() => {
-                            if (onAddToCart) {
-                              const colorOpt = getBraceletColorOptions(item);
-                              const chosenColor = colorOpt ? (selectedColors[item.id] || colorOpt[0].label) : null;
-                              onAddToCart({
-                                productType: item.type,
-                                title: chosenColor ? `${item.name} (${chosenColor})` : item.name,
-                                unitPrice: item.price,
-                                quantity: 1,
-                                subtotal: item.price,
-                                image: item.image,
-                                variant: chosenColor || undefined,
-                                color: chosenColor || undefined,
-                                customization: chosenColor ? { color: chosenColor } : null
-                              });
-                              confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
-                              setAddedToast(true);
-                              setTimeout(() => setAddedToast(false), 2400);
-                            }
-                          }}
-                        >
-                          + Tambah ke Pesanan
-                        </button>
-                      )}
+                      {(() => {
+                        const { isOutOfStock, currentColor } = getEffectiveColorAndStock(item, selectedColors);
+                        if (isBundle2(item)) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#4F46E5', color: '#ffffff' }}
+                              onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: item, bundleType: 2 })}
+                            >
+                              Mulai Custom di Studio →
+                            </button>
+                          );
+                        }
+                        if (item.category === 'bundling' || item.id?.startsWith('col-bundle')) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                              onClick={() => setBundlingModalItem(item)}
+                            >
+                              + Pilih Koleksi & Pesan
+                            </button>
+                          );
+                        }
+                        if (itemIsCustomizable) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                              onClick={() => onCustomizeItem && onCustomizeItem(item)}
+                            >
+                              + Custom
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            type="button"
+                            disabled={isOutOfStock}
+                            className={`col-order-pill-btn ${isOutOfStock ? 'disabled-out-of-stock' : ''}`}
+                            style={isOutOfStock ? {
+                              background: '#E5E7EB',
+                              color: '#9CA3AF',
+                              borderColor: '#D1D5DB',
+                              cursor: 'not-allowed',
+                              boxShadow: 'none'
+                            } : {}}
+                            onClick={() => {
+                              if (isOutOfStock) return;
+                              if (onAddToCart) {
+                                const colorOpt = getBraceletColorOptions(item);
+                                const chosenColor = colorOpt ? currentColor : null;
+                                onAddToCart({
+                                  productType: item.type,
+                                  title: chosenColor ? `${item.name} (${chosenColor})` : item.name,
+                                  unitPrice: item.price,
+                                  quantity: 1,
+                                  subtotal: item.price,
+                                  image: item.image,
+                                  variant: chosenColor || undefined,
+                                  color: chosenColor || undefined,
+                                  customization: chosenColor ? { color: chosenColor } : null
+                                });
+                                confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
+                                setAddedToast(true);
+                                setTimeout(() => setAddedToast(false), 2400);
+                              }
+                            }}
+                          >
+                            {isOutOfStock ? 'Stok Habis' : '+ Tambah ke Pesanan'}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -576,9 +685,8 @@ export default function CollectionPage({
                     <div className="col-actions">
                       {/* Color Variant Option Selector */}
                       {(() => {
-                        const colorOptions = getBraceletColorOptions(rec);
+                        const { colorOptions, itemStocks, currentColor } = getEffectiveColorAndStock(rec, selectedColors);
                         if (!colorOptions) return null;
-                        const currentColor = selectedColors[rec.id] || colorOptions[0].label;
                         return (
                           <div style={{ marginBottom: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -588,12 +696,16 @@ export default function CollectionPage({
                             <div style={{ display: 'flex', gap: '6px' }}>
                               {colorOptions.map((opt) => {
                                 const isSel = currentColor === opt.label;
+                                const optStock = recStocks ? recStocks[opt.id] : undefined;
+                                const isOut = optStock !== undefined && optStock <= 0;
                                 return (
                                   <button
                                     key={opt.id}
                                     type="button"
+                                    disabled={isOut}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (isOut) return;
                                       setSelectedColors((prev) => ({ ...prev, [rec.id]: opt.label }));
                                     }}
                                     style={{
@@ -601,16 +713,17 @@ export default function CollectionPage({
                                       padding: '5px 8px',
                                       borderRadius: '999px',
                                       border: isSel ? '2px solid #4F46E5' : '1px solid #E5E7EB',
-                                      background: isSel ? '#EEF2FF' : '#FFFFFF',
-                                      color: isSel ? '#4F46E5' : '#374151',
+                                      background: isSel ? '#EEF2FF' : (isOut ? '#F9FAFB' : '#FFFFFF'),
+                                      color: isSel ? '#4F46E5' : (isOut ? '#9CA3AF' : '#374151'),
                                       fontSize: '0.75rem',
                                       fontWeight: isSel ? 700 : 500,
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       gap: '5px',
-                                      cursor: 'pointer',
-                                      transition: 'all 0.15s ease'
+                                      cursor: isOut ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.15s ease',
+                                      opacity: isOut ? 0.5 : 1
                                     }}
                                   >
                                     <span
@@ -619,10 +732,16 @@ export default function CollectionPage({
                                         height: '10px',
                                         borderRadius: '50%',
                                         background: opt.hex,
-                                        border: '1px solid rgba(0,0,0,0.15)'
+                                        border: '1px solid rgba(0,0,0,0.15)',
+                                        filter: isOut ? 'grayscale(0.6)' : 'none'
                                       }}
                                     />
                                     <span>{opt.label}</span>
+                                    {isOut && (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#EF4444' }}>
+                                        (Habis)
+                                      </span>
+                                    )}
                                   </button>
                                 );
                               })}
@@ -631,61 +750,82 @@ export default function CollectionPage({
                         );
                       })()}
 
-                      {isBundle2(rec) ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#4F46E5', color: '#ffffff' }}
-                          onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: rec, bundleType: 2 })}
-                        >
-                          Mulai Custom di Studio →
-                        </button>
-                      ) : rec.category === 'bundling' || rec.id?.startsWith('col-bundle') ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
-                          onClick={() => setBundlingModalItem(rec)}
-                        >
-                          + Pilih Koleksi & Pesan
-                        </button>
-                      ) : isCustom ? (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
-                          onClick={() => onCustomizeItem && onCustomizeItem(rec)}
-                        >
-                          + Custom
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="col-order-pill-btn"
-                          onClick={() => {
-                            if (onAddToCart) {
-                              const colorOpt = getBraceletColorOptions(rec);
-                              const chosenColor = colorOpt ? (selectedColors[rec.id] || colorOpt[0].label) : null;
-                              onAddToCart({
-                                productType: rec.type,
-                                title: chosenColor ? `${rec.name} (${chosenColor})` : rec.name,
-                                unitPrice: rec.price,
-                                quantity: 1,
-                                subtotal: rec.price,
-                                image: rec.image,
-                                variant: chosenColor || undefined,
-                                color: chosenColor || undefined,
-                                customization: chosenColor ? { color: chosenColor } : null
-                              });
-                              confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
-                              setAddedToast(true);
-                              setTimeout(() => setAddedToast(false), 2400);
-                            }
-                          }}
-                        >
-                          + Tambah ke Pesanan
-                        </button>
-                      )}
+                      {(() => {
+                        const { isOutOfStock, currentColor } = getEffectiveColorAndStock(rec, selectedColors);
+                        if (isBundle2(rec)) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#4F46E5', color: '#ffffff' }}
+                              onClick={() => onCustomizeItem && onCustomizeItem({ bundlingProduct: rec, bundleType: 2 })}
+                            >
+                              Mulai Custom di Studio →
+                            </button>
+                          );
+                        }
+                        if (rec.category === 'bundling' || rec.id?.startsWith('col-bundle')) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                              onClick={() => setBundlingModalItem(rec)}
+                            >
+                              + Pilih Koleksi & Pesan
+                            </button>
+                          );
+                        }
+                        if (isCustom) {
+                          return (
+                            <button
+                              type="button"
+                              className="col-order-pill-btn"
+                              style={{ width: '100%', background: '#21201D', color: '#ffffff' }}
+                              onClick={() => onCustomizeItem && onCustomizeItem(rec)}
+                            >
+                              + Custom
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            type="button"
+                            disabled={isOutOfStock}
+                            className={`col-order-pill-btn ${isOutOfStock ? 'disabled-out-of-stock' : ''}`}
+                            style={isOutOfStock ? {
+                              background: '#E5E7EB',
+                              color: '#9CA3AF',
+                              borderColor: '#D1D5DB',
+                              cursor: 'not-allowed',
+                              boxShadow: 'none'
+                            } : {}}
+                            onClick={() => {
+                              if (isOutOfStock) return;
+                              if (onAddToCart) {
+                                const colorOpt = getBraceletColorOptions(rec);
+                                const chosenColor = colorOpt ? currentColor : null;
+                                onAddToCart({
+                                  productType: rec.type,
+                                  title: chosenColor ? `${rec.name} (${chosenColor})` : rec.name,
+                                  unitPrice: rec.price,
+                                  quantity: 1,
+                                  subtotal: rec.price,
+                                  image: rec.image,
+                                  variant: chosenColor || undefined,
+                                  color: chosenColor || undefined,
+                                  customization: chosenColor ? { color: chosenColor } : null
+                                });
+                                confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
+                                setAddedToast(true);
+                                setTimeout(() => setAddedToast(false), 2400);
+                              }
+                            }}
+                          >
+                            {isOutOfStock ? 'Stok Habis' : '+ Tambah ke Pesanan'}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

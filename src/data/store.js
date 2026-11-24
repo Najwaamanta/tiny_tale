@@ -80,6 +80,11 @@ function mapDbProductsToCollections(dbProducts) {
         charms: p.highlights_charms || (p.highlights && p.highlights.charms) || initialMatch?.highlights?.charms || ''
       },
       stock: p.stock !== undefined ? Number(p.stock) : 50,
+      colorStocks: p.colorStocks && typeof p.colorStocks === 'object'
+        ? p.colorStocks
+        : (typeof p.highlights_shapes === 'string' && p.highlights_shapes.startsWith('{')
+            ? (() => { try { return JSON.parse(p.highlights_shapes); } catch (e) { return null; } })()
+            : (initialMatch?.colorStocks || null)),
       isCustomizable: Boolean(p.is_customizable !== undefined ? p.is_customizable : p.isCustomizable),
       templateId: p.template_id || p.templateId || 'layout-a'
     };
@@ -126,12 +131,30 @@ class Store {
             const serverOrderMap = new Map();
             data.orders.forEach((o) => serverOrderMap.set(o.id, o));
 
-            // Retain recent local orders (e.g. created within last 15 mins) not yet present on server
-            const pendingOrders = (this.orders || []).filter((o) => {
-              if (serverOrderMap.has(o.id)) return false;
-              const age = Date.now() - new Date(o.createdAt || Date.now()).getTime();
-              return !isNaN(age) && age < 15 * 60 * 1000;
-            });
+            // Retain ALL local orders not yet present on server so no orders are ever lost
+            const pendingOrders = (this.orders || []).filter((o) => !serverOrderMap.has(o.id));
+
+            // Auto-sync pending local orders up to the MySQL database
+            if (pendingOrders.length > 0) {
+              pendingOrders.forEach((pend) => {
+                apiFetch('/api/orders', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    id: pend.id,
+                    customer: pend.customer,
+                    items: pend.items,
+                    total: pend.totalAmount || pend.total,
+                    totalAmount: pend.totalAmount || pend.total,
+                    paymentMethod: pend.paymentMethod,
+                    paymentStatus: pend.paymentStatus,
+                    paymentProof: pend.paymentProofUrl || null,
+                    orderStatus: pend.craftingStatus || pend.orderStatus || 'processing',
+                    createdAt: pend.createdAt
+                  })
+                }).catch(() => null);
+              });
+            }
 
             this.orders = [...pendingOrders, ...data.orders];
             setStorage(STORAGE_KEYS.ORDERS, this.orders);
@@ -174,11 +197,28 @@ class Store {
           const serverOrderMap = new Map();
           dbOrders.forEach((o) => serverOrderMap.set(o.id, o));
 
-          const pendingOrders = (this.orders || []).filter((o) => {
-            if (serverOrderMap.has(o.id)) return false;
-            const age = Date.now() - new Date(o.createdAt || Date.now()).getTime();
-            return !isNaN(age) && age < 15 * 60 * 1000;
-          });
+          const pendingOrders = (this.orders || []).filter((o) => !serverOrderMap.has(o.id));
+
+          if (pendingOrders.length > 0) {
+            pendingOrders.forEach((pend) => {
+              apiFetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: pend.id,
+                  customer: pend.customer,
+                  items: pend.items,
+                  total: pend.totalAmount || pend.total,
+                  totalAmount: pend.totalAmount || pend.total,
+                  paymentMethod: pend.paymentMethod,
+                  paymentStatus: pend.paymentStatus,
+                  paymentProof: pend.paymentProofUrl || null,
+                  orderStatus: pend.craftingStatus || pend.orderStatus || 'processing',
+                  createdAt: pend.createdAt
+                })
+              }).catch(() => null);
+            });
+          }
 
           this.orders = [...pendingOrders, ...dbOrders];
           setStorage(STORAGE_KEYS.ORDERS, this.orders);
@@ -450,13 +490,15 @@ class Store {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ATC-${new Date().getFullYear()}-${randomSuffix}`;
 
-    // Deduct stock for chosen charms
+    // Deduct stock for chosen charms and products
     items.forEach(orderItem => {
       if (orderItem.charms && Array.isArray(orderItem.charms)) {
         orderItem.charms.forEach(ch => {
           this.deductCharmStock(ch.id || ch.name, orderItem.quantity || 1);
         });
       }
+      const itemVarColor = orderItem.color || orderItem.variant || null;
+      this.deductProductStock(orderItem.title || orderItem.id, itemVarColor, orderItem.quantity || 1);
     });
 
     const isCash = paymentMethod?.toLowerCase().includes('cash') || paymentMethod?.toLowerCase().includes('tunai');
@@ -750,6 +792,32 @@ class Store {
     setStorage(STORAGE_KEYS.CHARMS, this.charms);
   }
 
+  deductProductStock(productIdentifier, variantColor = null, qty = 1) {
+    this.collections = this.collections.map(item => {
+      const match = item.id === productIdentifier || item.name === productIdentifier || (item.name && productIdentifier && productIdentifier.includes(item.name));
+      if (!match) return item;
+
+      let nextColorStocks = item.colorStocks ? { ...item.colorStocks } : null;
+      if (variantColor && nextColorStocks) {
+        const cleanVar = String(variantColor).trim().toLowerCase();
+        const targetKey = Object.keys(nextColorStocks).find(k => k.toLowerCase() === cleanVar);
+        if (targetKey) {
+          nextColorStocks[targetKey] = Math.max(0, (nextColorStocks[targetKey] || 0) - qty);
+        }
+      }
+      const nextStock = nextColorStocks
+        ? Object.values(nextColorStocks).reduce((a, b) => a + b, 0)
+        : Math.max(0, (item.stock || 0) - qty);
+
+      return {
+        ...item,
+        stock: nextStock,
+        colorStocks: nextColorStocks
+      };
+    });
+    setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
+  }
+
   async updateCharm(charmId, updates) {
     this.charms = this.charms.map(c => {
       if (c.id === charmId) {
@@ -915,6 +983,7 @@ class Store {
           priceFormatted: `Rp ${nextPrice.toLocaleString('id-ID')}`,
           image: nextImage,
           thumbs: updates.thumbs || (nextImage ? [nextImage] : item.thumbs),
+          colorStocks: updates.colorStocks !== undefined ? updates.colorStocks : item.colorStocks,
           highlights: {
             strap: updates.highlights?.strap !== undefined ? updates.highlights.strap : (item.highlights?.strap || ''),
             shapes: updates.highlights?.shapes !== undefined ? updates.highlights.shapes : (item.highlights?.shapes || ''),

@@ -857,6 +857,8 @@ export const INITIAL_COLLECTIONS = [
       shapes: 'Minimal modern wrap',
       charms: 'Silver micro star & spacer'
     },
+    stock: 55,
+    colorStocks: { biru: 28, pink: 27 },
     isCustomizable: false
   },
   {
@@ -899,6 +901,8 @@ export const INITIAL_COLLECTIONS = [
       shapes: 'Sage pearl loop',
       charms: 'Mint star charm'
     },
+    stock: 42,
+    colorStocks: { hitam: 21, merah: 21 },
     isCustomizable: false
   }
 ];
