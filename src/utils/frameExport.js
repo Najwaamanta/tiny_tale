@@ -160,7 +160,7 @@ export function getFramePhotosForItem(item = {}) {
 
   for (const list of candidates) {
     if (Array.isArray(list) && list.some(Boolean)) {
-      return list.filter((p) => typeof p === 'string' && p.trim().length > 0);
+      return list.filter((p) => typeof p === 'string' && p.trim().length > 0 && p !== 'PHOTO_ATTACHED');
     }
   }
 

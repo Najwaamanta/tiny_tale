@@ -354,7 +354,8 @@ app.put('/api/charms/:id/stock', async (req, res) => {
 });
 
 // Helper to format orders and their line items
-function formatOrders(orders, items) {
+function formatOrders(orders, items, options = { fullPhotos: true }) {
+  const fullPhotos = options ? options.fullPhotos !== false : true;
   return orders.map((order) => {
     const orderItems = items
       .filter((it) => it.order_id === order.id)
@@ -366,10 +367,34 @@ function formatOrders(orders, items) {
           cDetails = {};
         }
 
-        // Extract frame photos and avoid duplicating them inside customDetails
-        const framePhotos = cDetails.framePhotos || it.framePhotos || [];
+        // Extract frame photos
+        const rawPhotos = cDetails.framePhotos || it.framePhotos || [];
         const cleanDetails = { ...cDetails };
         delete cleanDetails.framePhotos;
+
+        // In list/sync mode, replace multi-megabyte photos with placeholder to keep payload tiny
+        const framePhotos = fullPhotos
+          ? rawPhotos
+          : rawPhotos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
+
+        let safeBundleChoices = cleanDetails.bundleChoices || it.bundleChoices || null;
+        if (safeBundleChoices && !fullPhotos) {
+          try {
+            if (Array.isArray(safeBundleChoices)) {
+              safeBundleChoices = safeBundleChoices.map((b) => {
+                if (!b) return b;
+                const copy = { ...b };
+                if (Array.isArray(copy.framePhotos)) {
+                  copy.framePhotos = copy.framePhotos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
+                }
+                if (Array.isArray(copy.photos)) {
+                  copy.photos = copy.photos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
+                }
+                return copy;
+              });
+            }
+          } catch (e) {}
+        }
 
         const isGelang = it.product_type === 'gelang' || (it.title || '').toLowerCase().includes('gelang') || (it.title || '').toLowerCase().includes('bracelet');
         const safeImage = (isGelang && it.image && it.image.length > 5000) ? null : it.image;
@@ -382,12 +407,13 @@ function formatOrders(orders, items) {
           quantity: it.quantity,
           subtotal: it.subtotal,
           image: safeImage,
-          bundleChoices: cleanDetails.bundleChoices || it.bundleChoices || null,
+          bundleChoices: safeBundleChoices,
           bundleDescription: cleanDetails.bundleDescription || it.bundleDescription || '',
           variant: cleanDetails.variant || it.variant || '',
           color: cleanDetails.color || it.color || '',
           customDetails: cleanDetails,
           framePhotos: framePhotos,
+          hasFramePhotos: Array.isArray(rawPhotos) && rawPhotos.some(Boolean),
           frameId: cleanDetails.frameId || it.frameId || null,
           frameName: cleanDetails.frameName || it.frameName || '',
           baseName: cleanDetails.baseName || it.baseName || '',
@@ -411,6 +437,10 @@ function formatOrders(orders, items) {
       ? order.courier
       : (order.address && order.address !== '-' ? order.address : '-');
 
+    const paymentProofVal = fullPhotos
+      ? (order.payment_proof || null)
+      : (order.payment_proof ? (order.payment_proof.length > 5000 ? 'PROOF_ATTACHED' : order.payment_proof) : null);
+
     return {
       id: order.id,
       createdAt: order.created_at,
@@ -430,7 +460,8 @@ function formatOrders(orders, items) {
       totalAmount: totalAmt,
       paymentMethod: order.payment_method || 'QRIS',
       paymentStatus: order.payment_status || 'paid',
-      paymentProof: order.payment_proof || null,
+      paymentProof: paymentProofVal,
+      hasPaymentProof: Boolean(order.payment_proof),
       paymentProofUrl: null, // Avoid duplicate proof base64 payload
       orderStatus: order.order_status || 'processing',
       craftingStatus: craftingStat,
@@ -452,7 +483,7 @@ app.get('/api/sync', async (req, res) => {
       return {
         products,
         charms,
-        orders: formatOrders(orders, items)
+        orders: formatOrders(orders, items, { fullPhotos: false })
       };
     });
 
@@ -472,12 +503,29 @@ app.get('/api/orders', async (req, res) => {
     const formatted = await withConnection(async (conn) => {
       const [orders] = await conn.query('SELECT * FROM orders ORDER BY created_at DESC');
       const [items] = await conn.query('SELECT * FROM order_items');
-      return formatOrders(orders, items);
+      return formatOrders(orders, items, { fullPhotos: false });
     });
 
     res.json(formatted);
   } catch (err) {
     console.error('Error in /api/orders:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const order = await withConnection(async (conn) => {
+      const [orders] = await conn.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+      if (orders.length === 0) return null;
+      const [items] = await conn.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+      return formatOrders(orders, items, { fullPhotos: true })[0];
+    });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    res.json(order);
+  } catch (err) {
+    console.error(`Error in /api/orders/${req.params.id}:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });

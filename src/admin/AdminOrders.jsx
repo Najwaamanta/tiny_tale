@@ -77,8 +77,31 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
     return idMatch || nameMatch || waMatch || itemMatch;
   });
 
-  const handleOpenDetail = (order) => {
+  const handleOpenDetail = async (order) => {
     setSelectedOrder(order);
+    const hasPlaceholder = (order.paymentProof === 'PROOF_ATTACHED') ||
+      (order.items || []).some(it => {
+        if ((it.framePhotos || []).some(p => p === 'PHOTO_ATTACHED')) return true;
+        if (Array.isArray(it.bundleChoices)) {
+          return it.bundleChoices.some(b =>
+            (b?.framePhotos || []).some(p => p === 'PHOTO_ATTACHED') ||
+            (b?.photos || []).some(p => p === 'PHOTO_ATTACHED')
+          );
+        }
+        return false;
+      });
+
+    if (hasPlaceholder) {
+      try {
+        const res = await fetch(`/api/orders/${order.id}`);
+        if (res && res.ok) {
+          const fullOrder = await res.json();
+          setSelectedOrder((current) => (current && current.id === order.id ? fullOrder : current));
+        }
+      } catch (err) {
+        console.error('Error fetching full order details:', err);
+      }
+    }
   };
 
   const handleExportExcel = () => {
@@ -89,13 +112,32 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
     const key = `${order.id}-${item.id || item.title || 'item'}-${subLabel}`;
     setDownloadingItemId(key);
     try {
+      let activeOrder = order;
+      let activePhotos = overridePhotos;
+      let activeItem = item;
+
+      // Check if photos need to be fetched from server
+      const needsFullPhotos = (activePhotos && activePhotos.some(p => p === 'PHOTO_ATTACHED')) ||
+        (!activePhotos && (item.framePhotos && item.framePhotos.some(p => p === 'PHOTO_ATTACHED')));
+
+      if (needsFullPhotos) {
+        const res = await fetch(`/api/orders/${order.id}`);
+        if (res && res.ok) {
+          activeOrder = await res.json();
+          const matchItem = (activeOrder.items || []).find(it => it.id === item.id) || activeOrder.items?.[0] || item;
+          activeItem = matchItem;
+          activePhotos = getFramePhotosForItem(matchItem);
+          setSelectedOrder(activeOrder);
+        }
+      }
+
       await downloadPhotostripFrame({
-        item,
-        orderId: order.id,
-        customerName: order.customer?.name || 'Customer',
+        item: activeItem,
+        orderId: activeOrder.id,
+        customerName: activeOrder.customer?.name || 'Customer',
         subLabel,
         overrideFrameConfig: overrideConfig,
-        overridePhotos
+        overridePhotos: activePhotos
       });
     } catch (err) {
       console.error('Download frame error:', err);
@@ -814,23 +856,31 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
                     <strong style={{ fontSize: '0.88rem', color: 'var(--accent-cyan)' }}>
                       🧾 Bukti Pembayaran QRIS dari Pembeli:
                     </strong>
-                    <a
-                      href={selectedOrder.paymentProof || selectedOrder.paymentProofUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                    >
-                      Buka Gambar Penuh
-                    </a>
+                    {selectedOrder.paymentProof !== 'PROOF_ATTACHED' && (
+                      <a
+                        href={selectedOrder.paymentProof || selectedOrder.paymentProofUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                      >
+                        Buka Gambar Penuh
+                      </a>
+                    )}
                   </div>
-                  <div style={{ maxWidth: '280px', maxHeight: '220px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                    <img
-                      src={selectedOrder.paymentProof || selectedOrder.paymentProofUrl}
-                      alt="Bukti Transfer QRIS"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#000000' }}
-                    />
-                  </div>
+                  {selectedOrder.paymentProof === 'PROOF_ATTACHED' ? (
+                    <div style={{ padding: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                      ⏳ Sedang mengunduh foto bukti transfer...
+                    </div>
+                  ) : (
+                    <div style={{ maxWidth: '280px', maxHeight: '220px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                      <img
+                        src={selectedOrder.paymentProof || selectedOrder.paymentProofUrl}
+                        alt="Bukti Transfer QRIS"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#000000' }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
