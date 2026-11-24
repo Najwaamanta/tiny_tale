@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Footer({ onNavigate }) {
+export default function Footer({ onNavigate, onOpenAdmin, isAdmin = false }) {
   const handleNav = (e, view, elementId) => {
     e.preventDefault();
     if (elementId) {
@@ -73,8 +73,13 @@ export default function Footer({ onNavigate }) {
 
         {/* Bottom bar */}
         <div className="tt-footer-bottom">
-          <p className="tt-footer-copy">
-            © 2027 Tiny Tale Studio. All rights reserved. Made with love.
+          <p
+            className="tt-footer-copy"
+            onClick={onOpenAdmin}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+            title="Tiny Tale Studio"
+          >
+            © 2026 Tiny Tale Studio. All rights reserved. Made with love.
           </p>
 
           <div className="tt-footer-socials">

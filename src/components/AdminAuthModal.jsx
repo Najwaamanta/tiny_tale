@@ -33,7 +33,7 @@ export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
     e?.preventDefault();
     const clean = pin.trim();
     if (!clean) {
-      setError('Silakan masukkan PIN keamanan');
+      setError('Silakan masukkan password keamanan');
       return;
     }
 
@@ -41,7 +41,7 @@ export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
       setError('');
       onSuccess(clean);
     } else {
-      setError('PIN keamanan salah! Silakan coba lagi.');
+      setError('Password salah! Silakan coba lagi.');
     }
   };
 
@@ -61,11 +61,11 @@ export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
         {/* Header & Subtitle */}
         <h3 className="tt-auth-modal-title">Otorisasi Admin</h3>
         <p className="tt-auth-modal-subtitle">
-          Masukkan PIN keamanan untuk mengakses panel kelola data.
+          Masukkan password keamanan untuk mengakses panel kelola data.
         </p>
 
         {/* Form with PIN Input */}
-        <form onSubmit={handleSubmit} className="tt-auth-form">
+        <form onSubmit={handleSubmit} className="tt-auth-form" autoComplete="off">
           <div className="tt-auth-input-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <input
               type={showPin ? 'text' : 'password'}
@@ -76,8 +76,9 @@ export default function AdminAuthModal({ isOpen, onClose, onSuccess }) {
                 if (error) setError('');
               }}
               autoFocus
-              placeholder="Masukkan PIN"
-              aria-label="PIN Keamanan Admin"
+              placeholder="Masukkan password"
+              aria-label="Password Keamanan Admin"
+              autoComplete="new-password"
             />
             {pin && (
               <button

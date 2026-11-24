@@ -105,20 +105,8 @@ export default function Navbar({
           </ul>
         </nav>
 
-        {/* Right: Cart, Admin & Mobile Hamburger */}
+        {/* Right: Cart & Mobile Hamburger */}
         <div className="tt-nav-actions">
-          {/* Admin Panel Button (Image 1) */}
-          <button
-            type="button"
-            className="tt-admin-panel-btn"
-            onClick={onOpenAdminAuth || (isAdmin ? onOpenAdminDashboard : onOpenAdminLogin)}
-            title="Admin Panel"
-            aria-label="Admin Panel"
-          >
-            <Settings size={15} className="tt-admin-gear-icon" />
-            <span>Admin Panel</span>
-          </button>
-
           {/* Cart Icon / Badge Pill */}
           <button
             type="button"
@@ -172,22 +160,6 @@ export default function Navbar({
                 onClick={() => handleNavClick('frames')}
               >
                 Custom Studio
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className="tt-mobile-nav-item"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onOpenAdminAuth) onOpenAdminAuth();
-                  else if (isAdmin) onOpenAdminDashboard();
-                  else onOpenAdminLogin();
-                }}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EEAB0A', fontWeight: 700 }}
-              >
-                <Settings size={16} />
-                <span>Admin Panel</span>
               </button>
             </li>
           </ul>

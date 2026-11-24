@@ -91,6 +91,18 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  // Check if admin accessed via secret URL query param (?admin) or hash (#admin)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') !== null || window.location.hash === '#admin') {
+      if (isAdmin) {
+        setIsAdminDashboardView(true);
+      } else {
+        setIsAdminAuthModalOpen(true);
+      }
+    }
+  }, [isAdmin]);
+
   // Real-time synchronization loop when Admin Dashboard is active (throttled to 60s to conserve bandwidth)
   useEffect(() => {
     if (isAdmin && isAdminDashboardView) {
@@ -513,7 +525,10 @@ export default function App() {
       </main>
 
       {/* Site Footer */}
-      <Footer onNavigate={setActiveView} />
+      <Footer
+        onNavigate={setActiveView}
+        onOpenAdmin={() => setIsAdminAuthModalOpen(true)}
+      />
 
       {/* Cart Modal */}
       {isCartOpen && (
