@@ -354,6 +354,50 @@ app.put('/api/charms/:id/stock', async (req, res) => {
   }
 });
 
+// Helper to strip heavy base64 images from charms in list mode
+function sanitizeCharm(c) {
+  if (!c || typeof c !== 'object') return c;
+  const { image, ...rest } = c;
+  return {
+    ...rest,
+    image: (typeof image === 'string' && image.length < 300) ? image : null
+  };
+}
+
+// Helper to sanitize bundle choices (array or object format)
+function sanitizeBundleChoices(bc, fullPhotos) {
+  if (!bc || fullPhotos) return bc;
+  if (Array.isArray(bc)) {
+    return bc.map(b => sanitizeBundleItem(b));
+  }
+  if (typeof bc === 'object') {
+    const res = {};
+    for (const [k, v] of Object.entries(bc)) {
+      res[k] = sanitizeBundleItem(v);
+    }
+    return res;
+  }
+  return bc;
+}
+
+function sanitizeBundleItem(b) {
+  if (!b || typeof b !== 'object') return b;
+  const copy = { ...b };
+  if (Array.isArray(copy.framePhotos)) {
+    copy.framePhotos = copy.framePhotos.map(p => (typeof p === 'string' && p.length > 200 ? 'PHOTO_ATTACHED' : p));
+  }
+  if (Array.isArray(copy.photos)) {
+    copy.photos = copy.photos.map(p => (typeof p === 'string' && p.length > 200 ? 'PHOTO_ATTACHED' : p));
+  }
+  if (typeof copy.image === 'string' && copy.image.length > 300) {
+    copy.image = null;
+  }
+  if (Array.isArray(copy.charms)) {
+    copy.charms = copy.charms.map(sanitizeCharm);
+  }
+  return copy;
+}
+
 // Helper to format orders and their line items
 function formatOrders(orders, items, options = { fullPhotos: true }) {
   const fullPhotos = options ? options.fullPhotos !== false : true;
@@ -369,36 +413,31 @@ function formatOrders(orders, items, options = { fullPhotos: true }) {
         }
 
         // Extract frame photos
-        const rawPhotos = cDetails.framePhotos || it.framePhotos || [];
+        const rawPhotos = cDetails.framePhotos || it.framePhotos || cDetails.photos || [];
         const cleanDetails = { ...cDetails };
         delete cleanDetails.framePhotos;
+        delete cleanDetails.photos;
+        delete cleanDetails.bundleChoices;
+        delete cleanDetails.charms;
 
-        // In list/sync mode, replace multi-megabyte photos with placeholder to keep payload tiny
+        // In list/sync mode, replace multi-megabyte photos with placeholder to keep payload tiny (<6MB AWS Lambda limit)
         const framePhotos = fullPhotos
           ? rawPhotos
-          : rawPhotos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
+          : rawPhotos.map((p) => (typeof p === 'string' && p.length > 200 ? 'PHOTO_ATTACHED' : p));
 
-        let safeBundleChoices = cleanDetails.bundleChoices || it.bundleChoices || null;
-        if (safeBundleChoices && !fullPhotos) {
-          try {
-            if (Array.isArray(safeBundleChoices)) {
-              safeBundleChoices = safeBundleChoices.map((b) => {
-                if (!b) return b;
-                const copy = { ...b };
-                if (Array.isArray(copy.framePhotos)) {
-                  copy.framePhotos = copy.framePhotos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
-                }
-                if (Array.isArray(copy.photos)) {
-                  copy.photos = copy.photos.map((p) => (typeof p === 'string' && p.length > 5000 ? 'PHOTO_ATTACHED' : p));
-                }
-                return copy;
-              });
-            }
-          } catch (e) { }
+        let safeBundleChoices = cDetails.bundleChoices || it.bundleChoices || null;
+        if (!fullPhotos && safeBundleChoices) {
+          safeBundleChoices = sanitizeBundleChoices(safeBundleChoices, false);
         }
 
-        const isGelang = it.product_type === 'gelang' || (it.title || '').toLowerCase().includes('gelang') || (it.title || '').toLowerCase().includes('bracelet');
-        const safeImage = (isGelang && it.image && it.image.length > 5000) ? null : it.image;
+        let safeCharms = cleanDetails.charms || it.charms || [];
+        if (!fullPhotos && Array.isArray(safeCharms)) {
+          safeCharms = safeCharms.map(sanitizeCharm);
+          cleanDetails.charms = safeCharms;
+        }
+
+        // For item.image, if list mode and image is a base64 string (> 500 chars), set to null to avoid payload bloat
+        const safeImage = (fullPhotos || (typeof it.image === 'string' && it.image.length <= 500)) ? it.image : null;
 
         return {
           id: it.id,
@@ -428,7 +467,7 @@ function formatOrders(orders, items, options = { fullPhotos: true }) {
           bellColorName: cleanDetails.bellColorName || it.bellColorName || '',
           hardwareName: cleanDetails.hardwareName || it.hardwareName || '',
           customLetters: cleanDetails.customLetters || it.customLetters || '',
-          charms: cleanDetails.charms || it.charms || []
+          charms: safeCharms
         };
       });
 
@@ -440,7 +479,7 @@ function formatOrders(orders, items, options = { fullPhotos: true }) {
 
     const paymentProofVal = fullPhotos
       ? (order.payment_proof || null)
-      : (order.payment_proof ? (order.payment_proof.length > 5000 ? 'PROOF_ATTACHED' : order.payment_proof) : null);
+      : (order.payment_proof ? (order.payment_proof.length > 200 ? 'PROOF_ATTACHED' : order.payment_proof) : null);
 
     return {
       id: order.id,

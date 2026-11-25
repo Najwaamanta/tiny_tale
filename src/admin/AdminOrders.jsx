@@ -82,8 +82,9 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
     const hasPlaceholder = (order.paymentProof === 'PROOF_ATTACHED') ||
       (order.items || []).some(it => {
         if ((it.framePhotos || []).some(p => p === 'PHOTO_ATTACHED')) return true;
-        if (Array.isArray(it.bundleChoices)) {
-          return it.bundleChoices.some(b =>
+        if (it.bundleChoices && typeof it.bundleChoices === 'object') {
+          const list = Array.isArray(it.bundleChoices) ? it.bundleChoices : Object.values(it.bundleChoices);
+          return list.some(b =>
             (b?.framePhotos || []).some(p => p === 'PHOTO_ATTACHED') ||
             (b?.photos || []).some(p => p === 'PHOTO_ATTACHED')
           );
@@ -118,15 +119,32 @@ export default function AdminOrders({ orders = [], collections = [], charms = []
 
       // Check if photos need to be fetched from server
       const needsFullPhotos = (activePhotos && activePhotos.some(p => p === 'PHOTO_ATTACHED')) ||
-        (!activePhotos && (item.framePhotos && item.framePhotos.some(p => p === 'PHOTO_ATTACHED')));
+        (!activePhotos && (item.framePhotos && item.framePhotos.some(p => p === 'PHOTO_ATTACHED'))) ||
+        (item.bundleChoices && typeof item.bundleChoices === 'object' && (
+          (Array.isArray(item.bundleChoices) ? item.bundleChoices : Object.values(item.bundleChoices))
+            .some(b => (b?.framePhotos || []).some(p => p === 'PHOTO_ATTACHED') || (b?.photos || []).some(p => p === 'PHOTO_ATTACHED'))
+        ));
 
       if (needsFullPhotos) {
         const res = await fetch(`/api/orders/${order.id}`);
         if (res && res.ok) {
           activeOrder = await res.json();
-          const matchItem = (activeOrder.items || []).find(it => it.id === item.id) || activeOrder.items?.[0] || item;
-          activeItem = matchItem;
-          activePhotos = getFramePhotosForItem(matchItem);
+          let matchItem = (activeOrder.items || []).find(it => it.id === item.id);
+          if (!matchItem) {
+            // Check if item is a bundle choice inside one of the order items
+            for (const ordItem of (activeOrder.items || [])) {
+              if (ordItem.bundleChoices && typeof ordItem.bundleChoices === 'object') {
+                const bList = Array.isArray(ordItem.bundleChoices) ? ordItem.bundleChoices : Object.values(ordItem.bundleChoices);
+                const foundSub = bList.find(b => b.name === item.name || b.label === item.label || b.frameId === item.frameId);
+                if (foundSub) {
+                  matchItem = foundSub;
+                  break;
+                }
+              }
+            }
+          }
+          activeItem = matchItem || activeOrder.items?.[0] || item;
+          activePhotos = getFramePhotosForItem(activeItem);
           setSelectedOrder(activeOrder);
         }
       }
