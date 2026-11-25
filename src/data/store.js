@@ -160,12 +160,12 @@ class Store {
             setStorage(STORAGE_KEYS.ORDERS, this.orders);
             changed = true;
           }
-          if (Array.isArray(data.charms)) {
+          if (Array.isArray(data.charms) && data.charms.length > 0) {
             this.charms = data.charms;
             setStorage(STORAGE_KEYS.CHARMS, this.charms);
             changed = true;
           }
-          if (Array.isArray(data.products)) {
+          if (Array.isArray(data.products) && data.products.length > 0) {
             this.collections = mapDbProductsToCollections(data.products);
             setStorage(STORAGE_KEYS.COLLECTIONS, this.collections);
             changed = true;

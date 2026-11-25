@@ -44,6 +44,95 @@ const dbConfig = {
   ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 };
 
+let tablesInitialized = false;
+async function ensureTablesExist(conn) {
+  if (tablesInitialized) return;
+  try {
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        username varchar(50) NOT NULL,
+        email varchar(100) NOT NULL,
+        password varchar(255) NOT NULL,
+        pin varchar(50) NOT NULL DEFAULT 'tinytale08',
+        role varchar(50) NOT NULL DEFAULT 'head_artisan',
+        created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS charms (
+        id varchar(50) PRIMARY KEY,
+        name varchar(100) NOT NULL,
+        category varchar(50) NOT NULL,
+        price int NOT NULL DEFAULT 5000,
+        stock int NOT NULL DEFAULT 40,
+        icon varchar(20) DEFAULT '✨',
+        image longtext,
+        description text,
+        created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id varchar(50) PRIMARY KEY,
+        customer_name varchar(100) NOT NULL,
+        customer_whatsapp varchar(50) NOT NULL,
+        address text,
+        city varchar(100) DEFAULT '-',
+        courier varchar(100) DEFAULT '-',
+        courier_cost int DEFAULT 0,
+        notes text,
+        payment_method varchar(50) NOT NULL DEFAULT 'qris',
+        payment_status varchar(50) NOT NULL DEFAULT 'paid',
+        order_status varchar(50) NOT NULL DEFAULT 'processing',
+        tracking_number varchar(100) DEFAULT NULL,
+        total_price int NOT NULL,
+        created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        payment_proof longtext
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        order_id varchar(50) NOT NULL,
+        product_type varchar(50) NOT NULL,
+        title varchar(150) NOT NULL,
+        unit_price int NOT NULL,
+        quantity int NOT NULL DEFAULT 1,
+        subtotal int NOT NULL,
+        image longtext,
+        custom_details json,
+        created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_order_id (order_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id varchar(100) PRIMARY KEY,
+        name varchar(255) NOT NULL,
+        category varchar(50) NOT NULL,
+        type varchar(50) NOT NULL,
+        price int NOT NULL,
+        image longtext,
+        badge varchar(50) DEFAULT NULL,
+        description text,
+        is_active tinyint(1) DEFAULT 1,
+        details json DEFAULT NULL,
+        created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    tablesInitialized = true;
+  } catch (err) {
+    console.warn('[Tiny Tale DB] Table init warning:', err.message);
+  }
+}
+
 // Safe, stateless connection executor with auto-retry and backoff
 // Ensures connections are NEVER left in 'Sleep' state, preventing ER_USER_LIMIT_REACHED (max 5 connections on Filess.io)
 async function withConnection(fn, retries = 5) {
@@ -51,6 +140,9 @@ async function withConnection(fn, retries = 5) {
     let conn = null;
     try {
       conn = await mysql.createConnection(dbConfig);
+      if (!tablesInitialized) {
+        await ensureTablesExist(conn);
+      }
       return await fn(conn);
     } catch (err) {
       const isLimitErr = err.code === 'ER_USER_LIMIT_REACHED' ||
