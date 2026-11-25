@@ -1,3 +1,7 @@
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 const dns = require('dns');
 try {
   dns.setDefaultResultOrder('ipv4first');
@@ -25,28 +29,56 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database configuration (supports localhost/Laragon & Filess.io/Aiven)
-const isCloudOrSSL = process.env.DB_SSL === 'true' ||
-  (process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST));
+// Database configuration (supports TiDB Cloud Serverless, Filess.io, Aiven & Localhost)
+const isLocalhost = process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1';
 
-const rawHost = process.env.DB_HOST || '127.0.0.1';
-// Direct IPv4 mapping for Filess.io to eliminate Windows IPv6 latency & ETIMEDOUT
-const dbHost = (rawHost === 'bbqatu.h.filess.io') ? '5.154.90.219' :
-               (rawHost === 'w0aeps.h.filess.io') ? '188.245.153.167' : rawHost;
+// Automatically default to TiDB Cloud if no DB_HOST is provided or if legacy Filess.io is still configured
+const isFiless = process.env.DB_HOST && process.env.DB_HOST.includes('filess.io');
+const rawHost = (isLocalhost)
+  ? process.env.DB_HOST
+  : (!process.env.DB_HOST || isFiless)
+    ? 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com'
+    : process.env.DB_HOST;
+
+const dbPort = (isLocalhost)
+  ? (Number(process.env.DB_PORT) || 3306)
+  : (!process.env.DB_PORT || isFiless)
+    ? 4000
+    : Number(process.env.DB_PORT);
+
+const dbUser = (isLocalhost)
+  ? (process.env.DB_USER || 'root')
+  : (!process.env.DB_USER || isFiless)
+    ? 'C1g165cxqVzGNLZ.root'
+    : process.env.DB_USER;
+
+const dbPassword = (isLocalhost)
+  ? (process.env.DB_PASSWORD || '')
+  : (!process.env.DB_PASSWORD || isFiless)
+    ? 'lWsYaIml7oXH4NxN'
+    : process.env.DB_PASSWORD;
+
+const dbName = (isLocalhost)
+  ? (process.env.DB_NAME || 'defaultdb')
+  : (!process.env.DB_NAME || isFiless)
+    ? 'test'
+    : process.env.DB_NAME;
+
+const isCloudOrSSL = !isLocalhost;
 
 const dbConfig = {
-  host: dbHost,
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'defaultdb',
-  connectTimeout: 8000,
+  host: rawHost,
+  port: dbPort,
+  user: dbUser,
+  password: dbPassword,
+  database: dbName,
+  connectTimeout: 10000,
   waitForConnections: true,
-  connectionLimit: 2, // Strictly limit to max 2 connections to stay well below Filess.io limit of 5
+  connectionLimit: 5,
   queueLimit: 20,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,
-  ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
+  ...(isCloudOrSSL ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {})
 };
 
 let pool = null;
@@ -131,13 +163,24 @@ async function ensureTablesExist(conn) {
         category varchar(50) NOT NULL,
         type varchar(50) NOT NULL,
         price int NOT NULL,
-        image longtext,
-        badge varchar(50) DEFAULT NULL,
+        image longtext NOT NULL,
         description text,
+        highlights_strap text,
+        highlights_shapes text,
+        highlights_charms text,
+        stock int NOT NULL DEFAULT 50,
+        is_customizable tinyint(1) NOT NULL DEFAULT 1,
+        badge varchar(50) DEFAULT NULL,
         is_active tinyint(1) DEFAULT 1,
         details json DEFAULT NULL,
         created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    // Ensure default admin user exists
+    await conn.query(`
+      INSERT IGNORE INTO admin_users (id, username, email, password, pin, role)
+      VALUES (1, 'Head Artisan', 'admin@atelier.id', 'tinytale08', 'tinytale08', 'head_artisan');
     `);
 
     tablesInitialized = true;
@@ -196,7 +239,7 @@ async function dbQuery(sql, params = []) {
 app.get('/api/health', async (req, res) => {
   try {
     await dbQuery('SELECT 1 + 1 AS solution');
-    res.json({ status: 'ok', database: process.env.DB_NAME || 'defaultdb', host: dbHost, connected: true });
+    res.json({ status: 'ok', database: dbConfig.database, host: dbConfig.host, port: dbConfig.port, connected: true });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }

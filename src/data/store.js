@@ -83,8 +83,8 @@ function mapDbProductsToCollections(dbProducts) {
       colorStocks: p.colorStocks && typeof p.colorStocks === 'object'
         ? p.colorStocks
         : (typeof p.highlights_shapes === 'string' && p.highlights_shapes.startsWith('{')
-            ? (() => { try { return JSON.parse(p.highlights_shapes); } catch (e) { return null; } })()
-            : (initialMatch?.colorStocks || null)),
+          ? (() => { try { return JSON.parse(p.highlights_shapes); } catch (e) { return null; } })()
+          : (initialMatch?.colorStocks || null)),
       isCustomizable: Boolean(p.is_customizable !== undefined ? p.is_customizable : p.isCustomizable),
       templateId: p.template_id || p.templateId || 'layout-a'
     };
