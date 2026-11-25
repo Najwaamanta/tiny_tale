@@ -134,26 +134,35 @@ class Store {
             // Retain ALL local orders not yet present on server so no orders are ever lost
             const pendingOrders = (this.orders || []).filter((o) => !serverOrderMap.has(o.id));
 
-            // Auto-sync pending local orders up to the MySQL database
-            if (pendingOrders.length > 0) {
-              pendingOrders.forEach((pend) => {
-                apiFetch('/api/orders', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    id: pend.id,
-                    customer: pend.customer,
-                    items: pend.items,
-                    total: pend.totalAmount || pend.total,
-                    totalAmount: pend.totalAmount || pend.total,
-                    paymentMethod: pend.paymentMethod,
-                    paymentStatus: pend.paymentStatus,
-                    paymentProof: pend.paymentProofUrl || null,
-                    orderStatus: pend.craftingStatus || pend.orderStatus || 'processing',
-                    createdAt: pend.createdAt
-                  })
-                }).catch(() => null);
-              });
+            // Auto-sync pending local orders gently and sequentially to respect Filess.io 5-connection limit
+            if (pendingOrders.length > 0 && !this._isUploadingPending) {
+              this._isUploadingPending = true;
+              (async () => {
+                try {
+                  for (const pend of pendingOrders) {
+                    await apiFetch('/api/orders', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        id: pend.id,
+                        customer: pend.customer,
+                        items: pend.items,
+                        total: pend.totalAmount || pend.total,
+                        totalAmount: pend.totalAmount || pend.total,
+                        paymentMethod: pend.paymentMethod,
+                        paymentStatus: pend.paymentStatus,
+                        paymentProof: pend.paymentProofUrl || null,
+                        orderStatus: pend.craftingStatus || pend.orderStatus || 'processing',
+                        createdAt: pend.createdAt
+                      })
+                    }).catch(() => null);
+                    // 500ms delay between uploads to prevent connection spikes
+                    await new Promise((r) => setTimeout(r, 500));
+                  }
+                } finally {
+                  this._isUploadingPending = false;
+                }
+              })();
             }
 
             this.orders = [...pendingOrders, ...data.orders];
@@ -177,9 +186,15 @@ class Store {
           this.notify();
           return { success: true, count: this.orders.length, time: this.lastSyncTime };
         }
+      } else if (syncRes && syncRes.status >= 500) {
+        // Server returned 500/502 (e.g. database error). Do not hammer the database with 3 fallback requests!
+        this.isLiveDbConnected = false;
+        this.isSyncing = false;
+        this.notify();
+        return { success: false, error: 'Database unavailable' };
       }
     } catch (e) {
-      // Fall through to individual endpoints fallback
+      // Fall through only on network disconnect
     }
 
     // 2. Fallback: individual endpoints called sequentially to avoid connection bursts

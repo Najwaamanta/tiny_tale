@@ -41,8 +41,21 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'defaultdb',
   connectTimeout: 8000,
+  waitForConnections: true,
+  connectionLimit: 2, // Strictly limit to max 2 connections to stay well below Filess.io limit of 5
+  queueLimit: 20,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
   ...(isCloudOrSSL ? { ssl: { rejectUnauthorized: false } } : {})
 };
+
+let pool = null;
+function getPool() {
+  if (!pool) {
+    pool = mysql.createPool(dbConfig);
+  }
+  return pool;
+}
 
 let tablesInitialized = false;
 async function ensureTablesExist(conn) {
@@ -133,25 +146,29 @@ async function ensureTablesExist(conn) {
   }
 }
 
-// Safe, stateless connection executor with auto-retry and backoff
-// Ensures connections are NEVER left in 'Sleep' state, preventing ER_USER_LIMIT_REACHED (max 5 connections on Filess.io)
-async function withConnection(fn, retries = 5) {
+// Safe connection pool executor with auto-retry and concurrency capping
+// Uses a connection pool capped at 2 connections to NEVER exceed Filess.io limit of 5
+async function withConnection(fn, retries = 3) {
+  const p = getPool();
   for (let attempt = 1; attempt <= retries; attempt++) {
     let conn = null;
     try {
-      conn = await mysql.createConnection(dbConfig);
+      conn = await p.getConnection();
       if (!tablesInitialized) {
         await ensureTablesExist(conn);
       }
       return await fn(conn);
     } catch (err) {
+      if (err.code === 'ER_ACCOUNT_HAS_BEEN_LOCKED') {
+        throw err;
+      }
       const isLimitErr = err.code === 'ER_USER_LIMIT_REACHED' ||
         err.code === 'ETIMEDOUT' ||
         err.code === 'PROTOCOL_CONNECTION_LOST' ||
         (err.message && err.message.includes('max_user_connections'));
       if (attempt < retries && isLimitErr) {
-        const delay = Math.floor(250 * Math.pow(1.8, attempt - 1) + Math.random() * 100);
-        console.warn(`[Tiny Tale DB] Connection limit or timeout hit (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`);
+        const delay = Math.floor(400 * attempt + Math.random() * 200);
+        console.warn(`[Tiny Tale DB] Connection limit hit (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`);
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
@@ -159,7 +176,7 @@ async function withConnection(fn, retries = 5) {
     } finally {
       if (conn) {
         try {
-          await conn.end();
+          conn.release();
         } catch (e) {
           try { conn.destroy(); } catch (_) { }
         }
