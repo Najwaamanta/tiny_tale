@@ -15,7 +15,7 @@ export default function CheckoutModal({
   // Form states - Name, WhatsApp, Pickup Location & Payment Method
   const [customerName, setCustomerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [pickupLocation, setPickupLocation] = useState('Kampus B');
+  const [pickupLocation, setPickupLocation] = useState('Market Day');
   const [customPickupLocation, setCustomPickupLocation] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('QRIS'); // 'QRIS' | 'Cash'
   const [paymentProofUrl, setPaymentProofUrl] = useState('');
@@ -415,55 +415,37 @@ export default function CheckoutModal({
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gridTemplateColumns: '1fr',
                       gap: '8px'
                     }}
                   >
-                    {['Kampus B', 'Kampus C', 'Market Day', 'Lainnya'].map((loc) => {
-                      const isSelected = pickupLocation === loc;
-                      return (
-                        <button
-                          key={loc}
-                          type="button"
-                          onClick={() => setPickupLocation(loc)}
-                          style={{
-                            border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
-                            background: isSelected ? 'rgba(0, 242, 254, 0.12)' : 'var(--bg-secondary)',
-                            color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)',
-                            padding: '10px 14px',
-                            borderRadius: 'var(--radius-md)',
-                            fontWeight: isSelected ? 700 : 500,
-                            fontSize: '0.88rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '0.95rem' }}>📍</span>
-                            <span>{loc}</span>
-                          </div>
-                          {isSelected && <Check size={14} strokeWidth={3} />}
-                        </button>
-                      );
-                    })}
+                    <button
+                      type="button"
+                      style={{
+                        border: '2px solid var(--accent-cyan)',
+                        background: 'rgba(0, 242, 254, 0.12)',
+                        color: 'var(--accent-cyan)',
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-md)',
+                        fontWeight: 700,
+                        fontSize: '0.92rem',
+                        cursor: 'default',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.05rem' }}>📍</span>
+                        <span>Market Day</span>
+                      </div>
+                      <Check size={16} strokeWidth={3} />
+                    </button>
                   </div>
-
-                  {pickupLocation === 'Lainnya' && (
-                    <div style={{ marginTop: '10px' }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Tuliskan tempat pengambilan yang diinginkan..."
-                        value={customPickupLocation}
-                        onChange={(e) => setCustomPickupLocation(e.target.value)}
-                        required={pickupLocation === 'Lainnya'}
-                        autoFocus
-                      />
-                    </div>
-                  )}
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '6px', marginLeft: '2px' }}>
+                    * Khusus pengambilan langsung di booth <strong>Market Day</strong>.
+                  </div>
                 </div>
               </div>
 

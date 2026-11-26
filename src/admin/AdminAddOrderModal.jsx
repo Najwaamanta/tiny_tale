@@ -23,7 +23,7 @@ export default function AdminAddOrderModal({
   // Customer state
   const [customerName, setCustomerName] = useState('');
   const [customerWhatsApp, setCustomerWhatsApp] = useState('');
-  const [pickupLocation, setPickupLocation] = useState('Kampus B');
+  const [pickupLocation, setPickupLocation] = useState('Market Day');
   const [customPickupLocation, setCustomPickupLocation] = useState('');
   const [channel, setChannel] = useState('WhatsApp Direct');
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -466,8 +466,6 @@ export default function AdminAddOrderModal({
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
                   >
-                    <option value="Kampus B">Kampus B</option>
-                    <option value="Kampus C">Kampus C</option>
                     <option value="Market Day">Market Day</option>
                     <option value="Lainnya">Lainnya...</option>
                   </select>
